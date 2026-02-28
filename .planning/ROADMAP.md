@@ -1,0 +1,78 @@
+# Roadmap: COCO SDLC HOL Analytics Portal
+
+## Overview
+
+The portal is functionally built. This roadmap covers the final mile: verify all 6 payment domains work correctly with real Snowflake data, polish the UI to be consistent and usable, harden the code against security and reliability issues, then containerize and deploy to Snowpark Container Services. Four phases, two days, production.
+
+## Phases
+
+**Phase Numbering:**
+- Integer phases (1, 2, 3): Planned milestone work
+- Decimal phases (2.1, 2.2): Urgent insertions (marked with INSERTED)
+
+Decimal phases appear between their surrounding integers in numeric order.
+
+- [ ] **Phase 1: UAT Walkthrough** - Verify all 6 payment domains and AI chat return correct data from Snowflake
+- [ ] **Phase 2: UX / UI Polish** - Make navigation, charts, filters, and states visually consistent and usable
+- [ ] **Phase 3: Code Quality** - Fix security issues, error handling, and connection management
+- [ ] **Phase 4: Deployment** - Containerize and ship to Snowpark Container Services
+
+## Phase Details
+
+### Phase 1: UAT Walkthrough
+**Goal**: All 6 payment domains and AI chat are verified to return correct data from real Snowflake MARTS
+**Depends on**: Nothing (first phase)
+**Requirements**: UAT-01, UAT-02, UAT-03, UAT-04, UAT-05, UAT-06, UAT-07, UAT-08
+**Success Criteria** (what must be TRUE):
+  1. Home dashboard displays real KPI values from all 6 domains (not zeros, not errors)
+  2. Each domain page (Authorization, Settlement, Funding, Chargeback, Retrieval, Adjustment) shows correct KPIs and data tables populated from Snowflake
+  3. Authorization page displays correct timeseries, by-brand breakdown, and decline data
+  4. AI chat returns a meaningful, contextually correct answer to at least one natural language query about transaction data
+  5. Any bugs found during walkthrough are documented and resolved
+**Plans**: TBD
+
+### Phase 2: UX / UI Polish
+**Goal**: The portal is visually consistent and usable — merchants can navigate and read data without confusion
+**Depends on**: Phase 1
+**Requirements**: UX-01, UX-02, UX-03, UX-04, UX-05, UX-06
+**Success Criteria** (what must be TRUE):
+  1. Navigation looks and behaves the same across all 6 domain pages (consistent sidebar, header, active states)
+  2. Every chart displays with correct axis labels, legend, and formatted values (currency, percentages, counts)
+  3. Loading and empty states appear correctly — no blank charts, no unhandled spinner states
+  4. Date pickers and date range filters visibly update all data on the page when changed
+  5. Domain-specific filters (e.g., brand, merchant, reason code) apply correctly to their respective pages
+**Plans**: TBD
+
+### Phase 3: Code Quality
+**Goal**: The codebase is hardened against security vulnerabilities and reliability failures before going to production
+**Depends on**: Phase 2
+**Requirements**: CODE-01, CODE-02, CODE-03, CODE-04, CODE-05
+**Success Criteria** (what must be TRUE):
+  1. All database, schema, and table name references resolve to a single config file — no hardcoded strings in route files
+  2. API error responses return correct HTTP status codes (4xx/5xx) and do not include Snowflake credentials or connection details
+  3. User-supplied query parameters are sent via parameterized queries — no string interpolation in SQL
+  4. Each API request creates and closes its own Snowflake connection — no shared global connection state
+**Plans**: TBD
+
+### Phase 4: Deployment
+**Goal**: The portal is running in Snowpark Container Services and accessible to merchants with real data
+**Depends on**: Phase 3
+**Requirements**: DEPLOY-01, DEPLOY-02, DEPLOY-03, DEPLOY-04
+**Success Criteria** (what must be TRUE):
+  1. A Dockerfile builds successfully and produces an image compatible with SPCS requirements
+  2. The application is accessible at an SPCS endpoint — home dashboard loads in a browser
+  3. Environment variables and secrets are configured in SPCS (not baked into the image)
+  4. Domain pages return real data from Snowflake MARTS when accessed through the SPCS deployment
+**Plans**: TBD
+
+## Progress
+
+**Execution Order:**
+Phases execute in numeric order: 1 → 2 → 3 → 4
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 1. UAT Walkthrough | 0/TBD | Not started | - |
+| 2. UX / UI Polish | 0/TBD | Not started | - |
+| 3. Code Quality | 0/TBD | Not started | - |
+| 4. Deployment | 0/TBD | Not started | - |
