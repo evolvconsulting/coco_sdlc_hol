@@ -16,7 +16,7 @@ Requirements for production deployment within 2 days.
 - [x] **UAT-05**: Chargeback page shows correct KPIs, by-reason, and details
 - [x] **UAT-06**: Retrieval page shows correct KPIs and details
 - [x] **UAT-07**: Adjustment page shows correct KPIs and details
-- [ ] **UAT-08**: AI chat returns meaningful responses to natural language queries about transaction data
+- [x] **UAT-08**: AI chat returns meaningful responses to natural language queries about transaction data
 
 ### UX / UI Polish
 
@@ -84,7 +84,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UAT-05 | Phase 1 | Complete (01-02) |
 | UAT-06 | Phase 1 | Complete (01-02) |
 | UAT-07 | Phase 1 | Complete (01-02) |
-| UAT-08 | Phase 1 | Pending |
+| UAT-08 | Phase 1 | Complete (01-03) |
 | UX-01 | Phase 2 | Pending |
 | UX-02 | Phase 2 | Pending |
 | UX-03 | Phase 2 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after 01-02 completion (UAT-01 through UAT-07 marked complete)*
+*Last updated: 2026-02-28 after 01-03 completion (UAT-08 marked complete — all Phase 1 UAT requirements satisfied)*

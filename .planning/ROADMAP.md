@@ -12,7 +12,7 @@ The portal is functionally built. This roadmap covers the final mile: verify all
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: UAT Walkthrough** - Verify all 6 payment domains and AI chat return correct data from Snowflake
+- [x] **Phase 1: UAT Walkthrough** - Verify all 6 payment domains and AI chat return correct data from Snowflake
 - [ ] **Phase 2: UX / UI Polish** - Make navigation, charts, filters, and states visually consistent and usable
 - [ ] **Phase 3: Code Quality** - Fix security issues, error handling, and connection management
 - [ ] **Phase 4: Deployment** - Containerize and ship to Snowpark Container Services
@@ -34,7 +34,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 Plans:
 - [x] 01-01-PLAN.md — Environment pre-flight: verify .env.local, confirm Snowflake connectivity, discover MARTS data date range
 - [x] 01-02-PLAN.md — Domain walkthrough: API smoke-test all 19 endpoints, browser verify all 6 domain pages and home dashboard
-- [ ] 01-03-PLAN.md — AI chat verification (UAT-08), bug fixes from walkthrough, Phase 1 UAT sign-off
+- [x] 01-03-PLAN.md — AI chat verification (UAT-08), bug fixes from walkthrough, Phase 1 UAT sign-off
 
 ### Phase 2: UX / UI Polish
 **Goal**: The portal is visually consistent and usable — merchants can navigate and read data without confusion
@@ -77,7 +77,7 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. UAT Walkthrough | 2/3 | In progress | - |
+| 1. UAT Walkthrough | 3/3 | Complete | 2026-02-28 |
 | 2. UX / UI Polish | 0/TBD | Not started | - |
 | 3. Code Quality | 0/TBD | Not started | - |
 | 4. Deployment | 0/TBD | Not started | - |
