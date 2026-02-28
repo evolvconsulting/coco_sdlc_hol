@@ -10,27 +10,27 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 1 of 4 (UAT Walkthrough)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-28 — Roadmap created, phases derived from requirements
+Plan: 1 of 3 in current phase
+Status: In progress
+Last activity: 2026-02-28 — Plan 01-01 complete (environment pre-flight, Snowflake connectivity confirmed)
 
-Progress: [░░░░░░░░░░] 0%
+Progress: [█░░░░░░░░░] 8% (1/3 plans in Phase 1)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0
-- Average duration: -
-- Total execution time: 0 hours
+- Total plans completed: 1
+- Average duration: ~45 min
+- Total execution time: ~0.75 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| - | - | - | - |
+| 1. UAT Walkthrough | 1 | ~45 min | ~45 min |
 
 **Recent Trend:**
-- Last 5 plans: -
+- Last 5 plans: 01-01
 - Trend: -
 
 *Updated after each plan completion*
@@ -45,6 +45,11 @@ Recent decisions affecting current work:
 - [Init]: Skip auth for this milestone — RLS + CLNT_ID filter handles data isolation for demo
 - [Init]: SPCS deployment target — keeps everything within Snowflake ecosystem
 - [Init]: Manual UAT over automated tests — 2-day timeline constraint
+- [01-01]: Key-pair auth via SNOWFLAKE_PRIVATE_KEY_PATH=c:/Users/TrentFoley/Keys/ennovate-trent-foley.p8
+- [01-01]: CORTEX_AGENT_DATABASE/SCHEMA removed — consolidated into SNOWFLAKE_DATABASE=COCO_SDLC_HOL / SNOWFLAKE_SCHEMA=MARTS
+- [01-01]: CORTEX_AGENT_NAME=PAYMENT_ANALYTICS_AGENT
+- [01-01]: Snowflake CLI connection name "ennovate" for all diagnostic SQL
+- [01-01]: Plan 02 test window: 2026-01-13 to 2026-02-22 (all 6 MARTS tables have data)
 
 ### Pending Todos
 
@@ -59,5 +64,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Roadmap and STATE.md initialized. Ready to plan Phase 1.
+Stopped at: Completed 01-01-PLAN.md — environment pre-flight complete, ready for 01-02 domain walkthrough
 Resume file: None
