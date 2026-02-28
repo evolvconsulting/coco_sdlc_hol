@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
         COUNT(CASE WHEN retrieval_status = 'CLOSED' THEN 1 END) as closed_count,
         ROUND(COUNT(CASE WHEN retrieval_status = 'FULFILLED' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as fulfillment_rate
       FROM COCO_SDLC_HOL.MARTS.RETRIEVALS
-      WHERE original_sale_date BETWEEN '${startDate}' AND '${endDate}'
+      WHERE retrieval_received_date BETWEEN '${startDate}' AND '${endDate}'
     `;
 
     const result = await executeQuery(sql);
