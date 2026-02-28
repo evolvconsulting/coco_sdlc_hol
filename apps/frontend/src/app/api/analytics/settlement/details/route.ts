@@ -23,36 +23,36 @@ export async function GET(request: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     const sql = `
-      SELECT 
-        SETTLE_ID,
-        RECORD_DT,
-        CARD_BRND,
-        LCTN_DBA_NM,
-        SALES_CT,
-        SALES_AM,
-        REFUND_CNT,
-        REFUND_AM,
-        PRCS_NET_AMT,
-        INTERCHANGE_AM
-      FROM COCO_SDLC_HOL.CLEA.SETTLE_DMCL_V1
-      WHERE RECORD_DT BETWEEN '${startDate}' AND '${endDate}'
-      ORDER BY RECORD_DT DESC
+      SELECT
+        settlement_id,
+        settlement_date,
+        card_brand,
+        merchant_name,
+        sales_count,
+        sales_amount,
+        refund_count,
+        refund_amount,
+        net_amount,
+        discount_amount
+      FROM COCO_SDLC_HOL.MARTS.SETTLEMENTS
+      WHERE settlement_date BETWEEN '${startDate}' AND '${endDate}'
+      ORDER BY settlement_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      settleId: row.SETTLE_ID,
-      recordDate: row.RECORD_DT,
-      cardBrand: row.CARD_BRND,
-      merchantName: row.LCTN_DBA_NM,
-      salesCount: Number(row.SALES_CT) || 0,
-      salesAmount: Number(row.SALES_AM) || 0,
-      refundCount: Number(row.REFUND_CNT) || 0,
-      refundAmount: Number(row.REFUND_AM) || 0,
-      netAmount: Number(row.PRCS_NET_AMT) || 0,
-      interchange: Number(row.INTERCHANGE_AM) || 0,
+      settleId: row.SETTLEMENT_ID,
+      recordDate: row.SETTLEMENT_DATE,
+      cardBrand: row.CARD_BRAND,
+      merchantName: row.MERCHANT_NAME,
+      salesCount: Number(row.SALES_COUNT) || 0,
+      salesAmount: Number(row.SALES_AMOUNT) || 0,
+      refundCount: Number(row.REFUND_COUNT) || 0,
+      refundAmount: Number(row.REFUND_AMOUNT) || 0,
+      netAmount: Number(row.NET_AMOUNT) || 0,
+      interchange: Number(row.DISCOUNT_AMOUNT) || 0,
     }));
 
     return NextResponse.json({

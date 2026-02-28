@@ -23,38 +23,38 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let whereClause = `WHERE RT_SALE_DT BETWEEN '${startDate}' AND '${endDate}'`;
-    if (status) whereClause += ` AND RV_CB_STATUS = '${status}'`;
+    let whereClause = `WHERE original_sale_date BETWEEN '${startDate}' AND '${endDate}'`;
+    if (status) whereClause += ` AND retrieval_status = '${status}'`;
 
     const sql = `
-      SELECT 
-        RT_ID,
-        RT_SALE_DT,
-        RV_CB_STATUS,
-        RT_RSN_CD,
-        RT_RSN_DESC,
-        RT_RTRVL_DUE_DT,
-        LCTN_DBA_NM,
-        CARD_BRND,
-        RT_DOLLAR_AM
-      FROM COCO_SDLC_HOL.CLEA.RETRIEVAL_DMCL_V1
+      SELECT
+        retrieval_id,
+        original_sale_date,
+        retrieval_status,
+        reason_code,
+        reason_description,
+        response_due_date,
+        merchant_name,
+        card_brand,
+        retrieval_amount
+      FROM COCO_SDLC_HOL.MARTS.RETRIEVALS
       ${whereClause}
-      ORDER BY RT_SALE_DT DESC
+      ORDER BY original_sale_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      rtId: row.RT_ID,
-      saleDate: row.RT_SALE_DT,
-      status: row.RV_CB_STATUS,
-      reasonCode: row.RT_RSN_CD,
-      reasonDescription: row.RT_RSN_DESC,
-      dueDate: row.RT_RTRVL_DUE_DT,
-      merchantName: row.LCTN_DBA_NM,
-      cardBrand: row.CARD_BRND,
-      amount: Number(row.RT_DOLLAR_AM) || 0,
+      rtId: row.RETRIEVAL_ID,
+      saleDate: row.ORIGINAL_SALE_DATE,
+      status: row.RETRIEVAL_STATUS,
+      reasonCode: row.REASON_CODE,
+      reasonDescription: row.REASON_DESCRIPTION,
+      dueDate: row.RESPONSE_DUE_DATE,
+      merchantName: row.MERCHANT_NAME,
+      cardBrand: row.CARD_BRAND,
+      amount: Number(row.RETRIEVAL_AMOUNT) || 0,
     }));
 
     return NextResponse.json({

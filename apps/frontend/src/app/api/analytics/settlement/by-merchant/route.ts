@@ -22,16 +22,16 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '10');
 
     const sql = `
-      SELECT 
-        LCTN_DBA_NM as merchant_name,
-        SUM(PRCS_NET_AMT) as net_volume,
-        SUM(SALES_CT) as transaction_count,
-        SUM(SALES_AM) as gross_sales,
-        SUM(REFUND_AM) as refund_amount,
-        SUM(INTERCHANGE_AM) as interchange
-      FROM COCO_SDLC_HOL.CLEA.SETTLE_DMCL_V1
-      WHERE RECORD_DT BETWEEN '${startDate}' AND '${endDate}'
-      GROUP BY LCTN_DBA_NM
+      SELECT
+        merchant_name,
+        SUM(net_amount) as net_volume,
+        SUM(sales_count) as transaction_count,
+        SUM(sales_amount) as gross_sales,
+        SUM(refund_amount) as refund_amount,
+        SUM(discount_amount) as interchange
+      FROM COCO_SDLC_HOL.MARTS.SETTLEMENTS
+      WHERE settlement_date BETWEEN '${startDate}' AND '${endDate}'
+      GROUP BY merchant_name
       ORDER BY net_volume DESC
       LIMIT ${limit}
     `;

@@ -21,16 +21,16 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
+      SELECT
         COUNT(*) as total_batches,
-        SUM(SALES_CT) as total_sales_count,
-        SUM(SALES_AM) as total_sales_amount,
-        SUM(REFUND_CNT) as total_refund_count,
-        SUM(REFUND_AM) as total_refund_amount,
-        SUM(PRCS_NET_AMT) as net_volume,
-        SUM(INTERCHANGE_AM) as total_interchange
-      FROM COCO_SDLC_HOL.CLEA.SETTLE_DMCL_V1
-      WHERE RECORD_DT BETWEEN '${startDate}' AND '${endDate}'
+        SUM(sales_count) as total_sales_count,
+        SUM(sales_amount) as total_sales_amount,
+        SUM(refund_count) as total_refund_count,
+        SUM(refund_amount) as total_refund_amount,
+        SUM(net_amount) as net_volume,
+        SUM(discount_amount) as total_interchange
+      FROM COCO_SDLC_HOL.MARTS.SETTLEMENTS
+      WHERE settlement_date BETWEEN '${startDate}' AND '${endDate}'
     `;
 
     const result = await executeQuery(sql);

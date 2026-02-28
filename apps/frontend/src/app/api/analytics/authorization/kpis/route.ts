@@ -23,19 +23,19 @@ export async function GET(request: NextRequest) {
     const cardBrand = searchParams.get('cardBrand');
 
     // Build the SQL query
-    const cardBrandFilter = cardBrand ? `AND CARD_BRND = '${cardBrand}'` : '';
-    
+    const cardBrandFilter = cardBrand ? `AND card_brand = '${cardBrand}'` : '';
+
     const sql = `
-      SELECT 
+      SELECT
         COUNT(*) as total_transactions,
-        SUM(CASE WHEN APPROVALCODE = 1 THEN 1 ELSE 0 END) as approved_count,
-        SUM(CASE WHEN APPROVALCODE = 0 THEN 1 ELSE 0 END) as declined_count,
-        ROUND(SUM(CASE WHEN APPROVALCODE = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as approval_rate,
-        SUM(AMOUNT) as total_amount,
-        SUM(CASE WHEN APPROVALCODE = 1 THEN AMOUNT ELSE 0 END) as approved_amount,
-        ROUND(AVG(AMOUNT), 2) as avg_ticket_size
-      FROM COCO_SDLC_HOL.CLEA.AUTH_DMCL_V1
-      WHERE TXNDATE BETWEEN '${startDate}' AND '${endDate}'
+        SUM(CASE WHEN approval_status = 'Approved' THEN 1 ELSE 0 END) as approved_count,
+        SUM(CASE WHEN approval_status = 'Declined' THEN 1 ELSE 0 END) as declined_count,
+        ROUND(SUM(CASE WHEN approval_status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as approval_rate,
+        SUM(transaction_amount) as total_amount,
+        SUM(CASE WHEN approval_status = 'Approved' THEN transaction_amount ELSE 0 END) as approved_amount,
+        ROUND(AVG(transaction_amount), 2) as avg_ticket_size
+      FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
+      WHERE transaction_date BETWEEN '${startDate}' AND '${endDate}'
         ${cardBrandFilter}
     `;
 

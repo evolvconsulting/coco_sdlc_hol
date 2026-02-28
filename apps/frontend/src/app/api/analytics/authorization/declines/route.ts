@@ -21,15 +21,15 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
-        COALESCE(DECLINEREASON, 'Unknown') as reason,
+      SELECT
+        COALESCE(decline_reason, 'Unknown') as reason,
         COUNT(*) as count,
-        SUM(AMOUNT) as amount,
+        SUM(transaction_amount) as amount,
         ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
-      FROM COCO_SDLC_HOL.CLEA.AUTH_DMCL_V1
-      WHERE TXNDATE BETWEEN '${startDate}' AND '${endDate}'
-        AND APPROVALCODE = 0
-      GROUP BY DECLINEREASON
+      FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
+      WHERE transaction_date BETWEEN '${startDate}' AND '${endDate}'
+        AND approval_status = 'Declined'
+      GROUP BY decline_reason
       ORDER BY count DESC
       LIMIT 10
     `;

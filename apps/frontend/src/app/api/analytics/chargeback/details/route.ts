@@ -23,42 +23,42 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let whereClause = `WHERE DSPUT_RCVD_DT BETWEEN '${startDate}' AND '${endDate}'`;
-    if (status) whereClause += ` AND CBK_STATUS = '${status}'`;
+    let whereClause = `WHERE dispute_received_date BETWEEN '${startDate}' AND '${endDate}'`;
+    if (status) whereClause += ` AND chargeback_status = '${status}'`;
 
     const sql = `
-      SELECT 
-        CBK_ID,
-        DSPUT_RCVD_DT,
-        DSPUT_RSN_CD,
-        DSPUT_RSN_DESC,
-        CBK_STATUS,
-        CBK_WIN_LOSS,
-        CHARGEBACK_CYCLE,
-        MRCH_NM,
-        CARD_BRND,
-        DSPUT_AMT,
-        TXN_AMT
-      FROM COCO_SDLC_HOL.CLEA.CHARGEBACK_DMCL_V1
+      SELECT
+        chargeback_id,
+        dispute_received_date,
+        reason_code,
+        reason_description,
+        chargeback_status,
+        outcome,
+        lifecycle_stage,
+        merchant_name,
+        card_brand,
+        dispute_amount,
+        transaction_amount
+      FROM COCO_SDLC_HOL.MARTS.CHARGEBACKS
       ${whereClause}
-      ORDER BY DSPUT_RCVD_DT DESC
+      ORDER BY dispute_received_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      cbkId: row.CBK_ID,
-      disputeDate: row.DSPUT_RCVD_DT,
-      reasonCode: row.DSPUT_RSN_CD,
-      reasonDescription: row.DSPUT_RSN_DESC,
-      status: row.CBK_STATUS,
-      winLoss: row.CBK_WIN_LOSS,
-      cycle: row.CHARGEBACK_CYCLE,
-      merchantName: row.MRCH_NM,
-      cardBrand: row.CARD_BRND,
-      disputeAmount: Number(row.DSPUT_AMT) || 0,
-      transactionAmount: Number(row.TXN_AMT) || 0,
+      cbkId: row.CHARGEBACK_ID,
+      disputeDate: row.DISPUTE_RECEIVED_DATE,
+      reasonCode: row.REASON_CODE,
+      reasonDescription: row.REASON_DESCRIPTION,
+      status: row.CHARGEBACK_STATUS,
+      winLoss: row.OUTCOME,
+      cycle: row.LIFECYCLE_STAGE,
+      merchantName: row.MERCHANT_NAME,
+      cardBrand: row.CARD_BRAND,
+      disputeAmount: Number(row.DISPUTE_AMOUNT) || 0,
+      transactionAmount: Number(row.TRANSACTION_AMOUNT) || 0,
     }));
 
     return NextResponse.json({

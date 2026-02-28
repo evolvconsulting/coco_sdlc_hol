@@ -24,41 +24,41 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let whereClause = `WHERE TXNDATE BETWEEN '${startDate}' AND '${endDate}'`;
-    if (cardBrand) whereClause += ` AND CARD_BRND = '${cardBrand}'`;
-    if (status === 'approved') whereClause += ` AND APPROVALCODE = 1`;
-    if (status === 'declined') whereClause += ` AND APPROVALCODE = 0`;
+    let whereClause = `WHERE transaction_date BETWEEN '${startDate}' AND '${endDate}'`;
+    if (cardBrand) whereClause += ` AND card_brand = '${cardBrand}'`;
+    if (status === 'approved') whereClause += ` AND approval_status = 'Approved'`;
+    if (status === 'declined') whereClause += ` AND approval_status = 'Declined'`;
 
     const sql = `
-      SELECT 
-        AUTH_ID,
-        TXNDATE,
-        CARD_BRND,
-        AMOUNT,
-        APPROVALCODE,
-        DECLINEREASON,
-        LCTN_DBA_NM,
-        PAYMENTMETHOD,
-        NETWORK,
-        RISK_SCORE
-      FROM COCO_SDLC_HOL.CLEA.AUTH_DMCL_V1
+      SELECT
+        authorization_id,
+        transaction_date,
+        card_brand,
+        transaction_amount,
+        approval_status,
+        decline_reason,
+        merchant_name,
+        payment_method,
+        processing_network,
+        risk_score
+      FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
       ${whereClause}
-      ORDER BY TXNDATE DESC
+      ORDER BY transaction_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      authId: row.AUTH_ID,
-      txnDate: row.TXNDATE,
-      cardBrand: row.CARD_BRND,
-      amount: Number(row.AMOUNT) || 0,
-      status: row.APPROVALCODE === 1 ? 'Approved' : 'Declined',
-      declineReason: row.DECLINEREASON,
-      merchantName: row.LCTN_DBA_NM,
-      paymentMethod: row.PAYMENTMETHOD,
-      network: row.NETWORK,
+      authId: row.AUTHORIZATION_ID,
+      txnDate: row.TRANSACTION_DATE,
+      cardBrand: row.CARD_BRAND,
+      amount: Number(row.TRANSACTION_AMOUNT) || 0,
+      status: row.APPROVAL_STATUS,
+      declineReason: row.DECLINE_REASON,
+      merchantName: row.MERCHANT_NAME,
+      paymentMethod: row.PAYMENT_METHOD,
+      network: row.PROCESSING_NETWORK,
       riskScore: Number(row.RISK_SCORE) || 0,
     }));
 

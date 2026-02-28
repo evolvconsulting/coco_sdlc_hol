@@ -10,6 +10,9 @@ with enriched as (
 )
 
 select
+    -- Surrogate key
+    retrieval_id,
+
     -- Dates
     original_sale_date,
     response_due_date,
@@ -20,7 +23,8 @@ select
     
     -- Reason
     reason_code,
-    
+    reason_description,
+
     -- Reference
     acquirer_reference_number as reference_number,
     
