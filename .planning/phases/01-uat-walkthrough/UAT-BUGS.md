@@ -78,3 +78,23 @@ Two additional bugs were identified and fixed during the browser walkthrough ses
 | 8 | All pages | Dev server failed to start with lightningcss module resolution error | Multiple `package-lock.json` files in parent directories confused Turbopack | Added `turbopack.root` in `next.config.ts` pointing to monorepo root | Blocker |
 
 Both fixed before final human verification. All 7 domains confirmed working.
+
+## Phase 1 UAT Sign-Off
+
+**Date completed:** 2026-02-28
+**Tester:** Trent Foley
+
+| Requirement | Status | Notes |
+|-------------|--------|-------|
+| UAT-01 Home Dashboard | PASS | 6 domain KPI cards showing real data |
+| UAT-02 Authorization | PASS | ~2,969 transactions, ~90.9% approval rate |
+| UAT-03 Settlement | PASS | Real net volume data, by-merchant breakdown |
+| UAT-04 Funding | PASS | Real deposit totals, timeseries |
+| UAT-05 Chargeback | PASS | Real dispute data, by-reason breakdown |
+| UAT-06 Retrieval | PASS | ~23 retrievals after retrieval_received_date fix |
+| UAT-07 Adjustment | PASS | Real adjustment data |
+| UAT-08 AI Chat | PASS | Contextually relevant streaming response verified |
+
+**Overall Phase 1 Status:** PASS
+
+All 8 UAT requirements satisfied. 8 bugs found during UAT — all auto-fixed (6 SQL column name mismatches, 1 wrong date filter column, 1 Turbopack config). No open Blocker or Major issues. Phase 1 UAT sign-off approved.
