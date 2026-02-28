@@ -9,8 +9,8 @@ const SNOWFLAKE_HOST = (process.env.SNOWFLAKE_HOST || '').trim();
 const SNOWFLAKE_USER = (process.env.SNOWFLAKE_USER || '').trim();
 const SNOWFLAKE_PRIVATE_KEY_PATH = (process.env.SNOWFLAKE_PRIVATE_KEY_PATH || '').trim();
 const SNOWFLAKE_PRIVATE_KEY = (process.env.SNOWFLAKE_PRIVATE_KEY || '').trim();
-const AGENT_DATABASE = (process.env.CORTEX_AGENT_DATABASE || process.env.SNOWFLAKE_DATABASE || 'COCO_SDLC_HOL').trim();
-const AGENT_SCHEMA = (process.env.CORTEX_AGENT_SCHEMA || process.env.SNOWFLAKE_SCHEMA || 'CLEA').trim();
+const AGENT_DATABASE = (process.env.SNOWFLAKE_DATABASE || 'COCO_SDLC_HOL').trim();
+const AGENT_SCHEMA = (process.env.SNOWFLAKE_SCHEMA || 'MARTS').trim();
 const AGENT_NAME = (process.env.CORTEX_AGENT_NAME || 'PAYMENT_ANALYTICS_AGENT').trim();
 
 // Generate JWT token for Snowflake authentication
