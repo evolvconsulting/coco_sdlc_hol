@@ -1,0 +1,158 @@
+# =============================================================================
+# CLX Staging Models Documentation
+# =============================================================================
+
+version: 2
+
+models:
+  # ===========================================================================
+  # Dimension/Reference Staging Models
+  # ===========================================================================
+  - name: stg_clx_mrch_mstr
+    description: |
+      Staging view for merchant master data.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: mrch_key
+        description: "Primary key (UUID)"
+        tests: [unique, not_null]
+      - name: lctn_dba_nm
+        description: "Location DBA name (legacy: LCTN_DBA_NM)"
+      - name: corp_dba_nm
+        description: "Corporate DBA name (legacy: CORP_DBA_NM)"
+
+  - name: stg_glb_bin
+    description: |
+      Staging view for global BIN reference data.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: bin_id
+        description: "Bank Identification Number"
+        tests: [unique, not_null]
+      - name: card_brnd
+        description: "Card brand (legacy: CARD_BRND)"
+
+  - name: stg_pltf_ref
+    description: |
+      Staging view for platform/processor reference data.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: pltf_id
+        description: "Platform ID"
+        tests: [unique, not_null]
+      - name: pltf_nm
+        description: "Platform name (legacy: PLTF_NM)"
+
+  - name: stg_dcln_rsn_cd
+    description: |
+      Staging view for decline reason codes.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: dcln_rsn_id
+        description: "Decline reason ID"
+        tests: [unique, not_null]
+      - name: dcln_rsn_cd
+        description: "Decline reason code (legacy: DCLN_RSN_CD)"
+      - name: dcln_rsn_desc
+        description: "Decline reason description (legacy: DCLN_RSN_DESC)"
+
+  - name: stg_cbk_rsn_cd
+    description: |
+      Staging view for chargeback reason codes.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: cbk_rsn_id
+        description: "Chargeback reason ID"
+        tests: [unique, not_null]
+      - name: rsn_cd
+        description: "Reason code (legacy: RSN_CD)"
+
+  # ===========================================================================
+  # Transactional Staging Models
+  # ===========================================================================
+  - name: stg_clx_auth
+    description: |
+      Staging view for authorization transactions.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+      
+      Column name transformation example:
+      - `txn_dt` -> `transaction_date` (intermediate) -> `TRANSACTION_DATE` (marts)
+      - `txn_am` -> `transaction_amount` (intermediate) -> `TRANSACTION_AMOUNT` (marts)
+      - `aprvl_cd` -> `approval_status_code` (intermediate) -> `APPROVAL_STATUS_CODE` (marts)
+    columns:
+      - name: auth_id
+        description: "Authorization ID (UUID)"
+        tests: [unique, not_null]
+      - name: txn_dt
+        description: "Transaction date (legacy: TXN_DT)"
+      - name: txn_am
+        description: "Transaction amount (legacy: TXN_AM)"
+      - name: aprvl_cd
+        description: "Approval code: 0=Unknown, 1=Approved, 2=Declined (legacy: APRVL_CD)"
+
+  - name: stg_clx_settle
+    description: |
+      Staging view for settlement transactions.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: settle_id
+        description: "Settlement ID (UUID)"
+        tests: [unique, not_null]
+      - name: rcrd_dt
+        description: "Record/settlement date (legacy: RCRD_DT)"
+      - name: prcs_net_am
+        description: "Processed net amount (legacy: PRCS_NET_AM)"
+
+  - name: stg_clx_fund
+    description: |
+      Staging view for funding/deposit transactions.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: fund_id
+        description: "Funding ID (UUID)"
+        tests: [unique, not_null]
+      - name: funded_dt
+        description: "Funded date (legacy: FUNDED_DT)"
+      - name: dpst_am
+        description: "Deposit amount (legacy: DPST_AM)"
+
+  - name: stg_clx_cbk
+    description: |
+      Staging view for chargeback transactions.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: cbk_id
+        description: "Chargeback ID (UUID)"
+        tests: [unique, not_null]
+      - name: dsput_rcvd_dt
+        description: "Dispute received date (legacy: DSPUT_RCVD_DT)"
+      - name: cbk_stat
+        description: "Chargeback status (legacy: CBK_STAT)"
+      - name: cbk_win_loss
+        description: "Win/Loss indicator (legacy: CBK_WIN_LOSS)"
+
+  - name: stg_clx_rtrvl
+    description: |
+      Staging view for retrieval requests.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: rtrvl_id
+        description: "Retrieval ID (UUID)"
+        tests: [unique, not_null]
+      - name: rtrvl_am
+        description: "Retrieval amount (legacy: RTRVL_AM)"
+      - name: rtrvl_stat
+        description: "Retrieval status (legacy: RTRVL_STAT)"
+
+  - name: stg_clx_adj
+    description: |
+      Staging view for adjustments.
+      **Legacy names preserved** - will be clarified in intermediate layer.
+    columns:
+      - name: adj_id
+        description: "Adjustment ID (UUID)"
+        tests: [unique, not_null]
+      - name: adj_am
+        description: "Adjustment amount (legacy: ADJ_AM)"
+      - name: adj_typ_cd
+        description: "Adjustment type: C=Credit, D=Debit (legacy: ADJ_TYP_CD)"

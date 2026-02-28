@@ -1,0 +1,73 @@
+# =============================================================================
+# EVOLV PERFORMANCE INTELLIGENCE - dbt Project Configuration
+# =============================================================================
+# This project demonstrates a medallion architecture transforming legacy OLTP
+# data through staging, intermediate, and marts layers.
+# =============================================================================
+
+name: 'evolv_performance_intelligence'
+version: '1.0.0'
+config-version: 2
+
+# This setting configures which "profile" dbt uses for this project.
+profile: 'evolv_pi'
+
+# These configurations specify where dbt should look for different types of files.
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# =============================================================================
+# Model Configurations
+# =============================================================================
+# Materialization strategy:
+# - Staging: Views (lightweight, always current)
+# - Intermediate: Dynamic Tables (auto-refresh with 1-hour lag)
+# - Marts: Dynamic Tables (auto-refresh with 1-hour lag)
+# =============================================================================
+
+models:
+  coco_sdlc_hol:
+    # Staging layer - Views over raw tables
+    staging:
+      +materialized: view
+      +schema: staging
+      +tags: ['staging', 'bronze']
+      clx:
+        +description: "Staging views for CLX source data"
+
+    # Intermediate layer - Enriched dynamic tables
+    intermediate:
+      +materialized: dynamic_table
+      +schema: intermediate
+      +tags: ['intermediate', 'silver']
+      +snowflake_warehouse: COMPUTE_WH
+      +target_lag: '1 hour'
+      payments:
+        +description: "Enriched payment data with business logic"
+
+    # Marts layer - Business-ready dynamic tables
+    marts:
+      +materialized: dynamic_table
+      +schema: marts
+      +tags: ['marts', 'gold']
+      +snowflake_warehouse: COMPUTE_WH
+      +target_lag: '1 hour'
+      payments:
+        +description: "Business-ready payment analytics"
+
+# =============================================================================
+# Variable Definitions
+# =============================================================================
+vars:
+  # Client filter for demo data
+  client_id: 'dmcl'
+flags:
+  require_generic_test_arguments_property: true

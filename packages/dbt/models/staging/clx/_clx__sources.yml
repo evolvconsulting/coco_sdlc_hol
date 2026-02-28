@@ -1,0 +1,180 @@
+# =============================================================================
+# CLX Source Definitions
+# =============================================================================
+# These sources reference the RAW normalized tables that will be created
+# to emulate a legacy OLTP system with abbreviated column names.
+# =============================================================================
+
+version: 2
+
+sources:
+  - name: raw
+    description: "Raw normalized OLTP-style tables with legacy naming conventions"
+    database: COCO_SDLC_HOL
+    schema: RAW
+
+    tables:
+      # =======================================================================
+      # Dimension Tables (Reference Data)
+      # =======================================================================
+      - name: CLX_MRCH_MSTR
+        description: "Merchant master data with legacy OLTP naming"
+        columns:
+          - name: MRCH_KEY
+            description: "Primary key - Unique merchant key (UUID)"
+            tests:
+              - unique
+              - not_null
+          - name: CLNT_ID
+            description: "Client identifier"
+          - name: MRCH_ID
+            description: "External merchant ID"
+          - name: LCTN_ID
+            description: "Store/location ID"
+          - name: LCTN_DBA_NM
+            description: "Location DBA name"
+          - name: CORP_DBA_NM
+            description: "Corporate DBA name"
+
+      - name: GLB_BIN
+        description: "Global BIN reference with card metadata"
+        columns:
+          - name: BIN_ID
+            description: "Bank Identification Number"
+            tests:
+              - unique
+              - not_null
+          - name: CARD_BRND
+            description: "Card brand"
+          - name: CARD_TYP
+            description: "Card type"
+
+      - name: PLTF_REF
+        description: "Platform/Processor reference data"
+        columns:
+          - name: PLTF_ID
+            description: "Platform ID"
+            tests:
+              - unique
+              - not_null
+          - name: PLTF_NM
+            description: "Platform name"
+
+      - name: DCLN_RSN_CD
+        description: "Decline reason codes reference"
+        columns:
+          - name: DCLN_RSN_ID
+            description: "Decline reason ID"
+            tests:
+              - unique
+              - not_null
+          - name: DCLN_RSN_CD
+            description: "Decline reason code"
+          - name: DCLN_RSN_DESC
+            description: "Decline reason description"
+
+      - name: CBK_RSN_CD
+        description: "Chargeback reason codes reference"
+        columns:
+          - name: CBK_RSN_ID
+            description: "Chargeback reason ID"
+            tests:
+              - unique
+              - not_null
+          - name: RSN_CD
+            description: "Reason code"
+          - name: RSN_DESC
+            description: "Reason description"
+
+      # =======================================================================
+      # Fact Tables (Transactional Data)
+      # =======================================================================
+      - name: CLX_AUTH
+        description: "Authorization transactions with legacy column names"
+        columns:
+          - name: AUTH_ID
+            description: "Authorization ID (UUID)"
+            tests:
+              - unique
+              - not_null
+          - name: CLNT_ID
+            description: "Client ID"
+          - name: TXN_DT
+            description: "Transaction date"
+          - name: TXN_AM
+            description: "Transaction amount"
+
+        config:
+          freshness:
+            warn_after: {count: 4, period: hour}
+            error_after: {count: 24, period: hour}
+          loaded_at_field: CRT_TS
+      - name: CLX_SETTLE
+        description: "Settlement transactions with legacy column names"
+        columns:
+          - name: SETTLE_ID
+            description: "Settlement ID (UUID)"
+            tests:
+              - unique
+              - not_null
+
+        config:
+          freshness:
+            warn_after: {count: 4, period: hour}
+            error_after: {count: 24, period: hour}
+          loaded_at_field: CRT_TS
+      - name: CLX_FUND
+        description: "Funding/deposit transactions with legacy column names"
+        columns:
+          - name: FUND_ID
+            description: "Funding ID (UUID)"
+            tests:
+              - unique
+              - not_null
+
+        config:
+          freshness:
+            warn_after: {count: 4, period: hour}
+            error_after: {count: 24, period: hour}
+          loaded_at_field: CRT_TS
+      - name: CLX_CBK
+        description: "Chargeback transactions with legacy column names"
+        columns:
+          - name: CBK_ID
+            description: "Chargeback ID (UUID)"
+            tests:
+              - unique
+              - not_null
+
+        config:
+          freshness:
+            warn_after: {count: 4, period: hour}
+            error_after: {count: 24, period: hour}
+          loaded_at_field: CRT_TS
+      - name: CLX_RTRVL
+        description: "Retrieval requests with legacy column names"
+        columns:
+          - name: RTRVL_ID
+            description: "Retrieval ID (UUID)"
+            tests:
+              - unique
+              - not_null
+
+        config:
+          freshness:
+            warn_after: {count: 4, period: hour}
+            error_after: {count: 24, period: hour}
+          loaded_at_field: CRT_TS
+      - name: CLX_ADJ
+        description: "Adjustments with legacy column names"
+        columns:
+          - name: ADJ_ID
+            description: "Adjustment ID (UUID)"
+            tests:
+              - unique
+              - not_null
+        config:
+          freshness:
+            warn_after: {count: 4, period: hour}
+            error_after: {count: 24, period: hour}
+          loaded_at_field: CRT_TS

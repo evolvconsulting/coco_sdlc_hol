@@ -1,0 +1,147 @@
+# =============================================================================
+# Intermediate Payments Models Documentation
+# =============================================================================
+
+version: 2
+
+models:
+  - name: int_authorizations__enriched
+    description: |
+      Enriched authorization transactions with clarified column names.
+      
+      **Column Name Transformation (Legacy -> Intermediate):**
+      - `txn_dt` -> `transaction_date`
+      - `txn_am` -> `transaction_amount`
+      - `aprvl_cd` -> `approval_status_code`
+      - `dcln_rsn_tx` -> `decline_reason_text`
+      - `bin_id` -> `card_bin`
+      - `card_lst4` -> `card_last_four`
+      - `pymt_mthd` -> `payment_method`
+      
+      **Enrichment:**
+      - Card details from BIN reference
+      - Merchant details from merchant master
+      - Processor name from platform reference
+      - Decline descriptions from reason codes
+      - Derived approval_status from code
+    columns:
+      - name: authorization_id
+        description: "Primary key (UUID)"
+        tests: [unique, not_null]
+      - name: transaction_date
+        description: "Transaction date (clarified from txn_dt)"
+      - name: transaction_amount
+        description: "Transaction amount in USD (clarified from txn_am)"
+      - name: approval_status
+        description: "Derived: 'Approved', 'Declined', or 'Unknown'"
+      - name: merchant_dba_name
+        description: "Merchant location name (enriched from join)"
+      - name: processor_name
+        description: "Processor platform name (enriched from join)"
+
+  - name: int_settlements__enriched
+    description: |
+      Enriched settlement transactions with clarified column names.
+      
+      **Column Name Transformation (Legacy -> Intermediate):**
+      - `rcrd_dt` -> `settlement_date`
+      - `prcs_net_am` -> `net_settlement_amount`
+      - `dscn_am` -> `discount_fee_amount`
+      - `sales_ct` -> `sales_transaction_count`
+    columns:
+      - name: settlement_id
+        description: "Primary key (UUID)"
+        tests: [unique, not_null]
+      - name: settlement_date
+        description: "Settlement date (clarified from rcrd_dt)"
+      - name: net_settlement_amount
+        description: "Net settlement amount (clarified from prcs_net_am)"
+
+  - name: int_deposits__enriched
+    description: |
+      Enriched deposit/funding transactions with clarified column names.
+      
+      **Column Name Transformation (Legacy -> Intermediate):**
+      - `dpst_am` -> `total_deposit_amount`
+      - `funded_dt` -> `deposit_date`
+      - `fees_am` -> `total_fees_amount`
+      - `cbk_am` -> `chargeback_deduction_amount`
+      
+      **Enrichment:**
+      - Derived fee breakdown (interchange vs service)
+      - Category codes from transaction_category
+    columns:
+      - name: deposit_id
+        description: "Primary key (UUID)"
+        tests: [unique, not_null]
+      - name: deposit_date
+        description: "Deposit date (clarified from funded_dt)"
+      - name: total_deposit_amount
+        description: "Total deposit amount (clarified from dpst_am)"
+
+  - name: int_chargebacks__enriched
+    description: |
+      Enriched chargeback transactions with clarified column names.
+      
+      **Column Name Transformation (Legacy -> Intermediate):**
+      - `dsput_rcvd_dt` -> `dispute_received_date`
+      - `dsput_am` -> `dispute_amount`
+      - `cbk_stat` -> `chargeback_status`
+      - `cbk_win_loss` -> `chargeback_outcome`
+      - `cbk_cycl` -> `lifecycle_stage`
+      
+      **Enrichment:**
+      - Reason descriptions from chargeback reason codes
+      - Merchant details from merchant master
+      - Derived days_until_due and is_past_due
+    columns:
+      - name: chargeback_id
+        description: "Primary key (UUID)"
+        tests: [unique, not_null]
+      - name: dispute_received_date
+        description: "Dispute received date (clarified from dsput_rcvd_dt)"
+      - name: chargeback_status
+        description: "Current status (clarified from cbk_stat)"
+      - name: chargeback_outcome
+        description: "Won/Lost (clarified from cbk_win_loss)"
+
+  - name: int_retrievals__enriched
+    description: |
+      Enriched retrieval requests with clarified column names.
+      
+      **Column Name Transformation (Legacy -> Intermediate):**
+      - `rtrvl_rcvd_dt` -> `retrieval_received_date`
+      - `rtrvl_am` -> `retrieval_amount`
+      - `rtrvl_stat` -> `retrieval_status`
+      - `sale_dt` -> `original_sale_date`
+      
+      **Enrichment:**
+      - Derived days_until_due and is_overdue
+    columns:
+      - name: retrieval_id
+        description: "Primary key (UUID)"
+        tests: [unique, not_null]
+      - name: retrieval_received_date
+        description: "Received date (clarified from rtrvl_rcvd_dt)"
+      - name: retrieval_status
+        description: "Current status (clarified from rtrvl_stat)"
+
+  - name: int_adjustments__enriched
+    description: |
+      Enriched adjustments with clarified column names.
+      
+      **Column Name Transformation (Legacy -> Intermediate):**
+      - `adj_am` -> `adjustment_amount`
+      - `adj_typ_cd` -> `adjustment_type_code`
+      - `adj_desc` -> `adjustment_description`
+      
+      **Enrichment:**
+      - Derived adjustment_type ('Credit'/'Debit') from type code
+    columns:
+      - name: adjustment_id
+        description: "Primary key (UUID)"
+        tests: [unique, not_null]
+      - name: adjustment_amount
+        description: "Adjustment amount (clarified from adj_am)"
+      - name: adjustment_type
+        description: "Derived: 'Credit' or 'Debit' from adj_typ_cd"

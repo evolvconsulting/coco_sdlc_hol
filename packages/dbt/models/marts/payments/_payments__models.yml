@@ -1,0 +1,122 @@
+# =============================================================================
+# Marts Payments Models Documentation
+# =============================================================================
+# These models represent the final business-ready tables for the semantic view.
+# =============================================================================
+
+version: 2
+
+models:
+  - name: authorizations
+    description: |
+      **Business-ready authorization analytics table.**
+      
+      Key columns: `transaction_date`, `transaction_amount`, `approval_status`,
+      `merchant_name`, `card_brand`, `processor_name`
+      
+      Referenced by: `PAYMENT_ANALYTICS` semantic view
+    columns:
+      - name: transaction_date
+        description: "Date of authorization transaction"
+      - name: transaction_amount
+        description: "Transaction amount in USD"
+      - name: approval_status_code
+        description: "Raw approval code (0=Unknown, 1=Approved, 2=Declined)"
+      - name: approval_status
+        description: "Friendly status: 'Approved', 'Declined', 'Unknown'"
+      - name: decline_reason
+        description: "Reason for decline (if applicable)"
+      - name: merchant_name
+        description: "Merchant location name"
+      - name: card_brand
+        description: "Card brand (Visa, Mastercard, etc.)"
+
+  - name: settlements
+    description: |
+      **Business-ready settlement analytics table.**
+      
+      Key columns: `settlement_date`, `net_amount`, `sales_amount`,
+      `merchant_name`, `card_brand`, `batch_number`
+      
+      Referenced by: `PAYMENT_ANALYTICS` semantic view
+    columns:
+      - name: settlement_date
+        description: "Date settlement was processed"
+      - name: net_amount
+        description: "Net settlement amount"
+      - name: sales_count
+        description: "Number of sales transactions"
+      - name: refund_count
+        description: "Number of refund transactions"
+
+  - name: deposits
+    description: |
+      **Business-ready deposit/funding analytics table.**
+      
+      Key columns: `deposit_date`, `deposit_amount`, `net_sales_amount`,
+      `total_fees_amount`, `interchange_charges`, `service_charges`
+      
+      Referenced by: `PAYMENT_ANALYTICS` semantic view
+    columns:
+      - name: deposit_date
+        description: "Date funds were deposited"
+      - name: deposit_amount
+        description: "Total deposit amount"
+      - name: total_fees_amount
+        description: "Total fees deducted"
+      - name: chargeback_amount
+        description: "Chargeback deductions"
+
+  - name: chargebacks
+    description: |
+      **Business-ready chargeback analytics table.**
+      
+      Key columns: `dispute_received_date`, `dispute_amount`, `chargeback_status`,
+      `outcome`, `lifecycle_stage`, `reason_code`
+      
+      Referenced by: `PAYMENT_ANALYTICS` semantic view
+    columns:
+      - name: dispute_received_date
+        description: "Date dispute was received"
+      - name: dispute_amount
+        description: "Amount being disputed"
+      - name: chargeback_status
+        description: "Current status (Open, Pending, Closed)"
+      - name: outcome
+        description: "Final outcome (Won, Lost, Pending)"
+      - name: lifecycle_stage
+        description: "Stage (Chargeback, Pre-Arbitration, Arbitration)"
+
+  - name: retrievals
+    description: |
+      **Business-ready retrieval request analytics table.**
+      
+      Key columns: `original_sale_date`, `response_due_date`, `retrieval_status`,
+      `retrieval_amount`, `merchant_name`
+      
+      Referenced by: `PAYMENT_ANALYTICS` semantic view
+    columns:
+      - name: original_sale_date
+        description: "Original transaction date"
+      - name: retrieval_status
+        description: "Current status (Open, Closed, Expired)"
+      - name: retrieval_amount
+        description: "Amount of retrieval request"
+
+  - name: adjustments
+    description: |
+      **Business-ready adjustment analytics table.**
+      
+      Key columns: `adjustment_date`, `adjustment_amount`, `adjustment_type`,
+      `adjustment_code`, `adjustment_category`
+      
+      Referenced by: `PAYMENT_ANALYTICS` semantic view
+    columns:
+      - name: adjustment_date
+        description: "Date of adjustment"
+      - name: adjustment_amount
+        description: "Adjustment amount (positive=credit, negative=debit)"
+      - name: adjustment_type
+        description: "'Credit' or 'Debit'"
+      - name: adjustment_code
+        description: "Adjustment type code"

@@ -37,7 +37,6 @@ coverage/
 **/dbt_packages/
 **/dbt_internal_packages/
 **/logs/
-package-lock.yml
 
 # Misc
 .cortex/
