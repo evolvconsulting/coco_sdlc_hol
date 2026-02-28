@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 1 of 4 (UAT Walkthrough)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: In progress
-Last activity: 2026-02-28 — Plan 01-01 complete (environment pre-flight, Snowflake connectivity confirmed)
+Last activity: 2026-02-28 — Plan 01-02 complete (domain walkthrough, all 7 pages verified, 8 bugs auto-fixed)
 
-Progress: [█░░░░░░░░░] 8% (1/3 plans in Phase 1)
+Progress: [██░░░░░░░░] 17% (2/3 plans in Phase 1)
 
 ## Performance Metrics
 
@@ -27,11 +27,11 @@ Progress: [█░░░░░░░░░] 8% (1/3 plans in Phase 1)
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 1. UAT Walkthrough | 1 | ~45 min | ~45 min |
+| 1. UAT Walkthrough | 2 | ~165 min | ~82 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01
-- Trend: -
+- Last 5 plans: 01-01, 01-02
+- Trend: 01-02 took ~120 min (includes 8 auto-fixes and human browser verification)
 
 *Updated after each plan completion*
 
@@ -50,6 +50,10 @@ Recent decisions affecting current work:
 - [01-01]: CORTEX_AGENT_NAME=PAYMENT_ANALYTICS_AGENT
 - [01-01]: Snowflake CLI connection name "ennovate" for all diagnostic SQL
 - [01-01]: Plan 02 test window: 2026-01-13 to 2026-02-22 (all 6 MARTS tables have data)
+- [01-02]: MARTS tables use *_key naming convention for primary keys (not *_id) — affects all domain details routes
+- [01-02]: Retrieval primary date column is retrieval_received_date (original_sale_date range is ~3 months earlier, outside test window)
+- [01-02]: Turbopack requires turbopack.root = monorepo root in next.config.ts to resolve lightningcss in multi-lockfile workspace
+- [01-02]: All 7 UAT domains (UAT-01 through UAT-07) verified PASS — no outstanding bugs entering Plan 03
 
 ### Pending Todos
 
@@ -64,5 +68,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 01-01-PLAN.md — environment pre-flight complete, ready for 01-02 domain walkthrough
+Stopped at: Completed 01-02-PLAN.md — domain walkthrough complete, all 7 UAT pages verified, ready for 01-03
 Resume file: None

@@ -52,14 +52,29 @@
 
 ## Browser Walkthrough Results
 
-*Awaiting human verification — see checkpoint below.*
+**Human verification completed 2026-02-28. Signal: "all pass"**
 
-| Page | URL | Status |
-|------|-----|--------|
-| Home Dashboard (UAT-01) | http://localhost:3000/ | Pending |
-| Authorization (UAT-02) | http://localhost:3000/analytics/authorization | Pending |
-| Settlement (UAT-03) | http://localhost:3000/analytics/settlement | Pending |
-| Funding (UAT-04) | http://localhost:3000/analytics/funding | Pending |
-| Chargeback (UAT-05) | http://localhost:3000/analytics/chargeback | Pending |
-| Retrieval (UAT-06) | http://localhost:3000/analytics/retrieval | Pending |
-| Adjustment (UAT-07) | http://localhost:3000/analytics/adjustment | Pending |
+**Date range tested:** 2026-01-13 to 2026-02-22
+
+| Page | URL | Status | Notes |
+|------|-----|--------|-------|
+| Home Dashboard (UAT-01) | http://localhost:3000/ | PASS | 6 domain KPI cards showing real values |
+| Authorization (UAT-02) | http://localhost:3000/analytics/authorization | PASS | ~2,969 transactions, ~90.9% approval rate |
+| Settlement (UAT-03) | http://localhost:3000/analytics/settlement | PASS | Real net volume data, by-merchant breakdown |
+| Funding (UAT-04) | http://localhost:3000/analytics/funding | PASS | Real deposit totals, timeseries |
+| Chargeback (UAT-05) | http://localhost:3000/analytics/chargeback | PASS | Real dispute data, by-reason breakdown |
+| Retrieval (UAT-06) | http://localhost:3000/analytics/retrieval | PASS | ~23 retrievals (after date column fix) |
+| Adjustment (UAT-07) | http://localhost:3000/analytics/adjustment | PASS | Real adjustment data |
+
+**Summary: 7/7 domains PASSED. 0 bugs from browser walkthrough. 0 blockers.**
+
+### Additional Bugs Found During Walkthrough
+
+Two additional bugs were identified and fixed during the browser walkthrough session (after the initial API smoke test):
+
+| # | Domain | Issue | Root Cause | Fix | Severity |
+|---|--------|-------|------------|-----|----------|
+| 7 | Retrieval | KPIs returned 0 records despite MARTS data existing | Date filter used `original_sale_date` (range: 2025-11-29 to 2026-01-28, outside test window) | Changed to `retrieval_received_date` (range: 2026-01-13 to 2026-02-22, within test window) | Major |
+| 8 | All pages | Dev server failed to start with lightningcss module resolution error | Multiple `package-lock.json` files in parent directories confused Turbopack | Added `turbopack.root` in `next.config.ts` pointing to monorepo root | Blocker |
+
+Both fixed before final human verification. All 7 domains confirmed working.

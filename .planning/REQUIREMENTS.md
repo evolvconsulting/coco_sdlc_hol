@@ -9,13 +9,13 @@ Requirements for production deployment within 2 days.
 
 ### UAT / Functional Verification
 
-- [ ] **UAT-01**: Home dashboard displays cross-domain KPI overview with real Snowflake data
-- [ ] **UAT-02**: Authorization page shows correct KPIs, timeseries, by-brand, declines, and details
-- [ ] **UAT-03**: Settlement page shows correct KPIs, by-merchant, timeseries, and details
-- [ ] **UAT-04**: Funding page shows correct KPIs, timeseries, and details
-- [ ] **UAT-05**: Chargeback page shows correct KPIs, by-reason, and details
-- [ ] **UAT-06**: Retrieval page shows correct KPIs and details
-- [ ] **UAT-07**: Adjustment page shows correct KPIs and details
+- [x] **UAT-01**: Home dashboard displays cross-domain KPI overview with real Snowflake data
+- [x] **UAT-02**: Authorization page shows correct KPIs, timeseries, by-brand, declines, and details
+- [x] **UAT-03**: Settlement page shows correct KPIs, by-merchant, timeseries, and details
+- [x] **UAT-04**: Funding page shows correct KPIs, timeseries, and details
+- [x] **UAT-05**: Chargeback page shows correct KPIs, by-reason, and details
+- [x] **UAT-06**: Retrieval page shows correct KPIs and details
+- [x] **UAT-07**: Adjustment page shows correct KPIs and details
 - [ ] **UAT-08**: AI chat returns meaningful responses to natural language queries about transaction data
 
 ### UX / UI Polish
@@ -77,13 +77,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| UAT-01 | Phase 1 | Pending |
-| UAT-02 | Phase 1 | Pending |
-| UAT-03 | Phase 1 | Pending |
-| UAT-04 | Phase 1 | Pending |
-| UAT-05 | Phase 1 | Pending |
-| UAT-06 | Phase 1 | Pending |
-| UAT-07 | Phase 1 | Pending |
+| UAT-01 | Phase 1 | Complete (01-02) |
+| UAT-02 | Phase 1 | Complete (01-02) |
+| UAT-03 | Phase 1 | Complete (01-02) |
+| UAT-04 | Phase 1 | Complete (01-02) |
+| UAT-05 | Phase 1 | Complete (01-02) |
+| UAT-06 | Phase 1 | Complete (01-02) |
+| UAT-07 | Phase 1 | Complete (01-02) |
 | UAT-08 | Phase 1 | Pending |
 | UX-01 | Phase 2 | Pending |
 | UX-02 | Phase 2 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after initial definition*
+*Last updated: 2026-02-28 after 01-02 completion (UAT-01 through UAT-07 marked complete)*
