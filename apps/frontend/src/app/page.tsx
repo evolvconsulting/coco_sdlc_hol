@@ -1,5 +1,7 @@
 'use client';
-import { Card, Row, Col, Statistic, Typography, Space, Button, Tag } from 'antd';
+
+import { useCallback } from 'react';
+import { Card, Row, Col, Statistic, Typography, Space, Button, Tag, Spin } from 'antd';
 import {
   CreditCardOutlined,
   BankOutlined,
@@ -14,49 +16,17 @@ import {
 } from '@ant-design/icons';
 import Link from 'next/link';
 import { DOMAINS } from '@/types/domain';
+import { useAnalyticsData } from '@/hooks';
+import type {
+  AuthorizationKPIs,
+  SettlementKPIs,
+  FundingKPIs,
+  ChargebackKPIs,
+  RetrievalKPIs,
+  AdjustmentKPIs,
+} from '@/types/domain';
 
 const { Title, Text, Paragraph } = Typography;
-
-// Mock KPI data for dashboard overview
-const dashboardKPIs = {
-  authorization: {
-    value: 1247893,
-    approvalRate: 96.4,
-    trend: 2.3,
-    trendUp: true,
-  },
-  settlement: {
-    value: 45678234.56,
-    netVolume: 42156789.12,
-    trend: 5.1,
-    trendUp: true,
-  },
-  funding: {
-    value: 38234567.89,
-    deposits: 412,
-    trend: -1.2,
-    trendUp: false,
-  },
-  chargeback: {
-    value: 1234,
-    disputeAmount: 234567.89,
-    trend: -8.5,
-    trendUp: true, // Down is good for chargebacks
-  },
-  retrieval: {
-    value: 567,
-    openCount: 89,
-    trend: 3.2,
-    trendUp: false,
-  },
-  adjustment: {
-    value: -12345.67,
-    creditCount: 234,
-    debitCount: 156,
-    trend: 1.5,
-    trendUp: false,
-  },
-};
 
 const domainIcons: Record<string, React.ReactNode> = {
   authorization: <CreditCardOutlined />,
@@ -67,20 +37,37 @@ const domainIcons: Record<string, React.ReactNode> = {
   adjustment: <SwapOutlined />,
 };
 
-const formatCurrency = (value: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(value);
-};
+const formatCurrency = (value: number) =>
+  new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 
-const formatNumber = (value: number) => {
-  return new Intl.NumberFormat('en-US').format(value);
-};
+const formatNumber = (value: number) =>
+  new Intl.NumberFormat('en-US').format(value);
+
+// Default date range: last 30 days
+const endDate = new Date().toISOString().split('T')[0];
+const startDateObj = new Date();
+startDateObj.setDate(startDateObj.getDate() - 30);
+const startDate = startDateObj.toISOString().split('T')[0];
 
 export default function DashboardPage() {
+  const authKpis = useAnalyticsData<AuthorizationKPIs>('authorization', 'kpis', { startDate, endDate });
+  const settleKpis = useAnalyticsData<SettlementKPIs>('settlement', 'kpis', { startDate, endDate });
+  const fundKpis = useAnalyticsData<FundingKPIs>('funding', 'kpis', { startDate, endDate });
+  const cbKpis = useAnalyticsData<ChargebackKPIs>('chargeback', 'kpis', { startDate, endDate });
+  const retKpis = useAnalyticsData<RetrievalKPIs>('retrieval', 'kpis', { startDate, endDate });
+  const adjKpis = useAnalyticsData<AdjustmentKPIs>('adjustment', 'kpis', { startDate, endDate });
+
+  const isLoading = authKpis.isLoading || settleKpis.isLoading || fundKpis.isLoading;
+
+  const refetchAll = useCallback(() => {
+    authKpis.refetch();
+    settleKpis.refetch();
+    fundKpis.refetch();
+    cbKpis.refetch();
+    retKpis.refetch();
+    adjKpis.refetch();
+  }, [authKpis, settleKpis, fundKpis, cbKpis, retKpis, adjKpis]);
+
   return (
     <div className="space-y-6">
       {/* Page Header */}
@@ -93,75 +80,70 @@ export default function DashboardPage() {
             Analytics overview for DMCL - Last 30 days
           </Text>
         </div>
-        <Link href="/chat">
-          <Button type="primary" icon={<MessageOutlined />} size="large">
-            Ask Your Data
-          </Button>
-        </Link>
+        <Space>
+          <Button onClick={refetchAll}>Refresh</Button>
+          <Link href="/chat">
+            <Button type="primary" icon={<MessageOutlined />} size="large">
+              Ask Your Data
+            </Button>
+          </Link>
+        </Space>
       </div>
 
       {/* Quick Stats Row */}
-      <Row gutter={[16, 16]}>
-        <Col xs={24} sm={12} lg={8}>
-          <Card className="kpi-card">
-            <Statistic
-              title="Total Authorizations"
-              value={dashboardKPIs.authorization.value}
-              formatter={(val) => formatNumber(val as number)}
-              prefix={<CreditCardOutlined style={{ color: '#FF6600' }} />}
-              suffix={
-                <Tag color={dashboardKPIs.authorization.trendUp ? 'success' : 'error'}>
-                  {dashboardKPIs.authorization.trendUp ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-                  {dashboardKPIs.authorization.trend}%
-                </Tag>
-              }
-            />
-            <div className="mt-2">
-              <Text type="secondary">Approval Rate: </Text>
-              <Text strong style={{ color: '#52c41a' }}>
-                {dashboardKPIs.authorization.approvalRate}%
-              </Text>
-            </div>
-          </Card>
-        </Col>
+      <Spin spinning={isLoading}>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="kpi-card">
+              <Statistic
+                title="Total Authorizations"
+                value={authKpis.data?.totalTransactions ?? 0}
+                formatter={(val) => formatNumber(val as number)}
+                prefix={<CreditCardOutlined style={{ color: '#FF6600' }} />}
+                suffix={
+                  authKpis.data?.trends?.transactions !== undefined ? (
+                    <Tag color={authKpis.data.trends.transactions >= 0 ? 'success' : 'error'}>
+                      {authKpis.data.trends.transactions >= 0 ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
+                      {Math.abs(authKpis.data.trends.transactions)}%
+                    </Tag>
+                  ) : null
+                }
+              />
+              <div className="mt-2">
+                <Text type="secondary">Approval Rate: </Text>
+                <Text strong style={{ color: '#52c41a' }}>
+                  {authKpis.data?.approvalRate ?? 0}%
+                </Text>
+              </div>
+            </Card>
+          </Col>
 
-        <Col xs={24} sm={12} lg={8}>
-          <Card className="kpi-card">
-            <Statistic
-              title="Net Settlement Volume"
-              value={dashboardKPIs.settlement.netVolume}
-              formatter={(val) => formatCurrency(val as number)}
-              prefix={<BankOutlined style={{ color: '#1890ff' }} />}
-              suffix={
-                <Tag color={dashboardKPIs.settlement.trendUp ? 'success' : 'error'}>
-                  {dashboardKPIs.settlement.trendUp ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-                  {dashboardKPIs.settlement.trend}%
-                </Tag>
-              }
-            />
-          </Card>
-        </Col>
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="kpi-card">
+              <Statistic
+                title="Net Settlement Volume"
+                value={settleKpis.data?.netVolume ?? 0}
+                formatter={(val) => formatCurrency(val as number)}
+                prefix={<BankOutlined style={{ color: '#1890ff' }} />}
+              />
+            </Card>
+          </Col>
 
-        <Col xs={24} sm={12} lg={8}>
-          <Card className="kpi-card">
-            <Statistic
-              title="Total Deposits"
-              value={dashboardKPIs.funding.value}
-              formatter={(val) => formatCurrency(val as number)}
-              prefix={<DollarOutlined style={{ color: '#52c41a' }} />}
-              suffix={
-                <Tag color={dashboardKPIs.funding.trendUp ? 'success' : 'error'}>
-                  {dashboardKPIs.funding.trendUp ? <ArrowUpOutlined /> : <ArrowDownOutlined />}
-                  {Math.abs(dashboardKPIs.funding.trend)}%
-                </Tag>
-              }
-            />
-            <div className="mt-2">
-              <Text type="secondary">{dashboardKPIs.funding.deposits} deposits</Text>
-            </div>
-          </Card>
-        </Col>
-      </Row>
+          <Col xs={24} sm={12} lg={8}>
+            <Card className="kpi-card">
+              <Statistic
+                title="Total Deposits"
+                value={fundKpis.data?.totalDeposits ?? 0}
+                formatter={(val) => formatCurrency(val as number)}
+                prefix={<DollarOutlined style={{ color: '#52c41a' }} />}
+              />
+              <div className="mt-2">
+                <Text type="secondary">{formatNumber(fundKpis.data?.totalFundingRecords ?? 0)} deposits</Text>
+              </div>
+            </Card>
+          </Col>
+        </Row>
+      </Spin>
 
       {/* Domain Cards */}
       <div>
@@ -216,32 +198,32 @@ export default function DashboardPage() {
               <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
                 <WarningOutlined style={{ color: '#ff4d4f', fontSize: 20 }} />
                 <div className="flex-1">
-                  <Text strong>Chargeback spike detected</Text>
+                  <Text strong>Chargebacks</Text>
                   <br />
                   <Text type="secondary" className="text-sm">
-                    15% increase in chargebacks for Merchant #4521
+                    {formatNumber(cbKpis.data?.totalChargebacks ?? 0)} total disputes ({formatCurrency(cbKpis.data?.totalDisputeAmount ?? 0)})
                   </Text>
                 </div>
-                <Tag color="error">Critical</Tag>
+                <Tag color="error">{formatNumber(cbKpis.data?.openCount ?? 0)} open</Tag>
               </div>
               <div className="flex items-center gap-3 p-3 bg-yellow-50 rounded-lg">
                 <FileSearchOutlined style={{ color: '#faad14', fontSize: 20 }} />
                 <div className="flex-1">
-                  <Text strong>89 retrievals pending</Text>
+                  <Text strong>Retrievals pending</Text>
                   <br />
                   <Text type="secondary" className="text-sm">
-                    23 due within 48 hours
+                    {formatNumber(retKpis.data?.openCount ?? 0)} open of {formatNumber(retKpis.data?.totalRetrievals ?? 0)} total
                   </Text>
                 </div>
                 <Tag color="warning">Attention</Tag>
               </div>
               <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                <BankOutlined style={{ color: '#1890ff', fontSize: 20 }} />
+                <SwapOutlined style={{ color: '#13c2c2', fontSize: 20 }} />
                 <div className="flex-1">
-                  <Text strong>Settlement complete</Text>
+                  <Text strong>Adjustments</Text>
                   <br />
                   <Text type="secondary" className="text-sm">
-                    Daily batch processed: $2.4M net
+                    Net: {formatCurrency(adjKpis.data?.netAdjustment ?? 0)} ({formatNumber(adjKpis.data?.totalAdjustments ?? 0)} total)
                   </Text>
                 </div>
                 <Tag color="processing">Info</Tag>

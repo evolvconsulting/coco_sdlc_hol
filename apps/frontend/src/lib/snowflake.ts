@@ -33,7 +33,7 @@ function getConfig(): SnowflakeConfig {
     username: process.env.SNOWFLAKE_USER || process.env.SNOWFLAKE_USERNAME || '',
     warehouse: process.env.SNOWFLAKE_WAREHOUSE || 'COMPUTE_WH',
     database: process.env.SNOWFLAKE_DATABASE || 'COCO_SDLC_HOL',
-    schema: process.env.SNOWFLAKE_SCHEMA || 'CLEA',
+    schema: process.env.SNOWFLAKE_SCHEMA || 'MARTS',
     role: process.env.SNOWFLAKE_ROLE,
     privateKeyPath: process.env.SNOWFLAKE_PRIVATE_KEY_PATH,
     privateKey: process.env.SNOWFLAKE_PRIVATE_KEY,
@@ -209,7 +209,7 @@ export async function getTableMetadata(tableName: string): Promise<{
   columns: Array<{ name: string; type: string; nullable: boolean }>;
 }> {
   const database = process.env.SNOWFLAKE_DATABASE || 'COCO_SDLC_HOL';
-  const schema = process.env.SNOWFLAKE_SCHEMA || 'CLEA';
+  const schema = process.env.SNOWFLAKE_SCHEMA || 'MARTS';
   
   const sql = `
     SELECT 

@@ -23,7 +23,7 @@ export const DOMAINS: Record<DomainType, DomainConfig> = {
     label: 'Authorization',
     description: 'Real-time transaction authorization data',
     icon: 'CreditCardOutlined',
-    tableName: 'AUTH_DMCL_V1',
+    tableName: 'AUTHORIZATIONS',
     color: '#FF6600',
   },
   settlement: {
@@ -31,7 +31,7 @@ export const DOMAINS: Record<DomainType, DomainConfig> = {
     label: 'Settlement',
     description: 'Batch settlement and clearing transactions',
     icon: 'BankOutlined',
-    tableName: 'SETTLE_DMCL_V1',
+    tableName: 'SETTLEMENTS',
     color: '#1890ff',
   },
   funding: {
@@ -39,7 +39,7 @@ export const DOMAINS: Record<DomainType, DomainConfig> = {
     label: 'Funding',
     description: 'Funding and deposit information',
     icon: 'DollarOutlined',
-    tableName: 'FUND_DMCL_V1',
+    tableName: 'DEPOSITS',
     color: '#52c41a',
   },
   chargeback: {
@@ -47,7 +47,7 @@ export const DOMAINS: Record<DomainType, DomainConfig> = {
     label: 'Chargebacks',
     description: 'Dispute and chargeback management',
     icon: 'WarningOutlined',
-    tableName: 'CHARGEBACK_DMCL_V1',
+    tableName: 'CHARGEBACKS',
     color: '#ff4d4f',
   },
   retrieval: {
@@ -55,7 +55,7 @@ export const DOMAINS: Record<DomainType, DomainConfig> = {
     label: 'Retrievals',
     description: 'Draft retrieval and document requests',
     icon: 'FileSearchOutlined',
-    tableName: 'RETRIEVAL_DMCL_V1',
+    tableName: 'RETRIEVALS',
     color: '#722ed1',
   },
   adjustment: {
@@ -63,21 +63,35 @@ export const DOMAINS: Record<DomainType, DomainConfig> = {
     label: 'Adjustments',
     description: 'Fee adjustments and corrections',
     icon: 'SwapOutlined',
-    tableName: 'ADJ_DMCL_V1',
+    tableName: 'ADJUSTMENTS',
     color: '#13c2c2',
   },
 };
 
-// Authorization specific types
+// API response wrapper
+export interface ApiResponse<T> {
+  success: boolean;
+  data: T;
+  filters?: Record<string, unknown>;
+  rowCount?: number;
+  error?: string;
+  message?: string;
+  code?: string;
+}
+
+// Authorization types
 export interface AuthorizationRecord {
-  TXNDATE: string;
-  TXNTIME: string;
-  AMOUNT: number;
-  APPROVALCODE: 0 | 1 | 2; // 0: Unknown, 1: Approved, 2: Declined
-  CARD_BRND: string;
-  LCTN_DBA_NM: string;
-  DECLINEREASON?: string;
-  PLTF_ID: number;
+  [key: string]: unknown;
+  authId: string;
+  txnDate: string;
+  cardBrand: string;
+  amount: number;
+  status: string;
+  declineReason: string | null;
+  merchantName: string;
+  paymentMethod: string;
+  network: string;
+  riskScore: number;
 }
 
 export interface AuthorizationKPIs {
@@ -88,98 +102,192 @@ export interface AuthorizationKPIs {
   totalAmount: number;
   approvedAmount: number;
   avgTicketSize: number;
+  trends: {
+    transactions: number;
+    approvalRate: number;
+    amount: number;
+  };
 }
 
-// Settlement specific types
+export interface AuthorizationTimeSeriesPoint {
+  date: string;
+  transactions: number;
+  approved: number;
+  declined: number;
+  approvalRate: number;
+  amount: number;
+}
+
+export interface AuthorizationByBrand {
+  cardBrand: string;
+  totalTransactions: number;
+  approved: number;
+  declined: number;
+  approvalRate: number;
+  totalAmount: number;
+}
+
+export interface AuthorizationDecline {
+  reason: string;
+  count: number;
+  amount: number;
+  percentage: number;
+}
+
+// Settlement types
 export interface SettlementRecord {
-  RECORD_DT: string;
-  SALES_CT: number;
-  REFUND_CNT: number;
-  PRCS_NET_AMT: number;
-  DSCN_AM: number;
-  CARD_BRND: string;
-  LCTN_DBA_NM: string;
+  [key: string]: unknown;
+  settleId: string;
+  recordDate: string;
+  cardBrand: string;
+  merchantName: string;
+  salesCount: number;
+  salesAmount: number;
+  refundCount: number;
+  refundAmount: number;
+  netAmount: number;
+  interchange: number;
 }
 
 export interface SettlementKPIs {
-  salesCount: number;
-  refundCount: number;
-  netCount: number;
-  netAmount: number;
-  discountAmount: number;
-  avgTicketSize: number;
+  totalBatches: number;
+  totalSalesCount: number;
+  totalSalesAmount: number;
+  totalRefundCount: number;
+  totalRefundAmount: number;
+  netVolume: number;
+  totalInterchange: number;
 }
 
-// Funding specific types
+export interface SettlementTimeSeriesPoint {
+  date: string;
+  salesCount: number;
+  salesAmount: number;
+  refundCount: number;
+  refundAmount: number;
+  netAmount: number;
+  interchange: number;
+}
+
+export interface SettlementByMerchant {
+  merchantName: string;
+  netVolume: number;
+  transactionCount: number;
+  grossSales: number;
+  refundAmount: number;
+  interchange: number;
+}
+
+// Funding types
 export interface FundingRecord {
-  FUNDED_DT: string;
-  DEPOSIT_AM: number;
-  NET_SALES_AM: number;
-  FEES_AM: number;
-  CHARGEBACK_AM: number;
-  PAYMENT_STATUS: string;
+  [key: string]: unknown;
+  fundId: string;
+  fundedDate: string;
+  status: string;
+  merchantName: string;
+  depositAmount: number;
+  netSales: number;
+  fees: number;
+  chargebacks: number;
 }
 
 export interface FundingKPIs {
+  totalFundingRecords: number;
   totalDeposits: number;
-  netSales: number;
+  totalNetSales: number;
   totalFees: number;
   totalChargebacks: number;
-  itemCount: number;
+  completedCount: number;
+  pendingCount: number;
+  heldCount: number;
 }
 
-// Chargeback specific types
+export interface FundingTimeSeriesPoint {
+  date: string;
+  deposits: number;
+  netSales: number;
+  fees: number;
+  chargebacks: number;
+  fundingCount: number;
+}
+
+// Chargeback types
 export interface ChargebackRecord {
-  DSPUT_RCVD_DT: string;
-  DSPUT_AMT: number;
-  DSPUT_RSN_CD: string;
-  CBK_STATUS: string;
-  CBK_WIN_LOSS: string;
-  CHARGEBACK_CYCLE: string;
+  [key: string]: unknown;
+  cbkId: string;
+  disputeDate: string;
+  reasonCode: string;
+  reasonDescription: string;
+  status: string;
+  winLoss: string;
+  cycle: string;
+  merchantName: string;
+  cardBrand: string;
+  disputeAmount: number;
+  transactionAmount: number;
 }
 
 export interface ChargebackKPIs {
-  chargebackCount: number;
-  disputeAmount: number;
+  totalChargebacks: number;
+  totalDisputeAmount: number;
+  totalTransactionAmount: number;
+  openCount: number;
+  closedCount: number;
   wonCount: number;
   lostCount: number;
   winRate: number;
-  pendingCount: number;
 }
 
-// Retrieval specific types
+export interface ChargebackByReason {
+  reasonCode: string;
+  reasonDescription: string;
+  count: number;
+  amount: number;
+  percentage: number;
+}
+
+// Retrieval types
 export interface RetrievalRecord {
-  RT_ACQR_REF_NR: string;
-  RT_SALE_DT: string;
-  RT_DOLLAR_AM: number;
-  RV_CB_STATUS: 'OPEN' | 'CLOSED' | 'EXPIRED';
-  RT_FULFILMT_DT?: string;
-  RT_RTRVL_DUE_DT: string;
+  [key: string]: unknown;
+  rtId: string;
+  saleDate: string;
+  status: string;
+  reasonCode: string;
+  reasonDescription: string;
+  dueDate: string;
+  merchantName: string;
+  cardBrand: string;
+  amount: number;
 }
 
 export interface RetrievalKPIs {
   totalRetrievals: number;
-  openCount: number;
-  closedCount: number;
-  expiredCount: number;
   totalAmount: number;
+  openCount: number;
+  fulfilledCount: number;
+  expiredCount: number;
+  closedCount: number;
   fulfillmentRate: number;
 }
 
-// Adjustment specific types
+// Adjustment types
 export interface AdjustmentRecord {
-  ADJ_DT: string;
-  ADJ_AM: number;
-  ADJ_TYPE_CD: 'C' | 'D'; // Credit or Debit
-  ADJ_DESC_TX: string;
-  FEE_DESC_TX?: string;
+  [key: string]: unknown;
+  adjId: string;
+  adjDate: string;
+  adjCode: string;
+  adjDescription: string;
+  feeDescription: string;
+  merchantName: string;
+  amount: number;
+  type: string;
 }
 
 export interface AdjustmentKPIs {
-  adjustmentCount: number;
-  creditAmount: number;
-  debitAmount: number;
-  netAmount: number;
+  totalAdjustments: number;
+  totalCredits: number;
+  totalDebits: number;
+  netAdjustment: number;
   creditCount: number;
   debitCount: number;
 }

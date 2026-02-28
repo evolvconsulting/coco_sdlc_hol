@@ -1,7 +1,7 @@
 'use client';
 
-import { useState } from 'react';
-import { Row, Col, Typography, Card, DatePicker, Select, Space, Button, Tabs, Breadcrumb } from 'antd';
+import { useState, useCallback } from 'react';
+import { Row, Col, Typography, Card, DatePicker, Select, Space, Button, Tabs, Breadcrumb, Spin } from 'antd';
 import {
   CreditCardOutlined,
   ReloadOutlined,
@@ -13,77 +13,19 @@ import dayjs from 'dayjs';
 import { KPICard } from '@/components/ui';
 import { GaugeChart, TimeSeriesChart, PieChart, BarChart } from '@/components/charts';
 import { DataGrid } from '@/components/grid';
+import { ConnectionError } from '@/components/ui/ConnectionError';
+import { useAnalyticsData } from '@/hooks';
 import { cardBrandColors } from '@/lib/theme';
+import type {
+  AuthorizationKPIs,
+  AuthorizationTimeSeriesPoint,
+  AuthorizationByBrand,
+  AuthorizationDecline,
+  AuthorizationRecord,
+} from '@/types/domain';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-
-// Mock data for authorization analytics
-const mockKPIs = {
-  totalTransactions: 1247893,
-  approvedCount: 1202668,
-  declinedCount: 45225,
-  approvalRate: 96.38,
-  totalAmount: 89234567.89,
-  approvedAmount: 86123456.78,
-  avgTicketSize: 71.52,
-  trends: {
-    transactions: 2.3,
-    approvalRate: 0.5,
-    amount: 4.1,
-  },
-};
-
-const mockTimeSeriesData = [
-  { date: '2026-02-01', value: 42356 },
-  { date: '2026-02-02', value: 38912 },
-  { date: '2026-02-03', value: 35678 },
-  { date: '2026-02-04', value: 41234 },
-  { date: '2026-02-05', value: 44567 },
-  { date: '2026-02-06', value: 48901 },
-  { date: '2026-02-07', value: 45234 },
-  { date: '2026-02-08', value: 43567 },
-  { date: '2026-02-09', value: 39876 },
-  { date: '2026-02-10', value: 36543 },
-  { date: '2026-02-11', value: 42109 },
-  { date: '2026-02-12', value: 45678 },
-  { date: '2026-02-13', value: 49012 },
-  { date: '2026-02-14', value: 52345 },
-  { date: '2026-02-15', value: 48765 },
-  { date: '2026-02-16', value: 44321 },
-  { date: '2026-02-17', value: 40987 },
-  { date: '2026-02-18', value: 43654 },
-  { date: '2026-02-19', value: 47321 },
-  { date: '2026-02-20', value: 50987 },
-  { date: '2026-02-21', value: 48654 },
-];
-
-const mockCardBrandData = [
-  { name: 'Visa', value: 523456, color: cardBrandColors['Visa'] },
-  { name: 'Mastercard', value: 312789, color: cardBrandColors['Mastercard'] },
-  { name: 'American Express', value: 98234, color: cardBrandColors['American Express'] },
-  { name: 'Discover', value: 45123, color: cardBrandColors['Discover'] },
-];
-
-const mockDeclineReasons = [
-  { name: 'Insufficient Funds', value: 15234 },
-  { name: 'Invalid Card', value: 8901 },
-  { name: 'Expired Card', value: 7654 },
-  { name: 'Do Not Honor', value: 5432 },
-  { name: 'Lost/Stolen', value: 3210 },
-  { name: 'Other', value: 4794 },
-];
-
-const mockDetailData = [
-  { TXNDATE: '2026-02-21', CARD_BRND: 'Visa', LCTN_DBA_NM: 'WALMART SUPERCENTER #4521', AMOUNT: 156.78, APPROVALCODE: 1, DECLINEREASON: null },
-  { TXNDATE: '2026-02-21', CARD_BRND: 'Mastercard', LCTN_DBA_NM: 'TARGET STORE #1234', AMOUNT: 89.99, APPROVALCODE: 1, DECLINEREASON: null },
-  { TXNDATE: '2026-02-21', CARD_BRND: 'Visa', LCTN_DBA_NM: 'COSTCO WHOLESALE #789', AMOUNT: 234.56, APPROVALCODE: 2, DECLINEREASON: 'Insufficient Funds' },
-  { TXNDATE: '2026-02-21', CARD_BRND: 'American Express', LCTN_DBA_NM: 'BEST BUY #3456', AMOUNT: 1299.99, APPROVALCODE: 1, DECLINEREASON: null },
-  { TXNDATE: '2026-02-21', CARD_BRND: 'Discover', LCTN_DBA_NM: 'HOME DEPOT #5678', AMOUNT: 456.23, APPROVALCODE: 1, DECLINEREASON: null },
-  { TXNDATE: '2026-02-20', CARD_BRND: 'Visa', LCTN_DBA_NM: 'CVS PHARMACY #2345', AMOUNT: 45.67, APPROVALCODE: 1, DECLINEREASON: null },
-  { TXNDATE: '2026-02-20', CARD_BRND: 'Mastercard', LCTN_DBA_NM: 'WALGREENS #6789', AMOUNT: 32.10, APPROVALCODE: 2, DECLINEREASON: 'Invalid Card' },
-  { TXNDATE: '2026-02-20', CARD_BRND: 'Visa', LCTN_DBA_NM: 'LOWES HOME IMP #4567', AMOUNT: 567.89, APPROVALCODE: 1, DECLINEREASON: null },
-];
 
 export default function AuthorizationPage() {
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
@@ -92,6 +34,74 @@ export default function AuthorizationPage() {
   ]);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+
+  const startDate = dateRange[0].format('YYYY-MM-DD');
+  const endDate = dateRange[1].format('YYYY-MM-DD');
+
+  const kpis = useAnalyticsData<AuthorizationKPIs>('authorization', 'kpis', {
+    startDate,
+    endDate,
+    cardBrand: selectedBrand || undefined,
+  });
+
+  const timeseries = useAnalyticsData<AuthorizationTimeSeriesPoint[]>('authorization', 'timeseries', {
+    startDate,
+    endDate,
+  });
+
+  const byBrand = useAnalyticsData<AuthorizationByBrand[]>('authorization', 'by-brand', {
+    startDate,
+    endDate,
+  });
+
+  const declinesList = useAnalyticsData<AuthorizationDecline[]>('authorization', 'declines', {
+    startDate,
+    endDate,
+  });
+
+  const details = useAnalyticsData<AuthorizationRecord[]>('authorization', 'details', {
+    startDate,
+    endDate,
+    cardBrand: selectedBrand || undefined,
+  }, { enabled: activeTab === 'details' });
+
+  const isLoading = kpis.isLoading || timeseries.isLoading || byBrand.isLoading || declinesList.isLoading;
+  const hasError = kpis.error || timeseries.error || byBrand.error || declinesList.error;
+  const errorCode = (hasError as Error & { code?: string })?.code;
+
+  const refetchAll = useCallback(() => {
+    kpis.refetch();
+    timeseries.refetch();
+    byBrand.refetch();
+    declinesList.refetch();
+    if (activeTab === 'details') details.refetch();
+  }, [kpis, timeseries, byBrand, declinesList, details, activeTab]);
+
+  if (hasError && errorCode === 'SNOWFLAKE_NOT_CONFIGURED') {
+    return <ConnectionError code="SNOWFLAKE_NOT_CONFIGURED" onRetry={refetchAll} />;
+  }
+
+  const kpiData = kpis.data;
+  const timeSeriesData = (timeseries.data || []).map((d) => ({
+    date: String(d.date),
+    value: d.transactions,
+  }));
+  const brandData = (byBrand.data || []).map((d) => ({
+    name: d.cardBrand,
+    value: d.totalTransactions,
+    color: cardBrandColors[d.cardBrand as keyof typeof cardBrandColors],
+  }));
+  const declineData = (declinesList.data || []).map((d) => ({
+    name: d.reason,
+    value: d.count,
+  }));
+  const brandDeclineRates = (byBrand.data || []).map((d) => ({
+    brand: d.cardBrand,
+    rate: d.totalTransactions > 0
+      ? Number(((d.declined / d.totalTransactions) * 100).toFixed(2))
+      : 0,
+    count: d.totalTransactions,
+  }));
 
   return (
     <div className="space-y-6">
@@ -148,7 +158,7 @@ export default function AuthorizationPage() {
               { value: 'Discover', label: 'Discover' },
             ]}
           />
-          <Button icon={<ReloadOutlined />}>Refresh</Button>
+          <Button icon={<ReloadOutlined />} onClick={refetchAll}>Refresh</Button>
         </Space>
       </div>
 
@@ -177,22 +187,23 @@ export default function AuthorizationPage() {
       />
 
       {activeTab === 'overview' ? (
-        <>
+        <Spin spinning={isLoading}>
           {/* KPI Cards */}
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={6}>
               <KPICard
                 title="Total Transactions"
-                value={mockKPIs.totalTransactions}
+                value={kpiData?.totalTransactions ?? 0}
                 prefix={<CreditCardOutlined />}
-                trend={mockKPIs.trends.transactions}
+                trend={kpiData?.trends?.transactions}
                 trendLabel="vs last period"
                 description="Total authorization requests received"
+                loading={kpis.isLoading}
               />
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <GaugeChart
-                value={mockKPIs.approvalRate}
+                value={kpiData?.approvalRate ?? 0}
                 title="Approval Rate"
                 height={180}
                 thresholds={[
@@ -205,19 +216,21 @@ export default function AuthorizationPage() {
             <Col xs={24} sm={12} lg={6}>
               <KPICard
                 title="Approved Amount"
-                value={mockKPIs.approvedAmount}
+                value={kpiData?.approvedAmount ?? 0}
                 format="currency"
-                trend={mockKPIs.trends.amount}
+                trend={kpiData?.trends?.amount}
                 color="#52c41a"
                 description="Total dollar amount approved"
+                loading={kpis.isLoading}
               />
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <KPICard
                 title="Avg Ticket Size"
-                value={mockKPIs.avgTicketSize}
+                value={kpiData?.avgTicketSize ?? 0}
                 format="currency"
                 description="Average transaction amount"
+                loading={kpis.isLoading}
               />
             </Col>
           </Row>
@@ -226,7 +239,7 @@ export default function AuthorizationPage() {
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={16}>
               <TimeSeriesChart
-                data={mockTimeSeriesData}
+                data={timeSeriesData}
                 title="Daily Transaction Volume"
                 height={300}
                 yAxisLabel="Transactions"
@@ -235,7 +248,7 @@ export default function AuthorizationPage() {
             </Col>
             <Col xs={24} lg={8}>
               <PieChart
-                data={mockCardBrandData}
+                data={brandData}
                 title="Transactions by Card Brand"
                 height={300}
               />
@@ -246,7 +259,7 @@ export default function AuthorizationPage() {
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
               <BarChart
-                data={mockDeclineReasons}
+                data={declineData}
                 title="Top Decline Reasons"
                 height={300}
                 horizontal
@@ -256,12 +269,7 @@ export default function AuthorizationPage() {
             <Col xs={24} lg={12}>
               <Card title={<Text strong>Decline Rate by Card Brand</Text>}>
                 <div className="space-y-4">
-                  {[
-                    { brand: 'Visa', rate: 2.98, count: 523456 },
-                    { brand: 'Mastercard', rate: 4.37, count: 312789 },
-                    { brand: 'American Express', rate: 2.60, count: 98234 },
-                    { brand: 'Discover', rate: 4.68, count: 45123 },
-                  ].map((item) => (
+                  {brandDeclineRates.map((item) => (
                     <div key={item.brand} className="flex items-center gap-4">
                       <div className="w-32">
                         <Text strong>{item.brand}</Text>
@@ -271,7 +279,7 @@ export default function AuthorizationPage() {
                           <div
                             className="h-full rounded-full"
                             style={{
-                              width: `${item.rate * 10}%`,
+                              width: `${Math.min(item.rate * 10, 100)}%`,
                               backgroundColor: '#ff4d4f',
                             }}
                           />
@@ -288,16 +296,18 @@ export default function AuthorizationPage() {
               </Card>
             </Col>
           </Row>
-        </>
+        </Spin>
       ) : (
         /* Details Tab */
-        <DataGrid
-          data={mockDetailData}
-          title="Authorization Transactions"
-          height={600}
-          enablePivot
-          enableExport
-        />
+        <Spin spinning={details.isLoading}>
+          <DataGrid
+            data={(details.data || []) as Record<string, unknown>[]}
+            title="Authorization Transactions"
+            height={600}
+            enablePivot
+            enableExport
+          />
+        </Spin>
       )}
     </div>
   );
