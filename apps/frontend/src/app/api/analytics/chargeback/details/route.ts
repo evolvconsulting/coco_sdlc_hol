@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     const sql = `
       SELECT
-        chargeback_id,
+        chargeback_key,
         dispute_received_date,
         reason_code,
         reason_description,
@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      cbkId: row.CHARGEBACK_ID,
+      cbkId: row.CHARGEBACK_KEY,
       disputeDate: row.DISPUTE_RECEIVED_DATE,
       reasonCode: row.REASON_CODE,
       reasonDescription: row.REASON_DESCRIPTION,

@@ -29,11 +29,11 @@ export async function GET(request: NextRequest) {
 
     const sql = `
       SELECT
-        adjustment_id,
+        adjustment_key,
         adjustment_date,
         adjustment_code,
         adjustment_description,
-        fee_description,
+        adjustment_category,
         merchant_name,
         adjustment_amount
       FROM COCO_SDLC_HOL.MARTS.ADJUSTMENTS
@@ -45,11 +45,11 @@ export async function GET(request: NextRequest) {
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      adjId: row.ADJUSTMENT_ID,
+      adjId: row.ADJUSTMENT_KEY,
       adjDate: row.ADJUSTMENT_DATE,
       adjCode: row.ADJUSTMENT_CODE,
       adjDescription: row.ADJUSTMENT_DESCRIPTION,
-      feeDescription: row.FEE_DESCRIPTION,
+      adjCategory: row.ADJUSTMENT_CATEGORY,
       merchantName: row.MERCHANT_NAME,
       amount: Number(row.ADJUSTMENT_AMOUNT) || 0,
       type: Number(row.ADJUSTMENT_AMOUNT) >= 0 ? 'Credit' : 'Debit',

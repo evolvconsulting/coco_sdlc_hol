@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     const sql = `
       SELECT
-        deposit_id,
+        deposit_key,
         deposit_date,
         payment_status,
         merchant_name,
@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      fundId: row.DEPOSIT_ID,
+      fundId: row.DEPOSIT_KEY,
       fundedDate: row.DEPOSIT_DATE,
       status: row.PAYMENT_STATUS,
       merchantName: row.MERCHANT_NAME,

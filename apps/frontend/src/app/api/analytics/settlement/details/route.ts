@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     const sql = `
       SELECT
-        settlement_id,
+        settlement_key,
         settlement_date,
         card_brand,
         merchant_name,
@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      settleId: row.SETTLEMENT_ID,
+      settleId: row.SETTLEMENT_KEY,
       recordDate: row.SETTLEMENT_DATE,
       cardBrand: row.CARD_BRAND,
       merchantName: row.MERCHANT_NAME,

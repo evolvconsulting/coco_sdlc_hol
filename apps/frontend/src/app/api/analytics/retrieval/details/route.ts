@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
 
     const sql = `
       SELECT
-        retrieval_id,
+        retrieval_key,
         original_sale_date,
         retrieval_status,
         reason_code,
@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      rtId: row.RETRIEVAL_ID,
+      rtId: row.RETRIEVAL_KEY,
       saleDate: row.ORIGINAL_SALE_DATE,
       status: row.RETRIEVAL_STATUS,
       reasonCode: row.REASON_CODE,

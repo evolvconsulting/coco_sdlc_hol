@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     const sql = `
       SELECT
-        authorization_id,
+        authorization_key,
         transaction_date,
         card_brand,
         transaction_amount,
@@ -39,8 +39,7 @@ export async function GET(request: NextRequest) {
         decline_reason,
         merchant_name,
         payment_method,
-        processing_network,
-        risk_score
+        processing_network
       FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
       ${whereClause}
       ORDER BY transaction_date DESC
@@ -50,7 +49,7 @@ export async function GET(request: NextRequest) {
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      authId: row.AUTHORIZATION_ID,
+      authId: row.AUTHORIZATION_KEY,
       txnDate: row.TRANSACTION_DATE,
       cardBrand: row.CARD_BRAND,
       amount: Number(row.TRANSACTION_AMOUNT) || 0,
@@ -59,7 +58,7 @@ export async function GET(request: NextRequest) {
       merchantName: row.MERCHANT_NAME,
       paymentMethod: row.PAYMENT_METHOD,
       network: row.PROCESSING_NETWORK,
-      riskScore: Number(row.RISK_SCORE) || 0,
+      riskScore: null,
     }));
 
     return NextResponse.json({
