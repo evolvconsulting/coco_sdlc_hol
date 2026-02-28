@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Card, Row, Col, Statistic, Select, DatePicker, Space, Typography, Spin, Tag, Progress, Tabs, Breadcrumb, Button } from 'antd';
 import {
   DollarOutlined,
@@ -8,7 +8,6 @@ import {
   ClockCircleOutlined,
   CheckCircleOutlined,
   WarningOutlined,
-  ArrowUpOutlined,
   FileExclamationOutlined,
   HomeOutlined,
   ReloadOutlined,
@@ -16,122 +15,15 @@ import {
   TableOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
-import { TimeSeriesChart, type TimeSeriesDataPoint } from '@/components/charts/TimeSeriesChart';
 import { BarChart } from '@/components/charts/BarChart';
 import { DataGrid } from '@/components/grid/DataGrid';
+import { ConnectionError } from '@/components/ui/ConnectionError';
+import { useAnalyticsData } from '@/hooks';
 import { domainColors } from '@/lib/theme';
+import type { ChargebackKPIs, ChargebackByReason, ChargebackRecord } from '@/types/domain';
 
 const { Title, Text } = Typography;
 const { RangePicker } = DatePicker;
-
-// Mock data for Chargeback analytics
-const mockKPIs = {
-  totalChargebackAmount: 1234567.89,
-  chargebackCount: 2345,
-  chargebackRate: 0.52,
-  winRate: 67.5,
-  pendingDisputes: 456,
-  avgResolutionDays: 28,
-};
-
-const mockTrendData: TimeSeriesDataPoint[] = [
-  { date: '2024-01-15', value: 165000 },
-  { date: '2024-01-16', value: 178000 },
-  { date: '2024-01-17', value: 156000 },
-  { date: '2024-01-18', value: 189000 },
-  { date: '2024-01-19', value: 198000 },
-  { date: '2024-01-20', value: 172000 },
-  { date: '2024-01-21', value: 176568 },
-];
-
-const mockByReasonCode = [
-  { name: 'Fraud (10.4)', value: 493827 },
-  { name: 'Not Received (13.1)', value: 370370 },
-  { name: 'Not as Described (13.3)', value: 185185 },
-  { name: 'Credit Not Processed (13.6)', value: 123457 },
-  { name: 'Duplicate (12.6)', value: 61728 },
-];
-
-const mockByCardBrand = [
-  { name: 'Visa', value: 617284 },
-  { name: 'Mastercard', value: 370370 },
-  { name: 'Amex', value: 185185 },
-  { name: 'Discover', value: 61728 },
-];
-
-const mockByStatus = [
-  { name: 'Won', value: 789012 },
-  { name: 'Lost', value: 345678 },
-  { name: 'Pending', value: 99877 },
-];
-
-const mockChargebackData = [
-  {
-    CB_DT: '2024-01-21',
-    CASE_ID: 'CB20240121001',
-    MERCHANT_ID: 'M001234',
-    MERCHANT_NAME: 'ABC Retail Corp',
-    CARD_BRAND: 'Visa',
-    REASON_CD: '10.4',
-    REASON_DESC: 'Fraud - Card Absent Environment',
-    CB_AM: 456.78,
-    ORIG_TRAN_DT: '2024-01-05',
-    STATUS: 'Pending',
-    DUE_DT: '2024-02-20',
-  },
-  {
-    CB_DT: '2024-01-21',
-    CASE_ID: 'CB20240121002',
-    MERCHANT_ID: 'M001235',
-    MERCHANT_NAME: 'XYZ Foods LLC',
-    CARD_BRAND: 'Mastercard',
-    REASON_CD: '13.1',
-    REASON_DESC: 'Merchandise/Services Not Received',
-    CB_AM: 234.56,
-    ORIG_TRAN_DT: '2024-01-08',
-    STATUS: 'Won',
-    DUE_DT: '2024-02-18',
-  },
-  {
-    CB_DT: '2024-01-20',
-    CASE_ID: 'CB20240120001',
-    MERCHANT_ID: 'M001236',
-    MERCHANT_NAME: 'Tech Solutions Inc',
-    CARD_BRAND: 'Amex',
-    REASON_CD: '13.3',
-    REASON_DESC: 'Not as Described',
-    CB_AM: 1234.56,
-    ORIG_TRAN_DT: '2024-01-02',
-    STATUS: 'Pending',
-    DUE_DT: '2024-02-15',
-  },
-  {
-    CB_DT: '2024-01-20',
-    CASE_ID: 'CB20240120002',
-    MERCHANT_ID: 'M001237',
-    MERCHANT_NAME: 'Global Services Co',
-    CARD_BRAND: 'Visa',
-    REASON_CD: '13.6',
-    REASON_DESC: 'Credit Not Processed',
-    CB_AM: 567.89,
-    ORIG_TRAN_DT: '2023-12-28',
-    STATUS: 'Lost',
-    DUE_DT: '2024-02-10',
-  },
-  {
-    CB_DT: '2024-01-19',
-    CASE_ID: 'CB20240119001',
-    MERCHANT_ID: 'M001238',
-    MERCHANT_NAME: 'Metro Dining Group',
-    CARD_BRAND: 'Discover',
-    REASON_CD: '12.6',
-    REASON_DESC: 'Duplicate Processing',
-    CB_AM: 89.99,
-    ORIG_TRAN_DT: '2024-01-10',
-    STATUS: 'Won',
-    DUE_DT: '2024-02-12',
-  },
-];
 
 export default function ChargebackAnalyticsPage() {
   const [dateRange, setDateRange] = useState<[dayjs.Dayjs, dayjs.Dayjs]>([
@@ -140,23 +32,49 @@ export default function ChargebackAnalyticsPage() {
   ]);
   const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
-  const [loading] = useState(false);
   const [activeTab, setActiveTab] = useState('overview');
 
+  const startDate = dateRange[0].format('YYYY-MM-DD');
+  const endDate = dateRange[1].format('YYYY-MM-DD');
+
+  const kpis = useAnalyticsData<ChargebackKPIs>('chargeback', 'kpis', { startDate, endDate });
+  const byReason = useAnalyticsData<ChargebackByReason[]>('chargeback', 'by-reason', { startDate, endDate });
+  const details = useAnalyticsData<ChargebackRecord[]>('chargeback', 'details', {
+    startDate,
+    endDate,
+    reasonCode: reasonCode || undefined,
+    status: status || undefined,
+  }, { enabled: activeTab === 'details' });
+
+  const isLoading = kpis.isLoading || byReason.isLoading;
+  const hasError = kpis.error || byReason.error;
+  const errorCode = (hasError as Error & { code?: string })?.code;
+
+  const refetchAll = useCallback(() => {
+    kpis.refetch();
+    byReason.refetch();
+    if (activeTab === 'details') details.refetch();
+  }, [kpis, byReason, details, activeTab]);
+
+  if (hasError && errorCode === 'SNOWFLAKE_NOT_CONFIGURED') {
+    return <ConnectionError code="SNOWFLAKE_NOT_CONFIGURED" onRetry={refetchAll} />;
+  }
+
+  const kpiData = kpis.data;
+
   const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(value);
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 
   const formatNumber = (value: number) =>
     new Intl.NumberFormat('en-US').format(value);
 
+  const reasonData = (byReason.data || []).map((d) => ({
+    name: d.reasonDescription || d.reasonCode,
+    value: d.amount,
+  }));
+
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
       <Breadcrumb
         items={[
           { href: '/', title: <><HomeOutlined /> Home</> },
@@ -165,22 +83,14 @@ export default function ChargebackAnalyticsPage() {
         ]}
       />
 
-      {/* Page Header */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <div
-            className="flex items-center justify-center w-12 h-12 rounded-lg"
-            style={{ backgroundColor: `${domainColors.chargeback.primary}15` }}
-          >
+          <div className="flex items-center justify-center w-12 h-12 rounded-lg" style={{ backgroundColor: `${domainColors.chargeback.primary}15` }}>
             <FileExclamationOutlined style={{ fontSize: 24, color: domainColors.chargeback.primary }} />
           </div>
           <div>
-            <Title level={3} className="!mb-0">
-              Chargeback Analytics
-            </Title>
-            <Text type="secondary">
-              Dispute management and chargeback metrics
-            </Text>
+            <Title level={3} className="!mb-0">Chargeback Analytics</Title>
+            <Text type="secondary">Dispute management and chargeback metrics</Text>
           </div>
         </div>
 
@@ -217,112 +127,79 @@ export default function ChargebackAnalyticsPage() {
             value={status}
             onChange={setStatus}
             options={[
-              { value: 'pending', label: 'Pending' },
-              { value: 'won', label: 'Won' },
-              { value: 'lost', label: 'Lost' },
+              { value: 'OPEN', label: 'Open' },
+              { value: 'CLOSED', label: 'Closed' },
             ]}
           />
-          <Button icon={<ReloadOutlined />}>Refresh</Button>
+          <Button icon={<ReloadOutlined />} onClick={refetchAll}>Refresh</Button>
         </Space>
       </div>
 
-      {/* Tabs */}
       <Tabs
         activeKey={activeTab}
         onChange={setActiveTab}
         items={[
-          {
-            key: 'overview',
-            label: (
-              <span>
-                <LineChartOutlined /> Overview
-              </span>
-            ),
-          },
-          {
-            key: 'details',
-            label: (
-              <span>
-                <TableOutlined /> Chargeback Details
-              </span>
-            ),
-          },
+          { key: 'overview', label: <span><LineChartOutlined /> Overview</span> },
+          { key: 'details', label: <span><TableOutlined /> Chargeback Details</span> },
         ]}
       />
 
       {activeTab === 'overview' ? (
-        <Spin spinning={loading}>
-          {/* KPI Cards */}
+        <Spin spinning={isLoading}>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8} xl={4}>
               <Card>
                 <Statistic
-                  title="Total CB Amount"
-                  value={mockKPIs.totalChargebackAmount}
+                  title="Total Dispute Amount"
+                  value={kpiData?.totalDisputeAmount ?? 0}
                   precision={0}
                   prefix={<DollarOutlined style={{ color: domainColors.chargeback.primary }} />}
                   formatter={(value) => formatCurrency(value as number)}
                   styles={{ content: { color: domainColors.chargeback.primary } }}
                 />
-                <div className="mt-2">
-                  <Tag color="red" icon={<ArrowUpOutlined />}>
-                    +8.2% vs last month
-                  </Tag>
-                </div>
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
               <Card>
                 <Statistic
                   title="Chargeback Count"
-                  value={mockKPIs.chargebackCount}
+                  value={kpiData?.totalChargebacks ?? 0}
                   prefix={<ExclamationCircleOutlined style={{ color: domainColors.chargeback.primary }} />}
                   formatter={(value) => formatNumber(value as number)}
                 />
-                <div className="mt-2">
-                  <Tag color="red" icon={<ArrowUpOutlined />}>
-                    +5.4% vs last month
-                  </Tag>
-                </div>
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
               <Card>
                 <Statistic
-                  title="Chargeback Rate"
-                  value={mockKPIs.chargebackRate}
-                  precision={2}
-                  suffix="%"
-                  prefix={<WarningOutlined style={{ color: mockKPIs.chargebackRate > 1 ? '#ff4d4f' : '#faad14' }} />}
-                  styles={{ content: { color: mockKPIs.chargebackRate > 1 ? '#ff4d4f' : '#faad14' } }}
+                  title="Transaction Amount"
+                  value={kpiData?.totalTransactionAmount ?? 0}
+                  precision={0}
+                  prefix={<DollarOutlined style={{ color: '#faad14' }} />}
+                  formatter={(value) => formatCurrency(value as number)}
                 />
-                <div className="mt-2">
-                  <Tag color={mockKPIs.chargebackRate < 1 ? 'green' : 'red'}>
-                    {mockKPIs.chargebackRate < 1 ? 'Within Threshold' : 'Above Threshold'}
-                  </Tag>
-                </div>
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
               <Card>
                 <Statistic
                   title="Win Rate"
-                  value={mockKPIs.winRate}
+                  value={kpiData?.winRate ?? 0}
                   precision={1}
                   suffix="%"
                   prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
                   styles={{ content: { color: '#52c41a' } }}
                 />
                 <div className="mt-2">
-                  <Progress percent={mockKPIs.winRate} showInfo={false} strokeColor="#52c41a" size="small" />
+                  <Progress percent={kpiData?.winRate ?? 0} showInfo={false} strokeColor="#52c41a" size="small" />
                 </div>
               </Card>
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
               <Card>
                 <Statistic
-                  title="Pending Disputes"
-                  value={mockKPIs.pendingDisputes}
+                  title="Open Disputes"
+                  value={kpiData?.openCount ?? 0}
                   prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
                   formatter={(value) => formatNumber(value as number)}
                 />
@@ -334,36 +211,23 @@ export default function ChargebackAnalyticsPage() {
             <Col xs={24} sm={12} lg={8} xl={4}>
               <Card>
                 <Statistic
-                  title="Avg Resolution"
-                  value={mockKPIs.avgResolutionDays}
-                  suffix=" days"
-                  prefix={<ClockCircleOutlined style={{ color: '#1890ff' }} />}
+                  title="Won / Lost"
+                  value={kpiData?.wonCount ?? 0}
+                  prefix={<WarningOutlined style={{ color: '#1890ff' }} />}
+                  suffix={` / ${kpiData?.lostCount ?? 0}`}
                 />
                 <div className="mt-2">
-                  <Tag color="blue">Within SLA</Tag>
+                  <Tag color="blue">{formatNumber(kpiData?.closedCount ?? 0)} closed</Tag>
                 </div>
               </Card>
             </Col>
           </Row>
 
-          {/* Charts Row */}
           <Row gutter={[16, 16]} className="mt-4">
-            <Col xs={24} lg={14}>
-              <Card title="Chargeback Amount Trend" className="h-full">
-                <TimeSeriesChart
-                  data={mockTrendData}
-                  height={300}
-                  color={domainColors.chargeback.primary}
-                  yAxisLabel="Chargeback Amount ($)"
-                  showArea={true}
-                  formatValue={(v) => `$${(v / 1000).toFixed(0)}K`}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} lg={10}>
+            <Col xs={24}>
               <Card title="Chargebacks by Reason Code" className="h-full">
                 <BarChart
-                  data={mockByReasonCode}
+                  data={reasonData}
                   height={300}
                   colors={[domainColors.chargeback.primary]}
                   horizontal={true}
@@ -372,40 +236,17 @@ export default function ChargebackAnalyticsPage() {
               </Card>
             </Col>
           </Row>
-
-          {/* Second Charts Row */}
-          <Row gutter={[16, 16]} className="mt-4">
-            <Col xs={24} lg={12}>
-              <Card title="Chargebacks by Card Brand">
-                <BarChart
-                  data={mockByCardBrand}
-                  height={250}
-                  colors={[domainColors.chargeback.primary]}
-                  formatValue={(v) => `$${(v / 1000).toFixed(0)}K`}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} lg={12}>
-              <Card title="Chargebacks by Status">
-                <BarChart
-                  data={mockByStatus}
-                  height={250}
-                  colors={[domainColors.chargeback.primary]}
-                  formatValue={(v) => `$${(v / 1000).toFixed(0)}K`}
-                />
-              </Card>
-            </Col>
-          </Row>
         </Spin>
       ) : (
-        /* Details Tab */
-        <DataGrid
-          data={mockChargebackData}
-          height={600}
-          enablePivot={true}
-          enableExport={true}
-          title="Chargeback Cases"
-        />
+        <Spin spinning={details.isLoading}>
+          <DataGrid
+            data={(details.data || []) as Record<string, unknown>[]}
+            height={600}
+            enablePivot={true}
+            enableExport={true}
+            title="Chargeback Cases"
+          />
+        </Spin>
       )}
     </div>
   );

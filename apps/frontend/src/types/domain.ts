@@ -81,6 +81,7 @@ export interface ApiResponse<T> {
 
 // Authorization types
 export interface AuthorizationRecord {
+  [key: string]: unknown;
   authId: string;
   txnDate: string;
   cardBrand: string;
@@ -135,6 +136,7 @@ export interface AuthorizationDecline {
 
 // Settlement types
 export interface SettlementRecord {
+  [key: string]: unknown;
   settleId: string;
   recordDate: string;
   cardBrand: string;
@@ -178,6 +180,7 @@ export interface SettlementByMerchant {
 
 // Funding types
 export interface FundingRecord {
+  [key: string]: unknown;
   fundId: string;
   fundedDate: string;
   status: string;
@@ -210,6 +213,7 @@ export interface FundingTimeSeriesPoint {
 
 // Chargeback types
 export interface ChargebackRecord {
+  [key: string]: unknown;
   cbkId: string;
   disputeDate: string;
   reasonCode: string;
@@ -244,6 +248,7 @@ export interface ChargebackByReason {
 
 // Retrieval types
 export interface RetrievalRecord {
+  [key: string]: unknown;
   rtId: string;
   saleDate: string;
   status: string;
@@ -267,6 +272,7 @@ export interface RetrievalKPIs {
 
 // Adjustment types
 export interface AdjustmentRecord {
+  [key: string]: unknown;
   adjId: string;
   adjDate: string;
   adjCode: string;
