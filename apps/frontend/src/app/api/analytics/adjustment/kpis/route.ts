@@ -21,15 +21,15 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
+      SELECT
         COUNT(*) as total_adjustments,
-        SUM(CASE WHEN ADJ_AM >= 0 THEN ADJ_AM ELSE 0 END) as total_credits,
-        SUM(CASE WHEN ADJ_AM < 0 THEN ABS(ADJ_AM) ELSE 0 END) as total_debits,
-        SUM(ADJ_AM) as net_adjustment,
-        COUNT(CASE WHEN ADJ_AM >= 0 THEN 1 END) as credit_count,
-        COUNT(CASE WHEN ADJ_AM < 0 THEN 1 END) as debit_count
-      FROM COCO_SDLC_HOL.CLEA.ADJ_DMCL_V1
-      WHERE ADJ_DT BETWEEN '${startDate}' AND '${endDate}'
+        SUM(CASE WHEN adjustment_amount >= 0 THEN adjustment_amount ELSE 0 END) as total_credits,
+        SUM(CASE WHEN adjustment_amount < 0 THEN ABS(adjustment_amount) ELSE 0 END) as total_debits,
+        SUM(adjustment_amount) as net_adjustment,
+        COUNT(CASE WHEN adjustment_amount >= 0 THEN 1 END) as credit_count,
+        COUNT(CASE WHEN adjustment_amount < 0 THEN 1 END) as debit_count
+      FROM COCO_SDLC_HOL.MARTS.ADJUSTMENTS
+      WHERE adjustment_date BETWEEN '${startDate}' AND '${endDate}'
     `;
 
     const result = await executeQuery(sql);

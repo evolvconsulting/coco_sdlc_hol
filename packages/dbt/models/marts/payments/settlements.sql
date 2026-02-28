@@ -10,6 +10,9 @@ with enriched as (
 )
 
 select
+    -- Surrogate key
+    settlement_id,
+
     -- Dates
     settlement_date,
     batch_date,

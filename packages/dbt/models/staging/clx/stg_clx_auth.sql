@@ -48,7 +48,10 @@ renamed as (
         -- Response codes (legacy names)
         avs_rslt,
         cvv_rslt,
-        
+
+        -- Risk (legacy name)
+        risk_score,
+
         -- Audit fields
         crt_ts,
         upd_ts

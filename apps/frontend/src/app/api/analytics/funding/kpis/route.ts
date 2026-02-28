@@ -21,17 +21,17 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
+      SELECT
         COUNT(*) as total_funding_records,
-        SUM(DEPOSIT_AM) as total_deposits,
-        SUM(NET_SALES_AM) as total_net_sales,
-        SUM(FEES_AM) as total_fees,
-        SUM(CHARGEBACK_AM) as total_chargebacks,
-        COUNT(CASE WHEN PAYMENT_STATUS = 'COMPLETED' THEN 1 END) as completed_count,
-        COUNT(CASE WHEN PAYMENT_STATUS = 'PENDING' THEN 1 END) as pending_count,
-        COUNT(CASE WHEN PAYMENT_STATUS = 'HELD' THEN 1 END) as held_count
-      FROM COCO_SDLC_HOL.CLEA.FUND_DMCL_V1
-      WHERE FUNDED_DT BETWEEN '${startDate}' AND '${endDate}'
+        SUM(deposit_amount) as total_deposits,
+        SUM(net_sales_amount) as total_net_sales,
+        SUM(total_fees_amount) as total_fees,
+        SUM(chargeback_amount) as total_chargebacks,
+        COUNT(CASE WHEN payment_status = 'COMPLETED' THEN 1 END) as completed_count,
+        COUNT(CASE WHEN payment_status = 'PENDING' THEN 1 END) as pending_count,
+        COUNT(CASE WHEN payment_status = 'HELD' THEN 1 END) as held_count
+      FROM COCO_SDLC_HOL.MARTS.DEPOSITS
+      WHERE deposit_date BETWEEN '${startDate}' AND '${endDate}'
     `;
 
     const result = await executeQuery(sql);

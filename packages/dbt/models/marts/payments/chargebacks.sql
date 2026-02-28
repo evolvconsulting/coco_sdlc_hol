@@ -10,6 +10,9 @@ with enriched as (
 )
 
 select
+    -- Surrogate key
+    chargeback_id,
+
     -- Dates
     dispute_received_date,
     original_transaction_date,

@@ -21,15 +21,15 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
-        DSPUT_RSN_CD as reason_code,
-        DSPUT_RSN_DESC as reason_description,
+      SELECT
+        reason_code,
+        reason_description,
         COUNT(*) as count,
-        SUM(DSPUT_AMT) as amount,
+        SUM(dispute_amount) as amount,
         ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
-      FROM COCO_SDLC_HOL.CLEA.CHARGEBACK_DMCL_V1
-      WHERE DSPUT_RCVD_DT BETWEEN '${startDate}' AND '${endDate}'
-      GROUP BY DSPUT_RSN_CD, DSPUT_RSN_DESC
+      FROM COCO_SDLC_HOL.MARTS.CHARGEBACKS
+      WHERE dispute_received_date BETWEEN '${startDate}' AND '${endDate}'
+      GROUP BY reason_code, reason_description
       ORDER BY count DESC
       LIMIT 10
     `;

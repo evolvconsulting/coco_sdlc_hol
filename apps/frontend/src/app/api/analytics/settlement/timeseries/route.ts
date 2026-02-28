@@ -21,18 +21,18 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
-        RECORD_DT as date,
-        SUM(SALES_CT) as sales_count,
-        SUM(SALES_AM) as sales_amount,
-        SUM(REFUND_CNT) as refund_count,
-        SUM(REFUND_AM) as refund_amount,
-        SUM(PRCS_NET_AMT) as net_amount,
-        SUM(INTERCHANGE_AM) as interchange
-      FROM COCO_SDLC_HOL.CLEA.SETTLE_DMCL_V1
-      WHERE RECORD_DT BETWEEN '${startDate}' AND '${endDate}'
-      GROUP BY RECORD_DT
-      ORDER BY RECORD_DT
+      SELECT
+        settlement_date as date,
+        SUM(sales_count) as sales_count,
+        SUM(sales_amount) as sales_amount,
+        SUM(refund_count) as refund_count,
+        SUM(refund_amount) as refund_amount,
+        SUM(net_amount) as net_amount,
+        SUM(discount_amount) as interchange
+      FROM COCO_SDLC_HOL.MARTS.SETTLEMENTS
+      WHERE settlement_date BETWEEN '${startDate}' AND '${endDate}'
+      GROUP BY settlement_date
+      ORDER BY settlement_date
     `;
 
     const result = await executeQuery(sql);

@@ -10,6 +10,9 @@ with enriched as (
 )
 
 select
+    -- Surrogate key
+    authorization_id,
+
     -- Transaction details
     transaction_date,
     transaction_time,
@@ -44,6 +47,9 @@ select
     
     -- Response codes
     avs_response_code as avs_response,
-    cvv_response_code as cvv_response
+    cvv_response_code as cvv_response,
+
+    -- Risk
+    risk_score
 
 from enriched

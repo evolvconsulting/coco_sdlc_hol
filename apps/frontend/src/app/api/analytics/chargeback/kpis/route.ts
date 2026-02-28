@@ -21,17 +21,17 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
+      SELECT
         COUNT(*) as total_chargebacks,
-        SUM(DSPUT_AMT) as total_dispute_amount,
-        SUM(TXN_AMT) as total_transaction_amount,
-        COUNT(CASE WHEN CBK_STATUS = 'OPEN' THEN 1 END) as open_count,
-        COUNT(CASE WHEN CBK_STATUS = 'CLOSED' THEN 1 END) as closed_count,
-        COUNT(CASE WHEN CBK_WIN_LOSS = 'WIN' THEN 1 END) as won_count,
-        COUNT(CASE WHEN CBK_WIN_LOSS = 'LOSS' THEN 1 END) as lost_count,
-        ROUND(COUNT(CASE WHEN CBK_WIN_LOSS = 'WIN' THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN CBK_WIN_LOSS IS NOT NULL THEN 1 END), 0), 2) as win_rate
-      FROM COCO_SDLC_HOL.CLEA.CHARGEBACK_DMCL_V1
-      WHERE DSPUT_RCVD_DT BETWEEN '${startDate}' AND '${endDate}'
+        SUM(dispute_amount) as total_dispute_amount,
+        SUM(transaction_amount) as total_transaction_amount,
+        COUNT(CASE WHEN chargeback_status = 'OPEN' THEN 1 END) as open_count,
+        COUNT(CASE WHEN chargeback_status = 'CLOSED' THEN 1 END) as closed_count,
+        COUNT(CASE WHEN outcome = 'WIN' THEN 1 END) as won_count,
+        COUNT(CASE WHEN outcome = 'LOSS' THEN 1 END) as lost_count,
+        ROUND(COUNT(CASE WHEN outcome = 'WIN' THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN outcome IS NOT NULL THEN 1 END), 0), 2) as win_rate
+      FROM COCO_SDLC_HOL.MARTS.CHARGEBACKS
+      WHERE dispute_received_date BETWEEN '${startDate}' AND '${endDate}'
     `;
 
     const result = await executeQuery(sql);

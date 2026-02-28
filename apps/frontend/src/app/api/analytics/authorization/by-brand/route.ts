@@ -21,16 +21,16 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
-        CARD_BRND as card_brand,
+      SELECT
+        card_brand,
         COUNT(*) as total_transactions,
-        SUM(CASE WHEN APPROVALCODE = 1 THEN 1 ELSE 0 END) as approved,
-        SUM(CASE WHEN APPROVALCODE = 0 THEN 1 ELSE 0 END) as declined,
-        ROUND(SUM(CASE WHEN APPROVALCODE = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as approval_rate,
-        SUM(AMOUNT) as total_amount
-      FROM COCO_SDLC_HOL.CLEA.AUTH_DMCL_V1
-      WHERE TXNDATE BETWEEN '${startDate}' AND '${endDate}'
-      GROUP BY CARD_BRND
+        SUM(CASE WHEN approval_status = 'Approved' THEN 1 ELSE 0 END) as approved,
+        SUM(CASE WHEN approval_status = 'Declined' THEN 1 ELSE 0 END) as declined,
+        ROUND(SUM(CASE WHEN approval_status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as approval_rate,
+        SUM(transaction_amount) as total_amount
+      FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
+      WHERE transaction_date BETWEEN '${startDate}' AND '${endDate}'
+      GROUP BY card_brand
       ORDER BY total_transactions DESC
     `;
 

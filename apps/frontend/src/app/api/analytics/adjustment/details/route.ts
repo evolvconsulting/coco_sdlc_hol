@@ -23,36 +23,36 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let whereClause = `WHERE ADJ_DT BETWEEN '${startDate}' AND '${endDate}'`;
-    if (type === 'credit') whereClause += ` AND ADJ_AM >= 0`;
-    if (type === 'debit') whereClause += ` AND ADJ_AM < 0`;
+    let whereClause = `WHERE adjustment_date BETWEEN '${startDate}' AND '${endDate}'`;
+    if (type === 'credit') whereClause += ` AND adjustment_amount >= 0`;
+    if (type === 'debit') whereClause += ` AND adjustment_amount < 0`;
 
     const sql = `
-      SELECT 
-        ADJ_ID,
-        ADJ_DT,
-        ADJ_CD,
-        ADJ_DESC_TX,
-        FEE_DESC_TX,
-        LCTN_DBA_NM,
-        ADJ_AM
-      FROM COCO_SDLC_HOL.CLEA.ADJ_DMCL_V1
+      SELECT
+        adjustment_id,
+        adjustment_date,
+        adjustment_code,
+        adjustment_description,
+        fee_description,
+        merchant_name,
+        adjustment_amount
+      FROM COCO_SDLC_HOL.MARTS.ADJUSTMENTS
       ${whereClause}
-      ORDER BY ADJ_DT DESC
+      ORDER BY adjustment_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      adjId: row.ADJ_ID,
-      adjDate: row.ADJ_DT,
-      adjCode: row.ADJ_CD,
-      adjDescription: row.ADJ_DESC_TX,
-      feeDescription: row.FEE_DESC_TX,
-      merchantName: row.LCTN_DBA_NM,
-      amount: Number(row.ADJ_AM) || 0,
-      type: Number(row.ADJ_AM) >= 0 ? 'Credit' : 'Debit',
+      adjId: row.ADJUSTMENT_ID,
+      adjDate: row.ADJUSTMENT_DATE,
+      adjCode: row.ADJUSTMENT_CODE,
+      adjDescription: row.ADJUSTMENT_DESCRIPTION,
+      feeDescription: row.FEE_DESCRIPTION,
+      merchantName: row.MERCHANT_NAME,
+      amount: Number(row.ADJUSTMENT_AMOUNT) || 0,
+      type: Number(row.ADJUSTMENT_AMOUNT) >= 0 ? 'Credit' : 'Debit',
     }));
 
     return NextResponse.json({

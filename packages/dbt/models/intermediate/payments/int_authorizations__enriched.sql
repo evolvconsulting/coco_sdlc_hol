@@ -103,7 +103,10 @@ select
     
     -- Response codes (RENAMED from legacy)
     auth.avs_rslt as avs_response_code,
-    auth.cvv_rslt as cvv_response_code
+    auth.cvv_rslt as cvv_response_code,
+
+    -- Risk score
+    auth.risk_score
 
 from auth
 left join merchants 

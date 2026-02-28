@@ -23,36 +23,36 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let whereClause = `WHERE FUNDED_DT BETWEEN '${startDate}' AND '${endDate}'`;
-    if (status) whereClause += ` AND PAYMENT_STATUS = '${status}'`;
+    let whereClause = `WHERE deposit_date BETWEEN '${startDate}' AND '${endDate}'`;
+    if (status) whereClause += ` AND payment_status = '${status}'`;
 
     const sql = `
-      SELECT 
-        FUND_ID,
-        FUNDED_DT,
-        PAYMENT_STATUS,
-        LCTN_DBA_NM,
-        DEPOSIT_AM,
-        NET_SALES_AM,
-        FEES_AM,
-        CHARGEBACK_AM
-      FROM COCO_SDLC_HOL.CLEA.FUND_DMCL_V1
+      SELECT
+        deposit_id,
+        deposit_date,
+        payment_status,
+        merchant_name,
+        deposit_amount,
+        net_sales_amount,
+        total_fees_amount,
+        chargeback_amount
+      FROM COCO_SDLC_HOL.MARTS.DEPOSITS
       ${whereClause}
-      ORDER BY FUNDED_DT DESC
+      ORDER BY deposit_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
     const result = await executeQuery(sql);
 
     const data = result.rows.map(row => ({
-      fundId: row.FUND_ID,
-      fundedDate: row.FUNDED_DT,
+      fundId: row.DEPOSIT_ID,
+      fundedDate: row.DEPOSIT_DATE,
       status: row.PAYMENT_STATUS,
-      merchantName: row.LCTN_DBA_NM,
-      depositAmount: Number(row.DEPOSIT_AM) || 0,
-      netSales: Number(row.NET_SALES_AM) || 0,
-      fees: Number(row.FEES_AM) || 0,
-      chargebacks: Number(row.CHARGEBACK_AM) || 0,
+      merchantName: row.MERCHANT_NAME,
+      depositAmount: Number(row.DEPOSIT_AMOUNT) || 0,
+      netSales: Number(row.NET_SALES_AMOUNT) || 0,
+      fees: Number(row.TOTAL_FEES_AMOUNT) || 0,
+      chargebacks: Number(row.CHARGEBACK_AMOUNT) || 0,
     }));
 
     return NextResponse.json({

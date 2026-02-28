@@ -10,6 +10,9 @@ with enriched as (
 )
 
 select
+    -- Surrogate key
+    adjustment_id,
+
     -- Dates
     adjustment_date,
     effective_date,

@@ -21,16 +21,16 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
     const sql = `
-      SELECT 
+      SELECT
         COUNT(*) as total_retrievals,
-        SUM(RT_DOLLAR_AM) as total_amount,
-        COUNT(CASE WHEN RV_CB_STATUS = 'OPEN' THEN 1 END) as open_count,
-        COUNT(CASE WHEN RV_CB_STATUS = 'FULFILLED' THEN 1 END) as fulfilled_count,
-        COUNT(CASE WHEN RV_CB_STATUS = 'EXPIRED' THEN 1 END) as expired_count,
-        COUNT(CASE WHEN RV_CB_STATUS = 'CLOSED' THEN 1 END) as closed_count,
-        ROUND(COUNT(CASE WHEN RV_CB_STATUS = 'FULFILLED' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as fulfillment_rate
-      FROM COCO_SDLC_HOL.CLEA.RETRIEVAL_DMCL_V1
-      WHERE RT_SALE_DT BETWEEN '${startDate}' AND '${endDate}'
+        SUM(retrieval_amount) as total_amount,
+        COUNT(CASE WHEN retrieval_status = 'OPEN' THEN 1 END) as open_count,
+        COUNT(CASE WHEN retrieval_status = 'FULFILLED' THEN 1 END) as fulfilled_count,
+        COUNT(CASE WHEN retrieval_status = 'EXPIRED' THEN 1 END) as expired_count,
+        COUNT(CASE WHEN retrieval_status = 'CLOSED' THEN 1 END) as closed_count,
+        ROUND(COUNT(CASE WHEN retrieval_status = 'FULFILLED' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as fulfillment_rate
+      FROM COCO_SDLC_HOL.MARTS.RETRIEVALS
+      WHERE original_sale_date BETWEEN '${startDate}' AND '${endDate}'
     `;
 
     const result = await executeQuery(sql);
