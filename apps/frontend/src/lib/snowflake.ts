@@ -1,9 +1,10 @@
-// Snowflake service for executing queries with RLS enforcement
-// All queries automatically filter by CLNT_ID = 'dmcl' for security
+// Snowflake service for executing queries with per-request connection lifecycle.
+// Each executeQuery call creates a fresh connection and destroys it after completion.
 
 import snowflake from 'snowflake-sdk';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
+import { SNOWFLAKE_DATABASE, SNOWFLAKE_SCHEMA } from '@/lib/config';
 
 interface SnowflakeConfig {
   account: string;
@@ -57,11 +58,11 @@ function getConfig(): SnowflakeConfig {
 function loadPrivateKey(keyPath: string): string {
   try {
     const keyContent = fs.readFileSync(keyPath, 'utf8');
-    
+
     // If the key is encrypted, we need the passphrase
     // For now, assume unencrypted key or handle via environment
     const passphrase = process.env.SNOWFLAKE_PRIVATE_KEY_PASSPHRASE || '';
-    
+
     if (keyContent.includes('ENCRYPTED')) {
       // Decrypt the private key
       const privateKey = crypto.createPrivateKey({
@@ -71,7 +72,7 @@ function loadPrivateKey(keyPath: string): string {
       });
       return privateKey.export({ type: 'pkcs8', format: 'pem' }) as string;
     }
-    
+
     return keyContent;
   } catch (err) {
     console.error('Failed to load private key:', err);
@@ -79,16 +80,10 @@ function loadPrivateKey(keyPath: string): string {
   }
 }
 
-// Create a connection pool (simplified for demo - use proper pooling in production)
-let connectionPool: snowflake.Connection | null = null;
-
-async function getConnection(): Promise<snowflake.Connection> {
-  if (connectionPool) {
-    return connectionPool;
-  }
-
+// Create a fresh connection for each request — no global singleton
+async function createConnection(): Promise<snowflake.Connection> {
   const config = getConfig();
-  
+
   // Build connection options
   const connectionOptions: snowflake.ConnectionOptions = {
     account: config.account,
@@ -121,10 +116,8 @@ async function getConnection(): Promise<snowflake.Connection> {
     connection.connect((err, conn) => {
       if (err) {
         console.error('Failed to connect to Snowflake:', err);
-        connectionPool = null;
         reject(err);
       } else {
-        connectionPool = conn;
         resolve(conn);
       }
     });
@@ -132,15 +125,23 @@ async function getConnection(): Promise<snowflake.Connection> {
 }
 
 // Execute a query and return results
-export async function executeQuery(sql: string): Promise<QueryResult> {
+export async function executeQuery(
+  sql: string,
+  binds?: (string | number | null)[]
+): Promise<QueryResult> {
   const startTime = Date.now();
-  const connection = await getConnection();
+  const connection = await createConnection();
 
   return new Promise((resolve, reject) => {
     connection.execute({
       sqlText: sql,
+      binds: binds || [],
       complete: (err, stmt, rows) => {
         const executionTime = Date.now() - startTime;
+
+        connection.destroy((destroyErr) => {
+          if (destroyErr) console.error('Error closing Snowflake connection:', destroyErr);
+        });
 
         if (err) {
           console.error('Query execution error:', err);
@@ -162,70 +163,23 @@ export async function executeQuery(sql: string): Promise<QueryResult> {
   });
 }
 
-// Execute a query with automatic RLS filter
-// This ensures all queries are scoped to the DMCL client
-export async function executeQueryWithRLS(
-  sql: string,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  _clientId: string = 'dmcl'
-): Promise<QueryResult> {
-  // Note: The views (AUTH_DMCL_V1, etc.) already have CLNT_ID filtering built-in
-  // This function is for additional security layer on raw queries
-  
-  // Validate the SQL doesn't contain dangerous patterns
-  const sanitizedSql = sanitizeSQL(sql);
-  
-  return executeQuery(sanitizedSql);
-}
-
-// Basic SQL sanitization (additional layer - views provide primary security)
-function sanitizeSQL(sql: string): string {
-  // Remove comments that could hide malicious code
-  let sanitized = sql.replace(/--.*$/gm, '');
-  sanitized = sanitized.replace(/\/\*[\s\S]*?\*\//g, '');
-  
-  // Check for dangerous statements
-  const dangerous = [
-    /\bDROP\b/i,
-    /\bDELETE\b/i,
-    /\bTRUNCATE\b/i,
-    /\bALTER\b/i,
-    /\bCREATE\b/i,
-    /\bINSERT\b/i,
-    /\bUPDATE\b/i,
-    /\bGRANT\b/i,
-    /\bREVOKE\b/i,
-  ];
-
-  for (const pattern of dangerous) {
-    if (pattern.test(sanitized)) {
-      throw new Error('Query contains prohibited statements');
-    }
-  }
-
-  return sanitized;
-}
-
 // Get table metadata (columns, types)
 export async function getTableMetadata(tableName: string): Promise<{
   columns: Array<{ name: string; type: string; nullable: boolean }>;
 }> {
-  const database = process.env.SNOWFLAKE_DATABASE || 'COCO_SDLC_HOL';
-  const schema = process.env.SNOWFLAKE_SCHEMA || 'MARTS';
-  
   const sql = `
-    SELECT 
+    SELECT
       COLUMN_NAME as name,
       DATA_TYPE as type,
       IS_NULLABLE = 'YES' as nullable
-    FROM ${database}.INFORMATION_SCHEMA.COLUMNS
-    WHERE TABLE_SCHEMA = '${schema}'
+    FROM ${SNOWFLAKE_DATABASE}.INFORMATION_SCHEMA.COLUMNS
+    WHERE TABLE_SCHEMA = '${SNOWFLAKE_SCHEMA}'
       AND TABLE_NAME = '${tableName.toUpperCase()}'
     ORDER BY ORDINAL_POSITION
   `;
 
   const result = await executeQuery(sql);
-  
+
   return {
     columns: result.rows.map((row) => ({
       name: row.NAME as string,
@@ -254,17 +208,5 @@ export function isConfigured(): boolean {
     return !!(account && user && hasAuth);
   } catch {
     return false;
-  }
-}
-
-// Close connection (cleanup)
-export function closeConnection(): void {
-  if (connectionPool) {
-    connectionPool.destroy((err) => {
-      if (err) {
-        console.error('Error closing Snowflake connection:', err);
-      }
-    });
-    connectionPool = null;
   }
 }
