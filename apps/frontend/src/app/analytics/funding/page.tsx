@@ -1,11 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Card, Row, Col, Statistic, Select, DatePicker, Space, Typography, Spin, Tag, Tabs, Breadcrumb, Button } from 'antd';
+import { Card, Row, Col, Select, DatePicker, Space, Typography, Tabs, Breadcrumb, Button, Skeleton } from 'antd';
 import {
-  DollarOutlined,
-  BankOutlined,
-  CheckCircleOutlined,
   WalletOutlined,
   HomeOutlined,
   ReloadOutlined,
@@ -16,8 +13,10 @@ import dayjs from 'dayjs';
 import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart';
 import { DataGrid } from '@/components/grid/DataGrid';
 import { ConnectionError } from '@/components/ui/ConnectionError';
+import { KPICard } from '@/components/ui';
 import { useAnalyticsData } from '@/hooks';
 import { domainColors } from '@/lib/theme';
+import { formatCompactCurrency } from '@/lib/formatters';
 import type { FundingKPIs, FundingTimeSeriesPoint, FundingRecord } from '@/types/domain';
 
 const { Title, Text } = Typography;
@@ -57,12 +56,6 @@ export default function FundingAnalyticsPage() {
   }
 
   const kpiData = kpis.data;
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
-
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat('en-US').format(value);
 
   const trendData = (timeseries.data || []).map((d) => ({
     date: String(d.date),
@@ -128,108 +121,98 @@ export default function FundingAnalyticsPage() {
       />
 
       {activeTab === 'overview' ? (
-        <Spin spinning={isLoading}>
+        <>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Deposits"
-                  value={kpiData?.totalDeposits ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: domainColors.funding.primary }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Total Deposits"
+                value={kpiData?.totalDeposits ?? 0}
+                format="currency"
+                color={domainColors.funding.primary}
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Funding Records"
-                  value={kpiData?.totalFundingRecords ?? 0}
-                  prefix={<BankOutlined style={{ color: domainColors.funding.primary }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Funding Records"
+                value={kpiData?.totalFundingRecords ?? 0}
+                format="number"
+                color={domainColors.funding.primary}
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Net Sales"
-                  value={kpiData?.totalNetSales ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: '#52c41a' }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Net Sales"
+                value={kpiData?.totalNetSales ?? 0}
+                format="currency"
+                color="#52c41a"
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Fees"
-                  value={kpiData?.totalFees ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: '#faad14' }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Total Fees"
+                value={kpiData?.totalFees ?? 0}
+                format="currency"
+                color="#faad14"
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Completed"
-                  value={kpiData?.completedCount ?? 0}
-                  prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-                <div className="mt-2">
-                  <Tag color="green">
-                    {kpiData && kpiData.totalFundingRecords > 0
-                      ? `${((kpiData.completedCount / kpiData.totalFundingRecords) * 100).toFixed(1)}%`
-                      : '0%'}
-                  </Tag>
-                </div>
-              </Card>
+              <KPICard
+                title="Completed"
+                value={kpiData?.completedCount ?? 0}
+                format="number"
+                color="#52c41a"
+                loading={kpis.isLoading}
+                description={
+                  kpiData && kpiData.totalFundingRecords > 0
+                    ? `${((kpiData.completedCount / kpiData.totalFundingRecords) * 100).toFixed(1)}% of total`
+                    : '0% of total'
+                }
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Pending"
-                  value={kpiData?.pendingCount ?? 0}
-                  prefix={<DollarOutlined style={{ color: '#faad14' }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-                <div className="mt-2">
-                  <Tag color="orange">Processing</Tag>
-                </div>
-              </Card>
+              <KPICard
+                title="Pending"
+                value={kpiData?.pendingCount ?? 0}
+                format="number"
+                color="#faad14"
+                loading={kpis.isLoading}
+                description="Processing"
+              />
             </Col>
           </Row>
 
           <Row gutter={[16, 16]} className="mt-4">
             <Col xs={24}>
               <Card title="Deposit Volume Trend" className="h-full">
-                <TimeSeriesChart
-                  data={trendData}
-                  height={300}
-                  color={domainColors.funding.primary}
-                  yAxisLabel="Deposit Amount ($)"
-                  showArea={true}
-                  formatValue={(v) => `$${(v / 1000000).toFixed(1)}M`}
-                />
+                {isLoading ? (
+                  <Skeleton active paragraph={{ rows: 6 }} style={{ height: 300, padding: '12px' }} />
+                ) : (
+                  <TimeSeriesChart
+                    data={trendData}
+                    height={300}
+                    color={domainColors.funding.primary}
+                    yAxisLabel="Deposit Amount ($)"
+                    showArea={true}
+                    formatValue={formatCompactCurrency}
+                  />
+                )}
               </Card>
             </Col>
           </Row>
-        </Spin>
+        </>
       ) : (
-        <Spin spinning={details.isLoading}>
-          <DataGrid
-            data={(details.data || []) as Record<string, unknown>[]}
-            height={600}
-            enablePivot={true}
-            enableExport={true}
-            title="Funding Transactions"
-          />
-        </Spin>
+        <DataGrid
+          data={(details.data || []) as Record<string, unknown>[]}
+          height={600}
+          enablePivot={true}
+          enableExport={true}
+          title="Funding Transactions"
+          loading={details.isLoading}
+        />
       )}
     </div>
   );
