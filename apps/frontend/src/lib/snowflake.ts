@@ -97,6 +97,7 @@ async function getConnection(): Promise<snowflake.Connection> {
     database: config.database,
     schema: config.schema,
     role: config.role,
+    ...(process.env.SNOWFLAKE_HOST ? { host: process.env.SNOWFLAKE_HOST } : {}),
   };
 
   // Use key-pair authentication if private key is provided (content or path)
@@ -120,6 +121,7 @@ async function getConnection(): Promise<snowflake.Connection> {
     connection.connect((err, conn) => {
       if (err) {
         console.error('Failed to connect to Snowflake:', err);
+        connectionPool = null;
         reject(err);
       } else {
         connectionPool = conn;
