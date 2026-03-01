@@ -1,0 +1,11 @@
+.git
+.github
+.planning
+**/node_modules
+**/.next
+**/.env*
+!**/.env.example
+packages/dbt
+*.log
+.claude
+AGENTS.md
