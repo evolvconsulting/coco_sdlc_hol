@@ -63,7 +63,12 @@ Plans:
   2. API error responses return correct HTTP status codes (4xx/5xx) and do not include Snowflake credentials or connection details
   3. User-supplied query parameters are sent via parameterized queries — no string interpolation in SQL
   4. Each API request creates and closes its own Snowflake connection — no shared global connection state
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Foundation: create config.ts (CODE-01) and refactor snowflake.ts for per-request connections + parameterized query support (CODE-04, CODE-05)
+- [ ] 03-02-PLAN.md — Analytics route hardening: apply config imports, parameterized queries, and error sanitization to all 19 analytics routes (CODE-01, CODE-02, CODE-03, CODE-04)
+- [ ] 03-03-PLAN.md — Remaining route cleanup: error sanitization for cortex/chat and query routes, config migration for metadata route (CODE-01, CODE-02, CODE-03)
 
 ### Phase 4: Deployment
 **Goal**: The portal is running in Snowpark Container Services and accessible to merchants with real data
@@ -85,5 +90,5 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 |-------|----------------|--------|-----------|
 | 1. UAT Walkthrough | 3/3 | Complete | 2026-02-28 |
 | 2. UX / UI Polish | 4/4 | Complete | 2026-02-28 |
-| 3. Code Quality | 0/TBD | Not started | - |
+| 3. Code Quality | 0/3 | Not started | - |
 | 4. Deployment | 0/TBD | Not started | - |
