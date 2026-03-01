@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_AUTHORIZATIONS } from '@/lib/config';
 
 // GET /api/analytics/authorization/declines - Get decline reason breakdown
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view decline data.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -20,21 +21,23 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate') || getDefaultStartDate();
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
+    const binds: (string | number | null)[] = [startDate, endDate];
+
     const sql = `
       SELECT
         COALESCE(decline_reason, 'Unknown') as reason,
         COUNT(*) as count,
         SUM(transaction_amount) as amount,
         ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
-      FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
-      WHERE transaction_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_AUTHORIZATIONS}
+      WHERE transaction_date BETWEEN ? AND ?
         AND approval_status = 'Declined'
       GROUP BY decline_reason
       ORDER BY count DESC
       LIMIT 10
     `;
 
-    const result = await executeQuery(sql);
+    const result = await executeQuery(sql, binds);
 
     const data = result.rows.map(row => ({
       reason: row.REASON,
@@ -51,11 +54,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Authorization declines error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve decline data. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

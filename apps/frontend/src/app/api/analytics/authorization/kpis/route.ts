@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_AUTHORIZATIONS } from '@/lib/config';
 
 // GET /api/analytics/authorization/kpis - Get authorization KPIs
 export async function GET(request: NextRequest) {
@@ -7,8 +8,8 @@ export async function GET(request: NextRequest) {
     // Check if Snowflake is configured
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view authorization data.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -23,7 +24,12 @@ export async function GET(request: NextRequest) {
     const cardBrand = searchParams.get('cardBrand');
 
     // Build the SQL query
-    const cardBrandFilter = cardBrand ? `AND card_brand = '${cardBrand}'` : '';
+    const binds: (string | number | null)[] = [startDate, endDate];
+    let cardBrandFilter = '';
+    if (cardBrand) {
+      cardBrandFilter = 'AND card_brand = ?';
+      binds.push(cardBrand);
+    }
 
     const sql = `
       SELECT
@@ -34,13 +40,13 @@ export async function GET(request: NextRequest) {
         SUM(transaction_amount) as total_amount,
         SUM(CASE WHEN approval_status = 'Approved' THEN transaction_amount ELSE 0 END) as approved_amount,
         ROUND(AVG(transaction_amount), 2) as avg_ticket_size
-      FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
-      WHERE transaction_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_AUTHORIZATIONS}
+      WHERE transaction_date BETWEEN ? AND ?
         ${cardBrandFilter}
     `;
 
-    const result = await executeQuery(sql);
-    
+    const result = await executeQuery(sql, binds);
+
     if (result.rows.length === 0) {
       return NextResponse.json({
         success: true,
@@ -73,11 +79,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Authorization KPIs error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve authorization data. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

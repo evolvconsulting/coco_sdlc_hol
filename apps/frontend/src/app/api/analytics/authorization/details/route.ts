@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_AUTHORIZATIONS } from '@/lib/config';
 
 // GET /api/analytics/authorization/details - Get authorization detail records
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view authorization details.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -24,10 +25,25 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let whereClause = `WHERE transaction_date BETWEEN '${startDate}' AND '${endDate}'`;
-    if (cardBrand) whereClause += ` AND card_brand = '${cardBrand}'`;
-    if (status === 'approved') whereClause += ` AND approval_status = 'Approved'`;
-    if (status === 'declined') whereClause += ` AND approval_status = 'Declined'`;
+    const binds: (string | number | null)[] = [startDate, endDate];
+    let whereClause = 'WHERE transaction_date BETWEEN ? AND ?';
+
+    let cardBrandFilter = '';
+    if (cardBrand) {
+      cardBrandFilter = ' AND card_brand = ?';
+      binds.push(cardBrand);
+    }
+
+    let statusFilter = '';
+    if (status === 'approved') {
+      statusFilter = ' AND approval_status = ?';
+      binds.push('Approved');
+    } else if (status === 'declined') {
+      statusFilter = ' AND approval_status = ?';
+      binds.push('Declined');
+    }
+
+    whereClause += cardBrandFilter + statusFilter;
 
     const sql = `
       SELECT
@@ -40,13 +56,13 @@ export async function GET(request: NextRequest) {
         merchant_name,
         payment_method,
         processing_network
-      FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
+      FROM ${FULL_TABLE_AUTHORIZATIONS}
       ${whereClause}
       ORDER BY transaction_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
-    const result = await executeQuery(sql);
+    const result = await executeQuery(sql, binds);
 
     const data = result.rows.map(row => ({
       authId: row.AUTHORIZATION_KEY,
@@ -70,11 +86,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Authorization details error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve authorization details. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

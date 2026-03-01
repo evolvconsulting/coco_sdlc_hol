@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_AUTHORIZATIONS } from '@/lib/config';
 
 // GET /api/analytics/authorization/timeseries - Get authorization timeseries data
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view authorization data.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -20,6 +21,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate') || getDefaultStartDate();
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
+    const binds: (string | number | null)[] = [startDate, endDate];
+
     const sql = `
       SELECT
         transaction_date as date,
@@ -28,13 +31,13 @@ export async function GET(request: NextRequest) {
         SUM(CASE WHEN approval_status = 'Declined' THEN 1 ELSE 0 END) as declined,
         ROUND(SUM(CASE WHEN approval_status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as approval_rate,
         SUM(transaction_amount) as amount
-      FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
-      WHERE transaction_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_AUTHORIZATIONS}
+      WHERE transaction_date BETWEEN ? AND ?
       GROUP BY transaction_date
       ORDER BY transaction_date
     `;
 
-    const result = await executeQuery(sql);
+    const result = await executeQuery(sql, binds);
 
     const data = result.rows.map(row => ({
       date: row.DATE,
@@ -53,11 +56,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Authorization timeseries error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve authorization timeseries. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }
