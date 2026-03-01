@@ -30,8 +30,8 @@ Requirements for production deployment within 2 days.
 ### Code Quality
 
 - [x] **CODE-01**: Database, schema, and table names centralized in a single configuration file (not scattered across route files)
-- [ ] **CODE-02**: API routes return correct HTTP status codes (4xx/5xx) on errors — not 200 with success=false in body
-- [ ] **CODE-03**: Error responses do not expose Snowflake credentials, connection strings, or sensitive query details
+- [x] **CODE-02**: API routes return correct HTTP status codes (4xx/5xx) on errors — not 200 with success=false in body
+- [x] **CODE-03**: Error responses do not expose Snowflake credentials, connection strings, or sensitive query details
 - [x] **CODE-04**: SQL queries for user-provided parameters use parameterized queries instead of string interpolation
 - [x] **CODE-05**: Snowflake connection lifecycle properly managed — no shared global connection across concurrent requests
 
@@ -92,8 +92,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-05 | Phase 2 | Complete (02-02, 02-04 verified) |
 | UX-06 | Phase 2 | Complete (02-03, 02-04 verified) |
 | CODE-01 | Phase 3 | Complete |
-| CODE-02 | Phase 3 | Pending |
-| CODE-03 | Phase 3 | Pending |
+| CODE-02 | Phase 3 | Complete |
+| CODE-03 | Phase 3 | Complete |
 | CODE-04 | Phase 3 | Complete |
 | CODE-05 | Phase 3 | Complete |
 | DEPLOY-01 | Phase 4 | Pending |
