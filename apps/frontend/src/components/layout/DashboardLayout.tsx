@@ -52,41 +52,34 @@ const menuItems: MenuProps['items'] = [
     label: 'Dashboard',
   },
   {
-    key: 'analytics',
+    key: '/analytics/authorization',
     icon: <CreditCardOutlined />,
-    label: 'Analytics',
-    children: [
-      {
-        key: '/analytics/authorization',
-        icon: <CreditCardOutlined />,
-        label: 'Authorization',
-      },
-      {
-        key: '/analytics/settlement',
-        icon: <BankOutlined />,
-        label: 'Settlement',
-      },
-      {
-        key: '/analytics/funding',
-        icon: <DollarOutlined />,
-        label: 'Funding',
-      },
-      {
-        key: '/analytics/chargeback',
-        icon: <WarningOutlined />,
-        label: 'Chargebacks',
-      },
-      {
-        key: '/analytics/retrieval',
-        icon: <FileSearchOutlined />,
-        label: 'Retrievals',
-      },
-      {
-        key: '/analytics/adjustment',
-        icon: <SwapOutlined />,
-        label: 'Adjustments',
-      },
-    ],
+    label: 'Authorization',
+  },
+  {
+    key: '/analytics/settlement',
+    icon: <BankOutlined />,
+    label: 'Settlement',
+  },
+  {
+    key: '/analytics/funding',
+    icon: <DollarOutlined />,
+    label: 'Funding',
+  },
+  {
+    key: '/analytics/chargeback',
+    icon: <WarningOutlined />,
+    label: 'Chargebacks',
+  },
+  {
+    key: '/analytics/retrieval',
+    icon: <FileSearchOutlined />,
+    label: 'Retrievals',
+  },
+  {
+    key: '/analytics/adjustment',
+    icon: <SwapOutlined />,
+    label: 'Adjustments',
   },
   {
     key: '/chat',
@@ -134,9 +127,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
     router.push(e.key);
   };
 
-  // Determine selected keys and open keys based on pathname
   const selectedKeys = [pathname];
-  const openKeys = pathname.startsWith('/analytics') ? ['analytics'] : [];
 
   return (
     <div className="min-h-screen">
@@ -157,7 +148,6 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           theme="dark"
           mode="inline"
           selectedKeys={selectedKeys}
-          openKeys={openKeys}
           items={menuItems}
           onClick={handleMenuClick}
           inlineCollapsed={collapsed}
