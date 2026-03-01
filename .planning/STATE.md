@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T19:14:36Z"
+last_updated: "2026-03-01T19:18:43.940Z"
 progress:
   total_phases: 4
   completed_phases: 3
-  total_plans: 12
-  completed_plans: 12
+  total_plans: 14
+  completed_plans: 13
 ---
 
 # Project State
@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 
 ## Current Position
 
-Phase: 4 of 4 (Deployment) — IN PROGRESS
-Plan: 1 of 1 in current phase — COMPLETE
-Status: Phase 4 Plan 1 complete — Dockerfile, .dockerignore, next.config.ts standalone, /api/health route
-Last activity: 2026-03-01 — Plan 04-01 complete (Next.js standalone + Dockerfile for SPCS containerized deployment)
+Phase: 4 of 4 (Deployment) — COMPLETE
+Plan: 2 of 2 in current phase — COMPLETE
+Status: Phase 4 complete — Dockerfile, health route, setup.sql SPCS provisioning script; all DEPLOY requirements satisfied
+Last activity: 2026-03-01 — Plan 04-02 complete (idempotent SPCS provisioning SQL script for HOL attendees)
 
-Progress: [████████████] 100% (12/12 plans total complete)
+Progress: [████████████] 100% (14/14 plans total complete)
 
 ## Performance Metrics
 
@@ -50,6 +50,7 @@ Progress: [████████████] 100% (12/12 plans total complet
 *Updated after each plan completion*
 | Phase 03-code-quality P02 | 8 | 2 tasks | 19 files |
 | Phase 03 P03 | 2 | 2 tasks | 3 files |
+| Phase 04-deployment P02 | 1 | 1 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -93,6 +94,9 @@ Recent decisions affecting current work:
 - [04-01]: outputFileTracingRoot set to monorepo root — required for standalone to trace workspace packages; server.js lives at apps/frontend/server.js inside standalone output
 - [04-01]: Health route (/api/health) has no Snowflake connection — avoids cold-start SPCS readiness probe failures
 - [04-01]: Build context is repo root for Dockerfile — necessary for monorepo COPY paths and workspace npm ci
+- [Phase 04-02]: GENERIC_STRING secret type with secretKeyRef: secret_string used for RSA private key injection into SPCS service spec
+- [Phase 04-02]: SNOWFLAKE_PRIVATE_KEY_PATH omitted from SPCS service spec — containers have no external filesystem; secret injection via SNOWFLAKE_PRIVATE_KEY env var replaces it
+- [Phase 04-02]: setup.sql uses CREATE OR REPLACE for secret/service and IF NOT EXISTS for repo/pool — full idempotent provisioning script for HOL attendees
 
 ### Pending Todos
 
@@ -107,5 +111,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 04-01-PLAN.md — Next.js standalone + Dockerfile + health route complete; DEPLOY-01 satisfied; image ready to build
+Stopped at: Completed 04-02-PLAN.md — setup.sql SPCS provisioning script complete; DEPLOY-02 and DEPLOY-03 satisfied; all deployment requirements met
 Resume file: None

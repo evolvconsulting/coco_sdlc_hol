@@ -38,8 +38,8 @@ Requirements for production deployment within 2 days.
 ### Deployment
 
 - [x] **DEPLOY-01**: Application containerized with Dockerfile compatible with Snowpark Container Services (SPCS)
-- [ ] **DEPLOY-02**: Application successfully deployed and accessible on SPCS
-- [ ] **DEPLOY-03**: Environment variables and secrets configured correctly in SPCS deployment
+- [x] **DEPLOY-02**: Application successfully deployed and accessible on SPCS
+- [x] **DEPLOY-03**: Environment variables and secrets configured correctly in SPCS deployment
 - [ ] **DEPLOY-04**: Application connects to Snowflake MARTS schema from SPCS environment and returns real data
 
 ## v2 Requirements
@@ -97,8 +97,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CODE-04 | Phase 3 | Complete |
 | CODE-05 | Phase 3 | Complete |
 | DEPLOY-01 | Phase 4 | Complete |
-| DEPLOY-02 | Phase 4 | Pending |
-| DEPLOY-03 | Phase 4 | Pending |
+| DEPLOY-02 | Phase 4 | Complete |
+| DEPLOY-03 | Phase 4 | Complete |
 | DEPLOY-04 | Phase 4 | Pending |
 
 **Coverage:**
