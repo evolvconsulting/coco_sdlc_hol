@@ -22,10 +22,10 @@ Requirements for production deployment within 2 days.
 
 - [x] **UX-01**: Navigation and layout are visually consistent across all 6 domain pages
 - [x] **UX-02**: Charts display with correct labels, axes, legends, and data formatting
-- [ ] **UX-03**: Empty states and loading states handled gracefully in all charts and data tables
-- [ ] **UX-04**: Date pickers and date range filters work correctly and update displayed data
-- [ ] **UX-05**: Domain-specific filters function correctly on each analytics page
-- [ ] **UX-06**: Portal is usable at standard desktop screen sizes
+- [x] **UX-03**: Empty states and loading states handled gracefully in all charts and data tables
+- [x] **UX-04**: Date pickers and date range filters work correctly and update displayed data
+- [x] **UX-05**: Domain-specific filters function correctly on each analytics page
+- [x] **UX-06**: Portal is usable at standard desktop screen sizes
 
 ### Code Quality
 
@@ -88,9 +88,9 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UX-01 | Phase 2 | Complete (02-01) |
 | UX-02 | Phase 2 | Complete (02-01) |
 | UX-03 | Phase 2 | In progress (02-02: chargeback/retrieval/adjustment loading states added) |
-| UX-04 | Phase 2 | Pending |
+| UX-04 | Phase 2 | Complete |
 | UX-05 | Phase 2 | In progress (02-02: retrieval orphaned reasonCode filter removed) |
-| UX-06 | Phase 2 | Pending |
+| UX-06 | Phase 2 | Complete |
 | CODE-01 | Phase 3 | Pending |
 | CODE-02 | Phase 3 | Pending |
 | CODE-03 | Phase 3 | Pending |
