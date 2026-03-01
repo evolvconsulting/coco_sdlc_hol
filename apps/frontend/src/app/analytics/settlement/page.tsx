@@ -1,11 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Card, Row, Col, Statistic, Select, DatePicker, Space, Typography, Spin, Tag, Tabs, Breadcrumb, Button } from 'antd';
+import { Card, Row, Col, Select, DatePicker, Space, Typography, Tabs, Breadcrumb, Button, Skeleton } from 'antd';
 import {
-  DollarOutlined,
-  CheckCircleOutlined,
-  FileTextOutlined,
   BankOutlined,
   HomeOutlined,
   ReloadOutlined,
@@ -17,8 +14,10 @@ import { TimeSeriesChart } from '@/components/charts/TimeSeriesChart';
 import { BarChart } from '@/components/charts/BarChart';
 import { DataGrid } from '@/components/grid/DataGrid';
 import { ConnectionError } from '@/components/ui/ConnectionError';
+import { KPICard } from '@/components/ui';
 import { useAnalyticsData } from '@/hooks';
 import { domainColors } from '@/lib/theme';
+import { formatCompactCurrency } from '@/lib/formatters';
 import type {
   SettlementKPIs,
   SettlementTimeSeriesPoint,
@@ -66,9 +65,6 @@ export default function SettlementAnalyticsPage() {
 
   const kpiData = kpis.data;
   const days = dateRange[1].diff(dateRange[0], 'day') || 1;
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 
   const formatNumber = (value: number) =>
     new Intl.NumberFormat('en-US').format(value);
@@ -143,114 +139,108 @@ export default function SettlementAnalyticsPage() {
       />
 
       {activeTab === 'overview' ? (
-        <Spin spinning={isLoading}>
+        <>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Net Settlement Volume"
-                  value={kpiData?.netVolume ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: domainColors.settlement.primary }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Net Settlement Volume"
+                value={kpiData?.netVolume ?? 0}
+                format="currency"
+                color={domainColors.settlement.primary}
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Sales Count"
-                  value={kpiData?.totalSalesCount ?? 0}
-                  prefix={<FileTextOutlined style={{ color: domainColors.settlement.primary }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Total Sales Count"
+                value={kpiData?.totalSalesCount ?? 0}
+                format="number"
+                color={domainColors.settlement.primary}
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Gross Sales"
-                  value={kpiData?.totalSalesAmount ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: '#52c41a' }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Gross Sales"
+                value={kpiData?.totalSalesAmount ?? 0}
+                format="currency"
+                color="#52c41a"
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Refunds"
-                  value={kpiData?.totalRefundAmount ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: '#ff4d4f' }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                  styles={{ content: { color: '#ff4d4f' } }}
-                />
-                <div className="mt-2">
-                  <Tag color="blue">{formatNumber(kpiData?.totalRefundCount ?? 0)} refunds</Tag>
-                </div>
-              </Card>
+              <KPICard
+                title="Total Refunds"
+                value={kpiData?.totalRefundAmount ?? 0}
+                format="currency"
+                color="#ff4d4f"
+                loading={kpis.isLoading}
+                description={kpiData ? `${formatNumber(kpiData.totalRefundCount)} refunds` : undefined}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Batches"
-                  value={kpiData?.totalBatches ?? 0}
-                  prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Total Batches"
+                value={kpiData?.totalBatches ?? 0}
+                format="number"
+                color="#52c41a"
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Daily Avg Volume"
-                  value={kpiData ? kpiData.netVolume / days : 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: domainColors.settlement.primary }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Daily Avg Volume"
+                value={kpiData ? kpiData.netVolume / days : 0}
+                format="currency"
+                color={domainColors.settlement.primary}
+                loading={kpis.isLoading}
+              />
             </Col>
           </Row>
 
           <Row gutter={[16, 16]} className="mt-4">
             <Col xs={24} lg={14}>
               <Card title="Settlement Volume Trend" className="h-full">
-                <TimeSeriesChart
-                  data={trendData}
-                  height={300}
-                  color={domainColors.settlement.primary}
-                  yAxisLabel="Settlement Amount ($)"
-                  showArea={true}
-                  formatValue={(v) => `$${(v / 1000000).toFixed(1)}M`}
-                />
+                {isLoading ? (
+                  <Skeleton active paragraph={{ rows: 6 }} style={{ height: 300, padding: '12px' }} />
+                ) : (
+                  <TimeSeriesChart
+                    data={trendData}
+                    height={300}
+                    color={domainColors.settlement.primary}
+                    yAxisLabel="Settlement Amount ($)"
+                    showArea={true}
+                    formatValue={formatCompactCurrency}
+                  />
+                )}
               </Card>
             </Col>
             <Col xs={24} lg={10}>
               <Card title="Settlement by Merchant" className="h-full">
-                <BarChart
-                  data={merchantData}
-                  height={300}
-                  colors={[domainColors.settlement.primary]}
-                  horizontal={true}
-                  formatValue={(v) => `$${(v / 1000000).toFixed(1)}M`}
-                />
+                {isLoading ? (
+                  <Skeleton active paragraph={{ rows: 6 }} style={{ height: 300, padding: '12px' }} />
+                ) : (
+                  <BarChart
+                    data={merchantData}
+                    height={300}
+                    colors={[domainColors.settlement.primary]}
+                    horizontal={true}
+                    formatValue={formatCompactCurrency}
+                  />
+                )}
               </Card>
             </Col>
           </Row>
-        </Spin>
+        </>
       ) : (
-        <Spin spinning={details.isLoading}>
-          <DataGrid
-            data={(details.data || []) as Record<string, unknown>[]}
-            height={600}
-            enablePivot={true}
-            enableExport={true}
-            title="Settlement Transactions"
-          />
-        </Spin>
+        <DataGrid
+          data={(details.data || []) as Record<string, unknown>[]}
+          height={600}
+          enablePivot={true}
+          enableExport={true}
+          title="Settlement Transactions"
+          loading={details.isLoading}
+        />
       )}
     </div>
   );
