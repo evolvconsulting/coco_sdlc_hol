@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T14:38:21.011Z"
+last_updated: "2026-03-01T19:14:36Z"
 progress:
-  total_phases: 3
+  total_phases: 4
   completed_phases: 3
-  total_plans: 11
-  completed_plans: 11
+  total_plans: 12
+  completed_plans: 12
 ---
 
 # Project State
@@ -18,16 +18,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Merchants can independently answer questions about their transaction performance without calling support — seeing approvals, fees, chargebacks, and funding in one place with their own data.
-**Current focus:** Phase 2 — UX/UI Polish
+**Current focus:** Phase 4 — Deployment
 
 ## Current Position
 
-Phase: 3 of 4 (Code Quality) — COMPLETE
-Plan: 4 of 4 in current phase — COMPLETE
-Status: Phase 3 complete — all 4 plans executed (config foundation, 19 analytics routes, 3 non-analytics routes, cortex/chat gap closure)
-Last activity: 2026-03-01 — Plan 03-04 complete (cortex/chat CODE-01 gap closure — AGENT_DATABASE/AGENT_SCHEMA replaced with config import)
+Phase: 4 of 4 (Deployment) — IN PROGRESS
+Plan: 1 of 1 in current phase — COMPLETE
+Status: Phase 4 Plan 1 complete — Dockerfile, .dockerignore, next.config.ts standalone, /api/health route
+Last activity: 2026-03-01 — Plan 04-01 complete (Next.js standalone + Dockerfile for SPCS containerized deployment)
 
-Progress: [██████████] 100% (11/11 plans total complete)
+Progress: [████████████] 100% (12/12 plans total complete)
 
 ## Performance Metrics
 
@@ -90,6 +90,9 @@ Recent decisions affecting current work:
 - [Phase 03-02]: funding/details status passed directly as bind — parameterization protects regardless of enum values
 - [Phase 03-03]: cortex/chat and query routes: all details exposure fields removed (errorText + String(error)); metadata/route.ts migrated from inline process.env to config.ts SNOWFLAKE_DATABASE/SNOWFLAKE_SCHEMA
 - [03-04]: cortex/chat gap closure — AGENT_DATABASE/AGENT_SCHEMA removed, replaced by SNOWFLAKE_DATABASE/SNOWFLAKE_SCHEMA from @/lib/config; CODE-01 fully satisfied across all 21 API routes
+- [04-01]: outputFileTracingRoot set to monorepo root — required for standalone to trace workspace packages; server.js lives at apps/frontend/server.js inside standalone output
+- [04-01]: Health route (/api/health) has no Snowflake connection — avoids cold-start SPCS readiness probe failures
+- [04-01]: Build context is repo root for Dockerfile — necessary for monorepo COPY paths and workspace npm ci
 
 ### Pending Todos
 
@@ -104,5 +107,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 03-04-PLAN.md — cortex/chat CODE-01 gap closure complete; Phase 3 Code Quality fully complete (all 4 plans)
+Stopped at: Completed 04-01-PLAN.md — Next.js standalone + Dockerfile + health route complete; DEPLOY-01 satisfied; image ready to build
 Resume file: None
