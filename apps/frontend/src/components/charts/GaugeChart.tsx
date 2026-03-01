@@ -15,6 +15,8 @@ interface GaugeChartProps {
   thresholds?: { value: number; color: string }[];
   suffix?: string;
   description?: string;
+  /** Optional custom formatter — when provided, overrides the default "{value}{suffix}" label */
+  formatValue?: (value: number) => string;
 }
 
 export function GaugeChart({
@@ -30,6 +32,7 @@ export function GaugeChart({
   ],
   suffix = '%',
   description,
+  formatValue,
 }: GaugeChartProps) {
   // Determine color based on value
   const normalizedValue = (value - min) / (max - min);
@@ -87,7 +90,7 @@ export function GaugeChart({
           offsetCenter: [0, '10%'],
           fontSize: 28,
           fontWeight: 'bold',
-          formatter: `{value}${suffix}`,
+          formatter: formatValue ? (v: number) => formatValue(v) : `{value}${suffix}`,
           color: valueColor,
         },
         data: [{ value }],

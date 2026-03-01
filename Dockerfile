@@ -1,22 +1,13 @@
 # Build context: repo root (not apps/frontend/)
 # SPCS requires linux/amd64 — never omit the --platform flag
 
-FROM --platform=linux/amd64 node:20-alpine AS deps
-WORKDIR /app
-
-# Copy root workspace manifest and frontend manifests
-COPY package.json package-lock.json* ./
-COPY apps/frontend/package.json apps/frontend/package-lock.json* ./apps/frontend/
-
-# Install only frontend production deps
-RUN cd apps/frontend && npm ci --omit=dev
-
 FROM --platform=linux/amd64 node:20-alpine AS builder
 WORKDIR /app
 
-# Copy deps from previous stage
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/frontend/node_modules ./apps/frontend/node_modules
+# Copy manifests and install ALL deps (including devDependencies for next build)
+COPY package.json package-lock.json* ./
+COPY apps/frontend/package.json apps/frontend/package-lock.json* ./apps/frontend/
+RUN npm ci && cd apps/frontend && npm ci
 
 # Copy full source (respects .dockerignore)
 COPY . .
