@@ -13,7 +13,6 @@ import {
   FileSearchOutlined,
   SwapOutlined,
   MessageOutlined,
-  SaveOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   UserOutlined,
@@ -94,11 +93,6 @@ const menuItems: MenuProps['items'] = [
     icon: <MessageOutlined />,
     label: 'Ask Data',
   },
-  {
-    key: '/reports',
-    icon: <SaveOutlined />,
-    label: 'Saved Reports',
-  },
 ];
 
 const userMenuItems: MenuProps['items'] = [
@@ -163,7 +157,7 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
           theme="dark"
           mode="inline"
           selectedKeys={selectedKeys}
-          defaultOpenKeys={openKeys}
+          openKeys={openKeys}
           items={menuItems}
           onClick={handleMenuClick}
           inlineCollapsed={collapsed}
