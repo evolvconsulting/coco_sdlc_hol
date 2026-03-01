@@ -27,3 +27,15 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 | 2. UX / UI Polish | v1.0 | 4/4 | Complete | 2026-02-28 |
 | 3. Code Quality | v1.0 | 4/4 | Complete | 2026-03-01 |
 | 4. Deployment | v1.0 | 3/3 | Complete | 2026-03-01 |
+
+### Phase 1: Generate hands on lab setup script
+
+**Goal:** Produce a single consolidated idempotent SQL script (hol_setup.sql) that provisions a complete Snowflake HOL environment — database, schemas, RAW tables, reference data, synthetic transactions, pre-compiled dbt model DDL (staging views + intermediate/marts dynamic tables), service user, image repository, and Cortex Agent — runnable by dataops.live or pasted into a Snowflake worksheet.
+**Requirements**: TBD
+**Depends on:** Phase 0
+**Plans:** 3 plans
+
+Plans:
+- [ ] 01-01-PLAN.md — Assemble foundation sections (ACCOUNTADMIN bootstrap, warehouse/DB/schema setup, RAW tables, reference data, synthetic transaction generation)
+- [ ] 01-02-PLAN.md — Assemble dbt DDL sections (11 staging views, 6 intermediate dynamic tables, 7 marts dynamic tables from compiled output)
+- [ ] 01-03-PLAN.md — Assemble final sections (service user, image repo, semantic view, Cortex Agent), merge into hol_setup.sql, human verification checkpoint
