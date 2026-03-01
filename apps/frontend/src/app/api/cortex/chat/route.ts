@@ -3,6 +3,9 @@ import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { SNOWFLAKE_DATABASE, SNOWFLAKE_SCHEMA } from '@/lib/config';
 
+// Path where SPCS injects the rotating OAuth token for service-identity auth.
+const SPCS_TOKEN_PATH = '/snowflake/session/token';
+
 // Snowflake Cortex Agent configuration
 // Note: trim() is used because Vercel env vars may have trailing newlines
 const SNOWFLAKE_ACCOUNT = (process.env.SNOWFLAKE_ACCOUNT || '').trim();
@@ -80,9 +83,24 @@ function generateJWT(): string {
   return `${encodedHeader}.${encodedPayload}.${encodedSignature}`;
 }
 
-// Check if Snowflake is properly configured for JWT auth
+// Resolve the auth token and header type for the Cortex Agent REST API.
+// Auth strategy (checked in order):
+//   1. SPCS OAuth  — /snowflake/session/token exists (running inside SPCS container)
+//   2. JWT key-pair — SNOWFLAKE_PRIVATE_KEY or SNOWFLAKE_PRIVATE_KEY_PATH is set
+function getAuthToken(): { token: string; tokenType: string } {
+  // Strategy 1: SPCS OAuth
+  if (fs.existsSync(SPCS_TOKEN_PATH)) {
+    const token = fs.readFileSync(SPCS_TOKEN_PATH, 'utf8').trim();
+    return { token, tokenType: 'OAUTH' };
+  }
+  // Strategy 2: JWT key-pair
+  return { token: generateJWT(), tokenType: 'KEYPAIR_JWT' };
+}
+
+// Check if Snowflake is properly configured for Cortex Agent auth
 function isSnowflakeConfigured(): boolean {
-  return !!(SNOWFLAKE_ACCOUNT && SNOWFLAKE_USER && (SNOWFLAKE_PRIVATE_KEY || SNOWFLAKE_PRIVATE_KEY_PATH));
+  const hasSpcsToken = fs.existsSync(SPCS_TOKEN_PATH);
+  return !!(SNOWFLAKE_ACCOUNT && SNOWFLAKE_USER && (hasSpcsToken || SNOWFLAKE_PRIVATE_KEY || SNOWFLAKE_PRIVATE_KEY_PATH));
 }
 
 interface ChatMessage {
@@ -122,8 +140,8 @@ export async function POST(request: NextRequest) {
       : `https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com`;
     const agentUrl = `${baseUrl}/api/v2/databases/${SNOWFLAKE_DATABASE}/schemas/${SNOWFLAKE_SCHEMA}/agents/${AGENT_NAME}:run`;
 
-    // Generate JWT token for authentication
-    const jwtToken = generateJWT();
+    // Resolve auth token — uses SPCS OAuth when running in a container, JWT otherwise
+    const { token: authToken, tokenType } = getAuthToken();
 
     // Build messages array with history
     // Cortex Agent API expects content to be an array of {type, text} objects
@@ -143,8 +161,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json',
         'Accept': 'text/event-stream',
-        Authorization: `Bearer ${jwtToken}`,
-        'X-Snowflake-Authorization-Token-Type': 'KEYPAIR_JWT',
+        Authorization: `Bearer ${authToken}`,
+        'X-Snowflake-Authorization-Token-Type': tokenType,
       },
       body: JSON.stringify(requestBody),
     });

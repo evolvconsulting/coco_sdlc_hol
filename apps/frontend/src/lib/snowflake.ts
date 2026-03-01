@@ -1,10 +1,18 @@
 // Snowflake service for executing queries with per-request connection lifecycle.
 // Each executeQuery call creates a fresh connection and destroys it after completion.
+//
+// Auth strategy (checked in order):
+//   1. SPCS OAuth  — /snowflake/session/token exists (running inside SPCS container)
+//   2. JWT key-pair — SNOWFLAKE_PRIVATE_KEY or SNOWFLAKE_PRIVATE_KEY_PATH is set
+//   3. Password    — SNOWFLAKE_PASSWORD is set (local dev fallback)
 
 import snowflake from 'snowflake-sdk';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
 import { SNOWFLAKE_DATABASE, SNOWFLAKE_SCHEMA } from '@/lib/config';
+
+// Path where SPCS injects the rotating OAuth token for service-identity auth.
+const SPCS_TOKEN_PATH = '/snowflake/session/token';
 
 interface SnowflakeConfig {
   account: string;
@@ -46,8 +54,9 @@ function getConfig(): SnowflakeConfig {
     throw new Error('Missing required Snowflake configuration. Check SNOWFLAKE_ACCOUNT and SNOWFLAKE_USER environment variables.');
   }
 
-  // Must have either private key (content or path) or password
-  if (!config.privateKey && !config.privateKeyPath && !config.password) {
+  // Must have either SPCS OAuth token, private key (content or path), or password
+  const spcsTokenPresent = fs.existsSync(SPCS_TOKEN_PATH);
+  if (!spcsTokenPresent && !config.privateKey && !config.privateKeyPath && !config.password) {
     throw new Error('Missing Snowflake authentication. Set SNOWFLAKE_PRIVATE_KEY, SNOWFLAKE_PRIVATE_KEY_PATH, or SNOWFLAKE_PASSWORD.');
   }
 
@@ -95,18 +104,30 @@ async function createConnection(): Promise<snowflake.Connection> {
     ...(process.env.SNOWFLAKE_HOST ? { host: process.env.SNOWFLAKE_HOST } : {}),
   };
 
-  // Use key-pair authentication if private key is provided (content or path)
-  if (config.privateKey) {
-    // Private key content provided directly (e.g., from Vercel env var)
+  // Auth strategy 1: SPCS OAuth (running inside an SPCS container)
+  // SPCS blocks all non-OAuth outbound Snowflake connections (error 395090).
+  // The platform writes a rotating token to /snowflake/session/token — read it fresh
+  // on every connection so we always use the current token (SPCS rotates every ~10 min).
+  if (fs.existsSync(SPCS_TOKEN_PATH)) {
+    const token = fs.readFileSync(SPCS_TOKEN_PATH, 'utf8').trim();
+    connectionOptions.authenticator = 'OAUTH';
+    connectionOptions.token = token;
+    // SPCS also injects SNOWFLAKE_HOST — use it when available for correct routing
+    if (process.env.SNOWFLAKE_HOST) {
+      connectionOptions.host = process.env.SNOWFLAKE_HOST;
+    }
+  } else if (config.privateKey) {
+    // Auth strategy 2a: JWT key-pair — private key content (e.g., local .env or non-SPCS cloud)
     // Convert escaped newlines back to actual newlines
     connectionOptions.authenticator = 'SNOWFLAKE_JWT';
     connectionOptions.privateKey = config.privateKey.replace(/\\n/g, '\n');
   } else if (config.privateKeyPath) {
-    // Private key path provided (local development)
+    // Auth strategy 2b: JWT key-pair — private key file path (local development)
     const privateKey = loadPrivateKey(config.privateKeyPath);
     connectionOptions.authenticator = 'SNOWFLAKE_JWT';
     connectionOptions.privateKey = privateKey;
   } else if (config.password) {
+    // Auth strategy 3: Password (local dev fallback)
     connectionOptions.password = config.password;
   }
 
@@ -200,11 +221,17 @@ export async function testConnection(): Promise<boolean> {
 }
 
 // Check if Snowflake is configured
+// Returns true when any valid auth path is available:
+//   - SPCS OAuth token file (inside SPCS container)
+//   - JWT key-pair credentials (env var or file path)
+//   - Password credentials
 export function isConfigured(): boolean {
   try {
     const account = process.env.SNOWFLAKE_ACCOUNT;
     const user = process.env.SNOWFLAKE_USER || process.env.SNOWFLAKE_USERNAME;
-    const hasAuth = process.env.SNOWFLAKE_PRIVATE_KEY || process.env.SNOWFLAKE_PRIVATE_KEY_PATH || process.env.SNOWFLAKE_PASSWORD;
+    // SPCS OAuth: token file present means we're inside a container with injected credentials
+    const hasSpcsToken = fs.existsSync(SPCS_TOKEN_PATH);
+    const hasAuth = hasSpcsToken || process.env.SNOWFLAKE_PRIVATE_KEY || process.env.SNOWFLAKE_PRIVATE_KEY_PATH || process.env.SNOWFLAKE_PASSWORD;
     return !!(account && user && hasAuth);
   } catch {
     return false;
