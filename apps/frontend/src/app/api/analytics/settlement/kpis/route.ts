@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_SETTLEMENTS } from '@/lib/config';
 
 // GET /api/analytics/settlement/kpis - Get settlement KPIs
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view settlement data.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -20,6 +21,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate') || getDefaultStartDate();
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
+    const binds: (string | number | null)[] = [startDate, endDate];
+
     const sql = `
       SELECT
         COUNT(*) as total_batches,
@@ -29,12 +32,12 @@ export async function GET(request: NextRequest) {
         SUM(refund_amount) as total_refund_amount,
         SUM(net_amount) as net_volume,
         SUM(discount_amount) as total_interchange
-      FROM COCO_SDLC_HOL.MARTS.SETTLEMENTS
-      WHERE settlement_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_SETTLEMENTS}
+      WHERE settlement_date BETWEEN ? AND ?
     `;
 
-    const result = await executeQuery(sql);
-    
+    const result = await executeQuery(sql, binds);
+
     if (result.rows.length === 0) {
       return NextResponse.json({
         success: true,
@@ -62,11 +65,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Settlement KPIs error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve settlement data. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_SETTLEMENTS } from '@/lib/config';
 
 // GET /api/analytics/settlement/by-merchant - Get settlement data by merchant
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view settlement data.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -21,6 +22,8 @@ export async function GET(request: NextRequest) {
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
     const limit = parseInt(searchParams.get('limit') || '10');
 
+    const binds: (string | number | null)[] = [startDate, endDate];
+
     const sql = `
       SELECT
         merchant_name,
@@ -29,14 +32,14 @@ export async function GET(request: NextRequest) {
         SUM(sales_amount) as gross_sales,
         SUM(refund_amount) as refund_amount,
         SUM(discount_amount) as interchange
-      FROM COCO_SDLC_HOL.MARTS.SETTLEMENTS
-      WHERE settlement_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_SETTLEMENTS}
+      WHERE settlement_date BETWEEN ? AND ?
       GROUP BY merchant_name
       ORDER BY net_volume DESC
       LIMIT ${limit}
     `;
 
-    const result = await executeQuery(sql);
+    const result = await executeQuery(sql, binds);
 
     const data = result.rows.map(row => ({
       merchantName: row.MERCHANT_NAME,
@@ -55,11 +58,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Settlement by-merchant error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve settlement data. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

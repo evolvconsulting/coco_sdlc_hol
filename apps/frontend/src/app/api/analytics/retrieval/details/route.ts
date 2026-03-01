@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_RETRIEVALS } from '@/lib/config';
 
 // GET /api/analytics/retrieval/details - Get retrieval detail records
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view retrieval details.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -23,8 +24,16 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
-    let whereClause = `WHERE retrieval_received_date BETWEEN '${startDate}' AND '${endDate}'`;
-    if (status) whereClause += ` AND retrieval_status = '${status}'`;
+    const binds: (string | number | null)[] = [startDate, endDate];
+    let whereClause = 'WHERE retrieval_received_date BETWEEN ? AND ?';
+
+    let statusFilter = '';
+    if (status) {
+      statusFilter = ' AND retrieval_status = ?';
+      binds.push(status);
+    }
+
+    whereClause += statusFilter;
 
     const sql = `
       SELECT
@@ -37,13 +46,13 @@ export async function GET(request: NextRequest) {
         merchant_name,
         card_brand,
         retrieval_amount
-      FROM COCO_SDLC_HOL.MARTS.RETRIEVALS
+      FROM ${FULL_TABLE_RETRIEVALS}
       ${whereClause}
       ORDER BY original_sale_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
-    const result = await executeQuery(sql);
+    const result = await executeQuery(sql, binds);
 
     const data = result.rows.map(row => ({
       rtId: row.RETRIEVAL_KEY,
@@ -66,11 +75,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Retrieval details error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve retrieval details. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

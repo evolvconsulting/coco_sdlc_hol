@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_CHARGEBACKS } from '@/lib/config';
 
 // GET /api/analytics/chargeback/kpis - Get chargeback KPIs
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view chargeback data.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -20,6 +21,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate') || getDefaultStartDate();
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
+    const binds: (string | number | null)[] = [startDate, endDate];
+
     const sql = `
       SELECT
         COUNT(*) as total_chargebacks,
@@ -30,12 +33,12 @@ export async function GET(request: NextRequest) {
         COUNT(CASE WHEN outcome = 'WIN' THEN 1 END) as won_count,
         COUNT(CASE WHEN outcome = 'LOSS' THEN 1 END) as lost_count,
         ROUND(COUNT(CASE WHEN outcome = 'WIN' THEN 1 END) * 100.0 / NULLIF(COUNT(CASE WHEN outcome IS NOT NULL THEN 1 END), 0), 2) as win_rate
-      FROM COCO_SDLC_HOL.MARTS.CHARGEBACKS
-      WHERE dispute_received_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_CHARGEBACKS}
+      WHERE dispute_received_date BETWEEN ? AND ?
     `;
 
-    const result = await executeQuery(sql);
-    
+    const result = await executeQuery(sql, binds);
+
     if (result.rows.length === 0) {
       return NextResponse.json({
         success: true,
@@ -64,11 +67,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Chargeback KPIs error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve chargeback data. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

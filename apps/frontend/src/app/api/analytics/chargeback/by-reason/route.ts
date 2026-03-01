@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_CHARGEBACKS } from '@/lib/config';
 
 // GET /api/analytics/chargeback/by-reason - Get chargeback breakdown by reason
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view chargeback data.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -20,6 +21,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate') || getDefaultStartDate();
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
+    const binds: (string | number | null)[] = [startDate, endDate];
+
     const sql = `
       SELECT
         reason_code,
@@ -27,14 +30,14 @@ export async function GET(request: NextRequest) {
         COUNT(*) as count,
         SUM(dispute_amount) as amount,
         ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(), 2) as percentage
-      FROM COCO_SDLC_HOL.MARTS.CHARGEBACKS
-      WHERE dispute_received_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_CHARGEBACKS}
+      WHERE dispute_received_date BETWEEN ? AND ?
       GROUP BY reason_code, reason_description
       ORDER BY count DESC
       LIMIT 10
     `;
 
-    const result = await executeQuery(sql);
+    const result = await executeQuery(sql, binds);
 
     const data = result.rows.map(row => ({
       reasonCode: row.REASON_CODE,
@@ -52,11 +55,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Chargeback by-reason error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve chargeback data. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

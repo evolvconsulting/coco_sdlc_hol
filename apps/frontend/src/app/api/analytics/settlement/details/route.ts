@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_SETTLEMENTS } from '@/lib/config';
 
 // GET /api/analytics/settlement/details - Get settlement detail records
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view settlement details.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -22,6 +23,8 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get('limit') || '100');
     const offset = parseInt(searchParams.get('offset') || '0');
 
+    const binds: (string | number | null)[] = [startDate, endDate];
+
     const sql = `
       SELECT
         settlement_key,
@@ -34,13 +37,13 @@ export async function GET(request: NextRequest) {
         refund_amount,
         net_amount,
         discount_amount
-      FROM COCO_SDLC_HOL.MARTS.SETTLEMENTS
-      WHERE settlement_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_SETTLEMENTS}
+      WHERE settlement_date BETWEEN ? AND ?
       ORDER BY settlement_date DESC
       LIMIT ${limit} OFFSET ${offset}
     `;
 
-    const result = await executeQuery(sql);
+    const result = await executeQuery(sql, binds);
 
     const data = result.rows.map(row => ({
       settleId: row.SETTLEMENT_KEY,
@@ -64,11 +67,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Settlement details error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve settlement details. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }

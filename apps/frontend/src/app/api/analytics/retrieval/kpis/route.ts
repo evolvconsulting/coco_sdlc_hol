@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { executeQuery, isConfigured } from '@/lib/snowflake';
+import { FULL_TABLE_RETRIEVALS } from '@/lib/config';
 
 // GET /api/analytics/retrieval/kpis - Get retrieval KPIs
 export async function GET(request: NextRequest) {
   try {
     if (!isConfigured()) {
       return NextResponse.json(
-        { 
-          success: false, 
+        {
+          success: false,
           error: 'Snowflake connection not configured',
           message: 'Please configure your Snowflake credentials to view retrieval data.',
           code: 'SNOWFLAKE_NOT_CONFIGURED'
@@ -20,6 +21,8 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get('startDate') || getDefaultStartDate();
     const endDate = searchParams.get('endDate') || getDefaultEndDate();
 
+    const binds: (string | number | null)[] = [startDate, endDate];
+
     const sql = `
       SELECT
         COUNT(*) as total_retrievals,
@@ -29,12 +32,12 @@ export async function GET(request: NextRequest) {
         COUNT(CASE WHEN retrieval_status = 'EXPIRED' THEN 1 END) as expired_count,
         COUNT(CASE WHEN retrieval_status = 'CLOSED' THEN 1 END) as closed_count,
         ROUND(COUNT(CASE WHEN retrieval_status = 'FULFILLED' THEN 1 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as fulfillment_rate
-      FROM COCO_SDLC_HOL.MARTS.RETRIEVALS
-      WHERE retrieval_received_date BETWEEN '${startDate}' AND '${endDate}'
+      FROM ${FULL_TABLE_RETRIEVALS}
+      WHERE retrieval_received_date BETWEEN ? AND ?
     `;
 
-    const result = await executeQuery(sql);
-    
+    const result = await executeQuery(sql, binds);
+
     if (result.rows.length === 0) {
       return NextResponse.json({
         success: true,
@@ -62,11 +65,10 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Retrieval KPIs error:', error);
     return NextResponse.json(
-      { 
-        success: false, 
+      {
+        success: false,
         error: 'Failed to connect to Snowflake',
         message: 'Unable to retrieve retrieval data. Please check your connection and try again.',
-        details: String(error),
         code: 'SNOWFLAKE_CONNECTION_ERROR'
       },
       { status: 503 }
