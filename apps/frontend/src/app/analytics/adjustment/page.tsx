@@ -1,13 +1,9 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Card, Row, Col, Statistic, DatePicker, Space, Typography, Spin, Tag, Tabs, Breadcrumb, Button } from 'antd';
+import { Row, Col, DatePicker, Space, Typography, Tabs, Breadcrumb, Button } from 'antd';
 import {
-  DollarOutlined,
   SwapOutlined,
-  PlusCircleOutlined,
-  MinusCircleOutlined,
-  FileTextOutlined,
   HomeOutlined,
   ReloadOutlined,
   LineChartOutlined,
@@ -16,6 +12,7 @@ import {
 import dayjs from 'dayjs';
 import { DataGrid } from '@/components/grid/DataGrid';
 import { ConnectionError } from '@/components/ui/ConnectionError';
+import { KPICard } from '@/components/ui';
 import { useAnalyticsData } from '@/hooks';
 import { domainColors } from '@/lib/theme';
 import type { AdjustmentKPIs, AdjustmentRecord } from '@/types/domain';
@@ -39,7 +36,6 @@ export default function AdjustmentAnalyticsPage() {
     endDate,
   }, { enabled: activeTab === 'details' });
 
-  const isLoading = kpis.isLoading;
   const hasError = kpis.error;
   const errorCode = (hasError as Error & { code?: string })?.code;
 
@@ -53,12 +49,6 @@ export default function AdjustmentAnalyticsPage() {
   }
 
   const kpiData = kpis.data;
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
-
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat('en-US').format(value);
 
   return (
     <div className="space-y-6">
@@ -107,77 +97,56 @@ export default function AdjustmentAnalyticsPage() {
       />
 
       {activeTab === 'overview' ? (
-        <Spin spinning={isLoading}>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Adjustments"
-                  value={kpiData?.totalAdjustments ?? 0}
-                  prefix={<FileTextOutlined style={{ color: domainColors.adjustment.primary }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Net Adjustment"
-                  value={kpiData?.netAdjustment ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: (kpiData?.netAdjustment ?? 0) < 0 ? '#ff4d4f' : '#52c41a' }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                  styles={{ content: { color: (kpiData?.netAdjustment ?? 0) < 0 ? '#ff4d4f' : '#52c41a' } }}
-                />
-                <div className="mt-2">
-                  <Tag color={(kpiData?.netAdjustment ?? 0) < 0 ? 'red' : 'green'}>
-                    Net {(kpiData?.netAdjustment ?? 0) < 0 ? 'Debit' : 'Credit'}
-                  </Tag>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Credit Adjustments"
-                  value={kpiData?.totalCredits ?? 0}
-                  precision={0}
-                  prefix={<PlusCircleOutlined style={{ color: '#52c41a' }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                  styles={{ content: { color: '#52c41a' } }}
-                />
-                <div className="mt-2">
-                  <Tag color="green">{formatNumber(kpiData?.creditCount ?? 0)} credits</Tag>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Debit Adjustments"
-                  value={kpiData?.totalDebits ?? 0}
-                  precision={0}
-                  prefix={<MinusCircleOutlined style={{ color: '#ff4d4f' }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                  styles={{ content: { color: '#ff4d4f' } }}
-                />
-                <div className="mt-2">
-                  <Tag color="red">{formatNumber(kpiData?.debitCount ?? 0)} debits</Tag>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        </Spin>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={6}>
+            <KPICard
+              title="Total Adjustments"
+              value={kpiData?.totalAdjustments ?? 0}
+              format="number"
+              loading={kpis.isLoading}
+              color={domainColors.adjustment.primary}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <KPICard
+              title="Net Adjustment"
+              value={kpiData?.netAdjustment ?? 0}
+              format="currency"
+              loading={kpis.isLoading}
+              color={(kpiData?.netAdjustment ?? 0) < 0 ? '#ff4d4f' : '#52c41a'}
+              description={(kpiData?.netAdjustment ?? 0) < 0 ? 'Net Debit' : 'Net Credit'}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <KPICard
+              title="Credit Adjustments"
+              value={kpiData?.totalCredits ?? 0}
+              format="currency"
+              loading={kpis.isLoading}
+              color="#52c41a"
+              description={`${kpiData?.creditCount ?? 0} credits`}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={6}>
+            <KPICard
+              title="Debit Adjustments"
+              value={kpiData?.totalDebits ?? 0}
+              format="currency"
+              loading={kpis.isLoading}
+              color="#ff4d4f"
+              description={`${kpiData?.debitCount ?? 0} debits`}
+            />
+          </Col>
+        </Row>
       ) : (
-        <Spin spinning={details.isLoading}>
-          <DataGrid
-            data={(details.data || []) as Record<string, unknown>[]}
-            height={600}
-            enablePivot={true}
-            enableExport={true}
-            title="Financial Adjustments"
-          />
-        </Spin>
+        <DataGrid
+          data={(details.data || []) as Record<string, unknown>[]}
+          loading={details.isLoading}
+          height={600}
+          enablePivot={true}
+          enableExport={true}
+          title="Financial Adjustments"
+        />
       )}
     </div>
   );
