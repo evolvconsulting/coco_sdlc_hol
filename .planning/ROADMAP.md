@@ -50,7 +50,7 @@ Plans:
 
 Plans:
 - [x] 02-01-PLAN.md — Sidebar fix + formatter foundation: controlled openKeys, remove Saved Reports stub, create formatters.ts
-- [ ] 02-02-PLAN.md — Analytics domain chart polish (TBD)
+- [x] 02-02-PLAN.md — Domain page KPICard conversion: chargeback, retrieval, adjustment to KPICard + Skeleton loading
 - [ ] 02-03-PLAN.md — Filters, loading, and empty states (TBD)
 
 ### Phase 3: Code Quality
@@ -83,6 +83,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. UAT Walkthrough | 3/3 | Complete | 2026-02-28 |
-| 2. UX / UI Polish | 1/3 | In progress | - |
+| 2. UX / UI Polish | 2/3 | In progress | - |
 | 3. Code Quality | 0/TBD | Not started | - |
 | 4. Deployment | 0/TBD | Not started | - |

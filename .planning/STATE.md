@@ -10,11 +10,11 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 ## Current Position
 
 Phase: 2 of 4 (UX/UI Polish) — IN PROGRESS
-Plan: 1 of 3 in current phase — COMPLETE
-Status: Phase 2 in progress — Plan 02-01 complete
-Last activity: 2026-02-28 — Plan 02-01 complete (sidebar fix + formatter module created)
+Plan: 2 of 3 in current phase — COMPLETE
+Status: Phase 2 in progress — Plan 02-02 complete
+Last activity: 2026-03-01 — Plan 02-02 complete (chargeback/retrieval/adjustment KPICard conversion)
 
-Progress: [████░░░░░░] 33% (4/9 plans total complete)
+Progress: [█████░░░░░] 44% (5/9 plans total complete)
 
 ## Performance Metrics
 
@@ -28,11 +28,11 @@ Progress: [████░░░░░░] 33% (4/9 plans total complete)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. UAT Walkthrough | 3/3 | ~180 min | ~60 min |
-| 2. UX/UI Polish | 1/3 | ~7 min | ~7 min |
+| 2. UX/UI Polish | 2/3 | ~22 min | ~11 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 01-02, 01-03, 02-01
-- Trend: 02-01 took ~7 min (targeted fixes, no blockers)
+- Last 5 plans: 01-01, 01-02, 01-03, 02-01, 02-02
+- Trend: 02-02 took ~15 min (3 pages, no blockers)
 
 *Updated after each plan completion*
 
@@ -60,6 +60,9 @@ Recent decisions affecting current work:
 - [02-01]: defaultOpenKeys changed to controlled openKeys prop — uncontrolled only applies at mount, controlled responds to pathname changes
 - [02-01]: formatCompactCurrency uses explicit threshold logic (not Intl compact) for predictable, testable output
 - [02-01]: SaveOutlined import removed alongside Saved Reports menu item — no orphaned imports
+- [02-02]: Retrieval reasonCode filter removed — API route does not accept reasonCode param
+- [02-02]: Adjustment column sizing updated from lg=8/xl=4 to lg=6 to match authorization reference
+- [02-02]: DataGrid native loading prop used instead of Spin wrapper on all three domain pages
 
 ### Pending Todos
 
@@ -73,6 +76,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-28
-Stopped at: Completed 02-01-PLAN.md — sidebar openKeys fix + formatters.ts created, ready for 02-02
+Last session: 2026-03-01
+Stopped at: Completed 02-02-PLAN.md — chargeback/retrieval/adjustment KPICard conversion, ready for 02-03
 Resume file: None
