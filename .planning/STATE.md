@@ -30,6 +30,10 @@ Progress: [████████████] 100% (14/14 plans complete)
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 1 added: Generate hands on lab setup script
+
 ### Decisions
 
 All milestone decisions logged in PROJECT.md Key Decisions table.
