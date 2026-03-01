@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Row, Col, Typography, Card, DatePicker, Select, Space, Button, Tabs, Breadcrumb, Spin } from 'antd';
+import { Row, Col, Typography, Card, DatePicker, Select, Space, Button, Tabs, Breadcrumb, Spin, Skeleton } from 'antd';
 import {
   CreditCardOutlined,
   ReloadOutlined,
@@ -16,6 +16,7 @@ import { DataGrid } from '@/components/grid';
 import { ConnectionError } from '@/components/ui/ConnectionError';
 import { useAnalyticsData } from '@/hooks';
 import { cardBrandColors } from '@/lib/theme';
+import { formatCompactCount, formatPercent } from '@/lib/formatters';
 import type {
   AuthorizationKPIs,
   AuthorizationTimeSeriesPoint,
@@ -187,7 +188,7 @@ export default function AuthorizationPage() {
       />
 
       {activeTab === 'overview' ? (
-        <Spin spinning={isLoading}>
+        <>
           {/* KPI Cards */}
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={6}>
@@ -202,16 +203,23 @@ export default function AuthorizationPage() {
               />
             </Col>
             <Col xs={24} sm={12} lg={6}>
-              <GaugeChart
-                value={kpiData?.approvalRate ?? 0}
-                title="Approval Rate"
-                height={180}
-                thresholds={[
-                  { value: 0.9, color: '#ff4d4f' },
-                  { value: 0.95, color: '#faad14' },
-                  { value: 1, color: '#52c41a' },
-                ]}
-              />
+              {isLoading ? (
+                <Card>
+                  <Skeleton active paragraph={{ rows: 6 }} style={{ height: 180, padding: '12px' }} />
+                </Card>
+              ) : (
+                <GaugeChart
+                  value={kpiData?.approvalRate ?? 0}
+                  title="Approval Rate"
+                  height={180}
+                  thresholds={[
+                    { value: 0.9, color: '#ff4d4f' },
+                    { value: 0.95, color: '#faad14' },
+                    { value: 1, color: '#52c41a' },
+                  ]}
+                  formatValue={formatPercent}
+                />
+              )}
             </Col>
             <Col xs={24} sm={12} lg={6}>
               <KPICard
@@ -238,33 +246,51 @@ export default function AuthorizationPage() {
           {/* Charts Row */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={16}>
-              <TimeSeriesChart
-                data={timeSeriesData}
-                title="Daily Transaction Volume"
-                height={300}
-                yAxisLabel="Transactions"
-                formatValue={(v) => new Intl.NumberFormat('en-US').format(v)}
-              />
+              {isLoading ? (
+                <Card>
+                  <Skeleton active paragraph={{ rows: 6 }} style={{ height: 300, padding: '12px' }} />
+                </Card>
+              ) : (
+                <TimeSeriesChart
+                  data={timeSeriesData}
+                  title="Daily Transaction Volume"
+                  height={300}
+                  yAxisLabel="Transactions"
+                  formatValue={formatCompactCount}
+                />
+              )}
             </Col>
             <Col xs={24} lg={8}>
-              <PieChart
-                data={brandData}
-                title="Transactions by Card Brand"
-                height={300}
-              />
+              {isLoading ? (
+                <Card>
+                  <Skeleton active paragraph={{ rows: 6 }} style={{ height: 300, padding: '12px' }} />
+                </Card>
+              ) : (
+                <PieChart
+                  data={brandData}
+                  title="Transactions by Card Brand"
+                  height={300}
+                />
+              )}
             </Col>
           </Row>
 
           {/* Second Charts Row */}
           <Row gutter={[16, 16]}>
             <Col xs={24} lg={12}>
-              <BarChart
-                data={declineData}
-                title="Top Decline Reasons"
-                height={300}
-                horizontal
-                colors={['#ff4d4f']}
-              />
+              {isLoading ? (
+                <Card>
+                  <Skeleton active paragraph={{ rows: 6 }} style={{ height: 300, padding: '12px' }} />
+                </Card>
+              ) : (
+                <BarChart
+                  data={declineData}
+                  title="Top Decline Reasons"
+                  height={300}
+                  horizontal
+                  colors={['#ff4d4f']}
+                />
+              )}
             </Col>
             <Col xs={24} lg={12}>
               <Card title={<Text strong>Decline Rate by Card Brand</Text>}>
@@ -296,7 +322,7 @@ export default function AuthorizationPage() {
               </Card>
             </Col>
           </Row>
-        </Spin>
+        </>
       ) : (
         /* Details Tab */
         <Spin spinning={details.isLoading}>
