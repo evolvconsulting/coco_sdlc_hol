@@ -46,11 +46,10 @@ export async function POST(request: NextRequest) {
     } catch (snowflakeError) {
       console.error('Snowflake query error:', snowflakeError);
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Query execution failed',
           message: 'Unable to execute query against Snowflake. Please check your query syntax and try again.',
-          details: String(snowflakeError),
           code: 'QUERY_EXECUTION_ERROR'
         },
         { status: 500 }
@@ -59,11 +58,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Query API error:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Internal server error',
         message: 'An unexpected error occurred. Please try again.',
-        details: String(error),
         code: 'INTERNAL_ERROR'
       },
       { status: 500 }

@@ -154,11 +154,10 @@ export async function POST(request: NextRequest) {
       const errorText = await response.text();
       console.error('Cortex Agent error:', response.status, errorText);
       return NextResponse.json(
-        { 
+        {
           success: false,
           error: 'Failed to connect to Cortex Agent',
           message: 'Unable to reach the AI assistant. Please check your Snowflake connection and try again.',
-          details: errorText,
           code: 'CORTEX_AGENT_ERROR'
         },
         { status: 503 }
@@ -220,11 +219,10 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Cortex API error:', error);
     return NextResponse.json(
-      { 
+      {
         success: false,
         error: 'Internal server error',
         message: 'An unexpected error occurred. Please try again.',
-        details: String(error),
         code: 'INTERNAL_ERROR'
       },
       { status: 500 }
