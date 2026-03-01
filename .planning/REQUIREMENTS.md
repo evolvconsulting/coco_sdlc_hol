@@ -85,12 +85,12 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UAT-06 | Phase 1 | Complete (01-02) |
 | UAT-07 | Phase 1 | Complete (01-02) |
 | UAT-08 | Phase 1 | Complete (01-03) |
-| UX-01 | Phase 2 | Complete (02-01) |
-| UX-02 | Phase 2 | Complete (02-01) |
-| UX-03 | Phase 2 | In progress (02-02: chargeback/retrieval/adjustment loading states added) |
-| UX-04 | Phase 2 | Complete |
-| UX-05 | Phase 2 | In progress (02-02: retrieval orphaned reasonCode filter removed) |
-| UX-06 | Phase 2 | Complete |
+| UX-01 | Phase 2 | Complete (02-01, 02-04 verified) |
+| UX-02 | Phase 2 | Complete (02-01, 02-03, 02-04 verified) |
+| UX-03 | Phase 2 | Complete (02-02, 02-03, 02-04 verified) |
+| UX-04 | Phase 2 | Complete (02-03, 02-04 verified) |
+| UX-05 | Phase 2 | Complete (02-02, 02-04 verified) |
+| UX-06 | Phase 2 | Complete (02-03, 02-04 verified) |
 | CODE-01 | Phase 3 | Pending |
 | CODE-02 | Phase 3 | Pending |
 | CODE-03 | Phase 3 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-03-01 after 02-02 completion (UX-03, UX-05 in progress — KPICard/Skeleton loading, filter fix)*
+*Last updated: 2026-02-28 after 02-04 completion (all UX-01 through UX-06 confirmed complete — human-verified)*
