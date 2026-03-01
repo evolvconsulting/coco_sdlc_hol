@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import * as fs from 'fs';
 import * as crypto from 'crypto';
+import { SNOWFLAKE_DATABASE, SNOWFLAKE_SCHEMA } from '@/lib/config';
 
 // Snowflake Cortex Agent configuration
 // Note: trim() is used because Vercel env vars may have trailing newlines
@@ -9,8 +10,6 @@ const SNOWFLAKE_HOST = (process.env.SNOWFLAKE_HOST || '').trim();
 const SNOWFLAKE_USER = (process.env.SNOWFLAKE_USER || '').trim();
 const SNOWFLAKE_PRIVATE_KEY_PATH = (process.env.SNOWFLAKE_PRIVATE_KEY_PATH || '').trim();
 const SNOWFLAKE_PRIVATE_KEY = (process.env.SNOWFLAKE_PRIVATE_KEY || '').trim();
-const AGENT_DATABASE = (process.env.SNOWFLAKE_DATABASE || 'COCO_SDLC_HOL').trim();
-const AGENT_SCHEMA = (process.env.SNOWFLAKE_SCHEMA || 'MARTS').trim();
 const AGENT_NAME = (process.env.CORTEX_AGENT_NAME || 'PAYMENT_ANALYTICS_AGENT').trim();
 
 // Generate JWT token for Snowflake authentication
@@ -121,7 +120,7 @@ export async function POST(request: NextRequest) {
     const baseUrl = SNOWFLAKE_HOST 
       ? `https://${SNOWFLAKE_HOST}`
       : `https://${SNOWFLAKE_ACCOUNT}.snowflakecomputing.com`;
-    const agentUrl = `${baseUrl}/api/v2/databases/${AGENT_DATABASE}/schemas/${AGENT_SCHEMA}/agents/${AGENT_NAME}:run`;
+    const agentUrl = `${baseUrl}/api/v2/databases/${SNOWFLAKE_DATABASE}/schemas/${SNOWFLAKE_SCHEMA}/agents/${AGENT_NAME}:run`;
 
     // Generate JWT token for authentication
     const jwtToken = generateJWT();
