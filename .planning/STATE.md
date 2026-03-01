@@ -22,12 +22,12 @@ See: .planning/PROJECT.md (updated 2026-02-28)
 
 ## Current Position
 
-Phase: 2 of 4 (UX/UI Polish) — COMPLETE
-Plan: 4 of 4 in current phase — COMPLETE
-Status: Phase 2 complete — ready for Phase 3 (Code Quality)
-Last activity: 2026-02-28 — Plan 02-04 complete (human visual verification, all UX-01 through UX-06 approved)
+Phase: 3 of 4 (Code Quality) — IN PROGRESS
+Plan: 1 of 4 in current phase — COMPLETE
+Status: Phase 3 in progress — Plan 03-01 complete (config.ts + snowflake.ts foundation)
+Last activity: 2026-03-01 — Plan 03-01 complete (centralized config.ts, per-request Snowflake connections, binds support, removed sanitizeSQL)
 
-Progress: [███████░░░] 64% (7/11 plans total complete)
+Progress: [████████░░] 73% (8/11 plans total complete)
 
 ## Performance Metrics
 
@@ -80,6 +80,10 @@ Recent decisions affecting current work:
 - [Phase 02-ux-ui-polish]: Settlement cardBrand filter and funding statusFilter wired to details queries only — overview queries show aggregate metrics regardless of filter (correct design)
 - [Phase 02-ux-ui-polish]: Desktop layout audit: all three pages use correct Col spans at 1440px — no overflow issues found
 - [02-04]: Phase 2 complete — all 6 UX requirements (UX-01 through UX-06) human-verified and satisfied
+- [03-01]: config.ts is single source of truth — all DB/schema/table strings import from @/lib/config
+- [03-01]: sanitizeSQL() removed — bypassable regex; parameterized binds provide real injection protection
+- [03-01]: Per-request Snowflake connections — no global connectionPool singleton; each executeQuery creates/destroys connection
+- [03-01]: executeQuery signature updated to (sql: string, binds?: (string | number | null)[]) — Plan 02 routes will pass user inputs as binds
 
 ### Pending Todos
 
@@ -93,6 +97,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-28
-Stopped at: Completed 02-04-PLAN.md — Phase 2 UX/UI Polish complete, all UX requirements human-verified, ready for Phase 3
+Last session: 2026-03-01
+Stopped at: Completed 03-01-PLAN.md — config.ts created, snowflake.ts refactored (per-request connections, binds support, sanitizeSQL removed)
 Resume file: None
