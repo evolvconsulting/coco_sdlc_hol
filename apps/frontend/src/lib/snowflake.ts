@@ -93,7 +93,33 @@ function loadPrivateKey(keyPath: string): string {
 async function createConnection(): Promise<snowflake.Connection> {
   const config = getConfig();
 
-  // Build connection options
+  // Auth strategy 1: SPCS OAuth (running inside an SPCS container)
+  // SPCS blocks all non-OAuth outbound Snowflake connections (error 395090).
+  // The platform writes a rotating token to /snowflake/session/token — read it fresh
+  // on every connection so we always use the current token (SPCS rotates every ~10 min).
+  // Do NOT specify username with SPCS OAuth — the token already encodes the user identity
+  // and Snowflake rejects with 390309 if username doesn't match the token's user.
+  if (fs.existsSync(SPCS_TOKEN_PATH)) {
+    const token = fs.readFileSync(SPCS_TOKEN_PATH, 'utf8').trim();
+    return new Promise((resolve, reject) => {
+      const connection = snowflake.createConnection({
+        account: config.account,
+        authenticator: 'OAUTH',
+        token,
+        warehouse: config.warehouse,
+        database: config.database,
+        schema: config.schema,
+        role: config.role,
+        ...(process.env.SNOWFLAKE_HOST ? { host: process.env.SNOWFLAKE_HOST } : {}),
+      });
+      connection.connect((err, conn) => {
+        if (err) { console.error('Failed to connect to Snowflake:', err); reject(err); }
+        else { resolve(conn); }
+      });
+    });
+  }
+
+  // Build connection options for non-SPCS auth strategies
   const connectionOptions: snowflake.ConnectionOptions = {
     account: config.account,
     username: config.username,
@@ -104,19 +130,7 @@ async function createConnection(): Promise<snowflake.Connection> {
     ...(process.env.SNOWFLAKE_HOST ? { host: process.env.SNOWFLAKE_HOST } : {}),
   };
 
-  // Auth strategy 1: SPCS OAuth (running inside an SPCS container)
-  // SPCS blocks all non-OAuth outbound Snowflake connections (error 395090).
-  // The platform writes a rotating token to /snowflake/session/token — read it fresh
-  // on every connection so we always use the current token (SPCS rotates every ~10 min).
-  if (fs.existsSync(SPCS_TOKEN_PATH)) {
-    const token = fs.readFileSync(SPCS_TOKEN_PATH, 'utf8').trim();
-    connectionOptions.authenticator = 'OAUTH';
-    connectionOptions.token = token;
-    // SPCS also injects SNOWFLAKE_HOST — use it when available for correct routing
-    if (process.env.SNOWFLAKE_HOST) {
-      connectionOptions.host = process.env.SNOWFLAKE_HOST;
-    }
-  } else if (config.privateKey) {
+  if (config.privateKey) {
     // Auth strategy 2a: JWT key-pair — private key content (e.g., local .env or non-SPCS cloud)
     // Convert escaped newlines back to actual newlines
     connectionOptions.authenticator = 'SNOWFLAKE_JWT';
