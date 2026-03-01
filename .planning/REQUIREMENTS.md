@@ -20,8 +20,8 @@ Requirements for production deployment within 2 days.
 
 ### UX / UI Polish
 
-- [ ] **UX-01**: Navigation and layout are visually consistent across all 6 domain pages
-- [ ] **UX-02**: Charts display with correct labels, axes, legends, and data formatting
+- [x] **UX-01**: Navigation and layout are visually consistent across all 6 domain pages
+- [x] **UX-02**: Charts display with correct labels, axes, legends, and data formatting
 - [ ] **UX-03**: Empty states and loading states handled gracefully in all charts and data tables
 - [ ] **UX-04**: Date pickers and date range filters work correctly and update displayed data
 - [ ] **UX-05**: Domain-specific filters function correctly on each analytics page
@@ -85,8 +85,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 | UAT-06 | Phase 1 | Complete (01-02) |
 | UAT-07 | Phase 1 | Complete (01-02) |
 | UAT-08 | Phase 1 | Complete (01-03) |
-| UX-01 | Phase 2 | Pending |
-| UX-02 | Phase 2 | Pending |
+| UX-01 | Phase 2 | Complete (02-01) |
+| UX-02 | Phase 2 | Complete (02-01) |
 | UX-03 | Phase 2 | Pending |
 | UX-04 | Phase 2 | Pending |
 | UX-05 | Phase 2 | Pending |
@@ -108,4 +108,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 ---
 *Requirements defined: 2026-02-28*
-*Last updated: 2026-02-28 after 01-03 completion (UAT-08 marked complete — all Phase 1 UAT requirements satisfied)*
+*Last updated: 2026-02-28 after 02-01 completion (UX-01, UX-02 marked complete — sidebar fix + formatter module)*

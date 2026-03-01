@@ -46,7 +46,12 @@ Plans:
   3. Loading and empty states appear correctly — no blank charts, no unhandled spinner states
   4. Date pickers and date range filters visibly update all data on the page when changed
   5. Domain-specific filters (e.g., brand, merchant, reason code) apply correctly to their respective pages
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [x] 02-01-PLAN.md — Sidebar fix + formatter foundation: controlled openKeys, remove Saved Reports stub, create formatters.ts
+- [ ] 02-02-PLAN.md — Analytics domain chart polish (TBD)
+- [ ] 02-03-PLAN.md — Filters, loading, and empty states (TBD)
 
 ### Phase 3: Code Quality
 **Goal**: The codebase is hardened against security vulnerabilities and reliability failures before going to production
@@ -78,6 +83,6 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. UAT Walkthrough | 3/3 | Complete | 2026-02-28 |
-| 2. UX / UI Polish | 0/TBD | Not started | - |
+| 2. UX / UI Polish | 1/3 | In progress | - |
 | 3. Code Quality | 0/TBD | Not started | - |
 | 4. Deployment | 0/TBD | Not started | - |

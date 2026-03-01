@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Merchants can independently answer questions about their transaction performance without calling support — seeing approvals, fees, chargebacks, and funding in one place with their own data.
-**Current focus:** Phase 1 — UAT Walkthrough
+**Current focus:** Phase 2 — UX/UI Polish
 
 ## Current Position
 
-Phase: 1 of 4 (UAT Walkthrough) — COMPLETE
-Plan: 3 of 3 in current phase — COMPLETE
-Status: Phase 1 complete — ready for Phase 2
-Last activity: 2026-02-28 — Plan 01-03 complete (AI chat verified, Phase 1 UAT sign-off PASS)
+Phase: 2 of 4 (UX/UI Polish) — IN PROGRESS
+Plan: 1 of 3 in current phase — COMPLETE
+Status: Phase 2 in progress — Plan 02-01 complete
+Last activity: 2026-02-28 — Plan 02-01 complete (sidebar fix + formatter module created)
 
-Progress: [███░░░░░░░] 25% (3/3 plans in Phase 1 complete)
+Progress: [████░░░░░░] 33% (4/9 plans total complete)
 
 ## Performance Metrics
 
@@ -28,10 +28,11 @@ Progress: [███░░░░░░░] 25% (3/3 plans in Phase 1 complete)
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 1. UAT Walkthrough | 3/3 | ~180 min | ~60 min |
+| 2. UX/UI Polish | 1/3 | ~7 min | ~7 min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01, 01-02, 01-03
-- Trend: 01-03 took ~15 min (sign-off only — all bugs pre-fixed in Plan 02)
+- Last 5 plans: 01-01, 01-02, 01-03, 02-01
+- Trend: 02-01 took ~7 min (targeted fixes, no blockers)
 
 *Updated after each plan completion*
 
@@ -56,6 +57,9 @@ Recent decisions affecting current work:
 - [01-02]: All 7 UAT domains (UAT-01 through UAT-07) verified PASS — no outstanding bugs entering Plan 03
 - [01-03]: Phase 1 UAT sign-off PASS — all 8 requirements (UAT-01 through UAT-08) satisfied
 - [01-03]: AI chat (UAT-08) verified — Snowflake Cortex Agent PAYMENT_ANALYTICS_AGENT returns contextually relevant streaming SSE responses with JWT key-pair auth
+- [02-01]: defaultOpenKeys changed to controlled openKeys prop — uncontrolled only applies at mount, controlled responds to pathname changes
+- [02-01]: formatCompactCurrency uses explicit threshold logic (not Intl compact) for predictable, testable output
+- [02-01]: SaveOutlined import removed alongside Saved Reports menu item — no orphaned imports
 
 ### Pending Todos
 
@@ -70,5 +74,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-28
-Stopped at: Completed 01-03-PLAN.md — Phase 1 UAT walkthrough complete, all 8 requirements PASS, ready for Phase 2
+Stopped at: Completed 02-01-PLAN.md — sidebar openKeys fix + formatters.ts created, ready for 02-02
 Resume file: None
