@@ -15,7 +15,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 1: UAT Walkthrough** - Verify all 6 payment domains and AI chat return correct data from Snowflake
 - [x] **Phase 2: UX / UI Polish** - Make navigation, charts, filters, and states visually consistent and usable
 - [x] **Phase 3: Code Quality** - Fix security issues, error handling, and connection management (completed 2026-03-01)
-- [ ] **Phase 4: Deployment** - Containerize and ship to Snowpark Container Services
+- [x] **Phase 4: Deployment** - Containerize and ship to Snowpark Container Services (completed 2026-03-01)
 
 ## Phase Details
 
@@ -96,4 +96,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. UAT Walkthrough | 3/3 | Complete | 2026-02-28 |
 | 2. UX / UI Polish | 4/4 | Complete | 2026-02-28 |
 | 3. Code Quality | 4/4 | Complete   | 2026-03-01 |
-| 4. Deployment | 2/3 | In Progress|  |
+| 4. Deployment | 3/3 | Complete   | 2026-03-01 |

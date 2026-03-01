@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-last_updated: "2026-03-01T19:18:43.940Z"
+last_updated: "2026-03-01T20:01:50.457Z"
 progress:
   total_phases: 4
-  completed_phases: 3
+  completed_phases: 4
   total_plans: 14
-  completed_plans: 13
+  completed_plans: 14
 ---
 
 # Project State
@@ -18,14 +18,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-02-28)
 
 **Core value:** Merchants can independently answer questions about their transaction performance without calling support — seeing approvals, fees, chargebacks, and funding in one place with their own data.
-**Current focus:** Phase 4 — Deployment
+**Current focus:** Phase 4 — Deployment (COMPLETE — project milestone v1.0 achieved)
 
 ## Current Position
 
 Phase: 4 of 4 (Deployment) — COMPLETE
-Plan: 2 of 2 in current phase — COMPLETE
-Status: Phase 4 complete — Dockerfile, health route, setup.sql SPCS provisioning script; all DEPLOY requirements satisfied
-Last activity: 2026-03-01 — Plan 04-02 complete (idempotent SPCS provisioning SQL script for HOL attendees)
+Plan: 3 of 3 in current phase — COMPLETE
+Status: ALL PHASES COMPLETE — SPCS service RUNNING at https://b6b4qiky-aovnged-ennovate.snowflakecomputing.app; all 14 plans and 4 phases done; milestone v1.0 achieved
+Last activity: 2026-03-01 — Plan 04-03 complete (Docker build, SPCS deploy, live endpoint verified)
 
 Progress: [████████████] 100% (14/14 plans total complete)
 
@@ -51,6 +51,7 @@ Progress: [████████████] 100% (14/14 plans total complet
 | Phase 03-code-quality P02 | 8 | 2 tasks | 19 files |
 | Phase 03 P03 | 2 | 2 tasks | 3 files |
 | Phase 04-deployment P02 | 1 | 1 tasks | 1 files |
+| Phase 04-deployment P03 | 60 | 3 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -97,6 +98,9 @@ Recent decisions affecting current work:
 - [Phase 04-02]: GENERIC_STRING secret type with secretKeyRef: secret_string used for RSA private key injection into SPCS service spec
 - [Phase 04-02]: SNOWFLAKE_PRIVATE_KEY_PATH omitted from SPCS service spec — containers have no external filesystem; secret injection via SNOWFLAKE_PRIVATE_KEY env var replaces it
 - [Phase 04-02]: setup.sql uses CREATE OR REPLACE for secret/service and IF NOT EXISTS for repo/pool — full idempotent provisioning script for HOL attendees
+- [Phase 04-03]: CPU_X64_XS substituted for STANDARD_1 instance family — STANDARD_1 not supported in this Snowflake account
+- [Phase 04-03]: CREATE SERVICE IF NOT EXISTS used — CREATE OR REPLACE SERVICE not supported in this account
+- [Phase 04-03]: SPCS public endpoint OAuth 302 redirect is expected SPCS ingress behavior — service RUNNING 1/1 confirms readiness probe passed in production
 
 ### Pending Todos
 
@@ -111,5 +115,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Completed 04-02-PLAN.md — setup.sql SPCS provisioning script complete; DEPLOY-02 and DEPLOY-03 satisfied; all deployment requirements met
+Stopped at: Completed 04-03-PLAN.md — SPCS service RUNNING at https://b6b4qiky-aovnged-ennovate.snowflakecomputing.app; all 4 DEPLOY requirements satisfied; project milestone v1.0 complete
 Resume file: None
