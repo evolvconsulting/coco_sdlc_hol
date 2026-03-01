@@ -1,15 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isConfigured } from '@/lib/snowflake';
-
-// Database configuration from environment
-const DATABASE = process.env.SNOWFLAKE_DATABASE || 'COCO_SDLC_HOL';
-const SCHEMA = process.env.SNOWFLAKE_SCHEMA || 'MARTS';
+import { SNOWFLAKE_DATABASE, SNOWFLAKE_SCHEMA } from '@/lib/config';
 
 // Domain metadata configuration
 const domainMetadata = {
   authorization: {
     tableName: 'AUTHORIZATIONS',
-    fullTableName: `${DATABASE}.${SCHEMA}.AUTHORIZATIONS`,
+    fullTableName: `${SNOWFLAKE_DATABASE}.${SNOWFLAKE_SCHEMA}.AUTHORIZATIONS`,
     description: 'Real-time authorization transactions',
     dimensions: [
       { name: 'transaction_date', type: 'date', label: 'Transaction Date' },
@@ -28,7 +25,7 @@ const domainMetadata = {
   },
   settlement: {
     tableName: 'SETTLEMENTS',
-    fullTableName: `${DATABASE}.${SCHEMA}.SETTLEMENTS`,
+    fullTableName: `${SNOWFLAKE_DATABASE}.${SNOWFLAKE_SCHEMA}.SETTLEMENTS`,
     description: 'Batch settlement and clearing transactions',
     dimensions: [
       { name: 'settlement_date', type: 'date', label: 'Settlement Date' },
@@ -47,7 +44,7 @@ const domainMetadata = {
   },
   funding: {
     tableName: 'DEPOSITS',
-    fullTableName: `${DATABASE}.${SCHEMA}.DEPOSITS`,
+    fullTableName: `${SNOWFLAKE_DATABASE}.${SNOWFLAKE_SCHEMA}.DEPOSITS`,
     description: 'Funding and deposit information',
     dimensions: [
       { name: 'deposit_date', type: 'date', label: 'Deposit Date' },
@@ -64,7 +61,7 @@ const domainMetadata = {
   },
   chargeback: {
     tableName: 'CHARGEBACKS',
-    fullTableName: `${DATABASE}.${SCHEMA}.CHARGEBACKS`,
+    fullTableName: `${SNOWFLAKE_DATABASE}.${SNOWFLAKE_SCHEMA}.CHARGEBACKS`,
     description: 'Dispute and chargeback data',
     dimensions: [
       { name: 'dispute_received_date', type: 'date', label: 'Dispute Received Date' },
@@ -83,7 +80,7 @@ const domainMetadata = {
   },
   retrieval: {
     tableName: 'RETRIEVALS',
-    fullTableName: `${DATABASE}.${SCHEMA}.RETRIEVALS`,
+    fullTableName: `${SNOWFLAKE_DATABASE}.${SNOWFLAKE_SCHEMA}.RETRIEVALS`,
     description: 'Draft retrieval requests',
     dimensions: [
       { name: 'original_sale_date', type: 'date', label: 'Sale Date' },
@@ -99,7 +96,7 @@ const domainMetadata = {
   },
   adjustment: {
     tableName: 'ADJUSTMENTS',
-    fullTableName: `${DATABASE}.${SCHEMA}.ADJUSTMENTS`,
+    fullTableName: `${SNOWFLAKE_DATABASE}.${SNOWFLAKE_SCHEMA}.ADJUSTMENTS`,
     description: 'Fee adjustments and corrections',
     dimensions: [
       { name: 'adjustment_date', type: 'date', label: 'Adjustment Date' },
@@ -122,8 +119,8 @@ export async function GET(request: NextRequest) {
 
   // Configuration info for client
   const connectionConfig = {
-    database: DATABASE,
-    schema: SCHEMA,
+    database: SNOWFLAKE_DATABASE,
+    schema: SNOWFLAKE_SCHEMA,
     isConnected: isConfigured(),
   };
 
