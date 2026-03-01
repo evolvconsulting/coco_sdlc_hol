@@ -1,13 +1,9 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Card, Row, Col, Statistic, Select, DatePicker, Space, Typography, Spin, Tag, Progress, Tabs, Breadcrumb, Button } from 'antd';
+import { Row, Col, Select, DatePicker, Space, Typography, Tabs, Breadcrumb, Button } from 'antd';
 import {
   FileSearchOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  ExclamationCircleOutlined,
-  FileTextOutlined,
   HomeOutlined,
   ReloadOutlined,
   LineChartOutlined,
@@ -16,6 +12,7 @@ import {
 import dayjs from 'dayjs';
 import { DataGrid } from '@/components/grid/DataGrid';
 import { ConnectionError } from '@/components/ui/ConnectionError';
+import { KPICard } from '@/components/ui';
 import { useAnalyticsData } from '@/hooks';
 import { domainColors } from '@/lib/theme';
 import type { RetrievalKPIs, RetrievalRecord } from '@/types/domain';
@@ -28,7 +25,6 @@ export default function RetrievalAnalyticsPage() {
     dayjs().subtract(30, 'day'),
     dayjs(),
   ]);
-  const [reasonCode, setReasonCode] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -42,7 +38,6 @@ export default function RetrievalAnalyticsPage() {
     status: status || undefined,
   }, { enabled: activeTab === 'details' });
 
-  const isLoading = kpis.isLoading;
   const hasError = kpis.error;
   const errorCode = (hasError as Error & { code?: string })?.code;
 
@@ -56,12 +51,6 @@ export default function RetrievalAnalyticsPage() {
   }
 
   const kpiData = kpis.data;
-
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat('en-US').format(value);
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
 
   return (
     <div className="space-y-6">
@@ -97,19 +86,6 @@ export default function RetrievalAnalyticsPage() {
             ]}
           />
           <Select
-            placeholder="All Reasons"
-            allowClear
-            style={{ width: 180 }}
-            value={reasonCode}
-            onChange={setReasonCode}
-            options={[
-              { value: 'CI', label: 'Cardholder Inquiry' },
-              { value: 'FI', label: 'Fraud Investigation' },
-              { value: 'CR', label: 'Compliance Review' },
-              { value: 'DS', label: 'Dispute Support' },
-            ]}
-          />
-          <Select
             placeholder="All Status"
             allowClear
             style={{ width: 130 }}
@@ -136,104 +112,72 @@ export default function RetrievalAnalyticsPage() {
       />
 
       {activeTab === 'overview' ? (
-        <Spin spinning={isLoading}>
-          <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Retrievals"
-                  value={kpiData?.totalRetrievals ?? 0}
-                  prefix={<FileTextOutlined style={{ color: domainColors.retrieval.primary }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Amount"
-                  value={kpiData?.totalAmount ?? 0}
-                  precision={0}
-                  prefix={<FileSearchOutlined style={{ color: domainColors.retrieval.primary }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Fulfillment Rate"
-                  value={kpiData?.fulfillmentRate ?? 0}
-                  precision={1}
-                  suffix="%"
-                  prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                  styles={{ content: { color: '#52c41a' } }}
-                />
-                <div className="mt-2">
-                  <Progress percent={kpiData?.fulfillmentRate ?? 0} showInfo={false} strokeColor="#52c41a" size="small" />
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Open"
-                  value={kpiData?.openCount ?? 0}
-                  prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-                <div className="mt-2">
-                  <Tag color="orange">Requires Action</Tag>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Fulfilled"
-                  value={kpiData?.fulfilledCount ?? 0}
-                  prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-                <div className="mt-2">
-                  <Tag color="green">
-                    {kpiData && kpiData.totalRetrievals > 0
-                      ? `${((kpiData.fulfilledCount / kpiData.totalRetrievals) * 100).toFixed(1)}% of total`
-                      : '0%'}
-                  </Tag>
-                </div>
-              </Card>
-            </Col>
-            <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Expired"
-                  value={kpiData?.expiredCount ?? 0}
-                  prefix={<ExclamationCircleOutlined style={{ color: '#ff4d4f' }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                  styles={{ content: { color: '#ff4d4f' } }}
-                />
-                <div className="mt-2">
-                  <Tag color="red">
-                    {kpiData && kpiData.totalRetrievals > 0
-                      ? `${((kpiData.expiredCount / kpiData.totalRetrievals) * 100).toFixed(1)}% of total`
-                      : '0%'}
-                  </Tag>
-                </div>
-              </Card>
-            </Col>
-          </Row>
-        </Spin>
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} lg={8} xl={4}>
+            <KPICard
+              title="Total Retrievals"
+              value={kpiData?.totalRetrievals ?? 0}
+              format="number"
+              loading={kpis.isLoading}
+              color={domainColors.retrieval.primary}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8} xl={4}>
+            <KPICard
+              title="Total Amount"
+              value={kpiData?.totalAmount ?? 0}
+              format="currency"
+              loading={kpis.isLoading}
+              color={domainColors.retrieval.primary}
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8} xl={4}>
+            <KPICard
+              title="Fulfillment Rate"
+              value={kpiData?.fulfillmentRate ?? 0}
+              format="percent"
+              loading={kpis.isLoading}
+              color="#52c41a"
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8} xl={4}>
+            <KPICard
+              title="Open"
+              value={kpiData?.openCount ?? 0}
+              format="number"
+              loading={kpis.isLoading}
+              description="Requires Action"
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8} xl={4}>
+            <KPICard
+              title="Fulfilled"
+              value={kpiData?.fulfilledCount ?? 0}
+              format="number"
+              loading={kpis.isLoading}
+              color="#52c41a"
+            />
+          </Col>
+          <Col xs={24} sm={12} lg={8} xl={4}>
+            <KPICard
+              title="Expired"
+              value={kpiData?.expiredCount ?? 0}
+              format="number"
+              loading={kpis.isLoading}
+              color="#ff4d4f"
+              trendInverted={true}
+            />
+          </Col>
+        </Row>
       ) : (
-        <Spin spinning={details.isLoading}>
-          <DataGrid
-            data={(details.data || []) as Record<string, unknown>[]}
-            height={600}
-            enablePivot={true}
-            enableExport={true}
-            title="Retrieval Requests"
-          />
-        </Spin>
+        <DataGrid
+          data={(details.data || []) as Record<string, unknown>[]}
+          loading={details.isLoading}
+          height={600}
+          enablePivot={true}
+          enableExport={true}
+          title="Retrieval Requests"
+        />
       )}
     </div>
   );
