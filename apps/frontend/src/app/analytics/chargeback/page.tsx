@@ -1,13 +1,8 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { Card, Row, Col, Statistic, Select, DatePicker, Space, Typography, Spin, Tag, Progress, Tabs, Breadcrumb, Button } from 'antd';
+import { Card, Row, Col, Select, DatePicker, Space, Typography, Tag, Tabs, Breadcrumb, Button, Skeleton } from 'antd';
 import {
-  DollarOutlined,
-  ExclamationCircleOutlined,
-  ClockCircleOutlined,
-  CheckCircleOutlined,
-  WarningOutlined,
   FileExclamationOutlined,
   HomeOutlined,
   ReloadOutlined,
@@ -18,8 +13,10 @@ import dayjs from 'dayjs';
 import { BarChart } from '@/components/charts/BarChart';
 import { DataGrid } from '@/components/grid/DataGrid';
 import { ConnectionError } from '@/components/ui/ConnectionError';
+import { KPICard } from '@/components/ui';
 import { useAnalyticsData } from '@/hooks';
 import { domainColors } from '@/lib/theme';
+import { formatCompactCurrency } from '@/lib/formatters';
 import type { ChargebackKPIs, ChargebackByReason, ChargebackRecord } from '@/types/domain';
 
 const { Title, Text } = Typography;
@@ -46,7 +43,7 @@ export default function ChargebackAnalyticsPage() {
     status: status || undefined,
   }, { enabled: activeTab === 'details' });
 
-  const isLoading = kpis.isLoading || byReason.isLoading;
+  const isChartLoading = byReason.isLoading;
   const hasError = kpis.error || byReason.error;
   const errorCode = (hasError as Error & { code?: string })?.code;
 
@@ -61,12 +58,6 @@ export default function ChargebackAnalyticsPage() {
   }
 
   const kpiData = kpis.data;
-
-  const formatCurrency = (value: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value);
-
-  const formatNumber = (value: number) =>
-    new Intl.NumberFormat('en-US').format(value);
 
   const reasonData = (byReason.data || []).map((d) => ({
     name: d.reasonDescription || d.reasonCode,
@@ -145,108 +136,94 @@ export default function ChargebackAnalyticsPage() {
       />
 
       {activeTab === 'overview' ? (
-        <Spin spinning={isLoading}>
+        <>
           <Row gutter={[16, 16]}>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Total Dispute Amount"
-                  value={kpiData?.totalDisputeAmount ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: domainColors.chargeback.primary }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                  styles={{ content: { color: domainColors.chargeback.primary } }}
-                />
-              </Card>
+              <KPICard
+                title="Total Dispute Amount"
+                value={kpiData?.totalDisputeAmount ?? 0}
+                format="currency"
+                loading={kpis.isLoading}
+                color={domainColors.chargeback.primary}
+                trendInverted={true}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Chargeback Count"
-                  value={kpiData?.totalChargebacks ?? 0}
-                  prefix={<ExclamationCircleOutlined style={{ color: domainColors.chargeback.primary }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Chargeback Count"
+                value={kpiData?.totalChargebacks ?? 0}
+                format="number"
+                loading={kpis.isLoading}
+                color={domainColors.chargeback.primary}
+                trendInverted={true}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Transaction Amount"
-                  value={kpiData?.totalTransactionAmount ?? 0}
-                  precision={0}
-                  prefix={<DollarOutlined style={{ color: '#faad14' }} />}
-                  formatter={(value) => formatCurrency(value as number)}
-                />
-              </Card>
+              <KPICard
+                title="Transaction Amount"
+                value={kpiData?.totalTransactionAmount ?? 0}
+                format="currency"
+                loading={kpis.isLoading}
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Win Rate"
-                  value={kpiData?.winRate ?? 0}
-                  precision={1}
-                  suffix="%"
-                  prefix={<CheckCircleOutlined style={{ color: '#52c41a' }} />}
-                  styles={{ content: { color: '#52c41a' } }}
-                />
-                <div className="mt-2">
-                  <Progress percent={kpiData?.winRate ?? 0} showInfo={false} strokeColor="#52c41a" size="small" />
-                </div>
-              </Card>
+              <KPICard
+                title="Win Rate"
+                value={kpiData?.winRate ?? 0}
+                format="percent"
+                loading={kpis.isLoading}
+                color="#52c41a"
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Open Disputes"
-                  value={kpiData?.openCount ?? 0}
-                  prefix={<ClockCircleOutlined style={{ color: '#faad14' }} />}
-                  formatter={(value) => formatNumber(value as number)}
-                />
-                <div className="mt-2">
-                  <Tag color="orange">Requires Action</Tag>
-                </div>
-              </Card>
+              <KPICard
+                title="Open Disputes"
+                value={kpiData?.openCount ?? 0}
+                format="number"
+                loading={kpis.isLoading}
+                description="Requires Action"
+              />
             </Col>
             <Col xs={24} sm={12} lg={8} xl={4}>
-              <Card>
-                <Statistic
-                  title="Won / Lost"
-                  value={kpiData?.wonCount ?? 0}
-                  prefix={<WarningOutlined style={{ color: '#1890ff' }} />}
-                  suffix={` / ${kpiData?.lostCount ?? 0}`}
-                />
-                <div className="mt-2">
-                  <Tag color="blue">{formatNumber(kpiData?.closedCount ?? 0)} closed</Tag>
-                </div>
-              </Card>
+              <KPICard
+                title="Won / Lost"
+                value={kpiData?.wonCount ?? 0}
+                format="number"
+                loading={kpis.isLoading}
+                suffix={` / ${kpiData?.lostCount ?? 0}`}
+              />
             </Col>
           </Row>
 
           <Row gutter={[16, 16]} className="mt-4">
             <Col xs={24}>
-              <Card title="Chargebacks by Reason Code" className="h-full">
-                <BarChart
-                  data={reasonData}
-                  height={300}
-                  colors={[domainColors.chargeback.primary]}
-                  horizontal={true}
-                  formatValue={(v) => `$${(v / 1000).toFixed(0)}K`}
-                />
-              </Card>
+              {isChartLoading ? (
+                <Card>
+                  <Skeleton active paragraph={{ rows: 6 }} style={{ height: 300, padding: '12px' }} />
+                </Card>
+              ) : (
+                <Card title="Chargebacks by Reason Code" className="h-full">
+                  <BarChart
+                    data={reasonData}
+                    height={300}
+                    colors={[domainColors.chargeback.primary]}
+                    horizontal={true}
+                    formatValue={formatCompactCurrency}
+                  />
+                </Card>
+              )}
             </Col>
           </Row>
-        </Spin>
+        </>
       ) : (
-        <Spin spinning={details.isLoading}>
-          <DataGrid
-            data={(details.data || []) as Record<string, unknown>[]}
-            height={600}
-            enablePivot={true}
-            enableExport={true}
-            title="Chargeback Cases"
-          />
-        </Spin>
+        <DataGrid
+          data={(details.data || []) as Record<string, unknown>[]}
+          loading={details.isLoading}
+          height={600}
+          enablePivot={true}
+          enableExport={true}
+          title="Chargeback Cases"
+        />
       )}
     </div>
   );
