@@ -79,7 +79,12 @@ Plans:
   2. The application is accessible at an SPCS endpoint — home dashboard loads in a browser
   3. Environment variables and secrets are configured in SPCS (not baked into the image)
   4. Domain pages return real data from Snowflake MARTS when accessed through the SPCS deployment
-**Plans**: TBD
+**Plans**: 3 plans
+
+Plans:
+- [ ] 04-01-PLAN.md — Container packaging: update next.config.ts (standalone + outputFileTracingRoot), add /api/health route, write Dockerfile and .dockerignore
+- [ ] 04-02-PLAN.md — Snowflake provisioning script: write idempotent setup.sql with Secret, image repo, compute pool, and SPCS service spec (all env vars + secret injection)
+- [ ] 04-03-PLAN.md — Build, push, deploy, and verify: docker build + push to Snowflake registry, run setup.sql, confirm portal returns real MARTS data at SPCS endpoint
 
 ## Progress
 
@@ -91,4 +96,4 @@ Phases execute in numeric order: 1 → 2 → 3 → 4
 | 1. UAT Walkthrough | 3/3 | Complete | 2026-02-28 |
 | 2. UX / UI Polish | 4/4 | Complete | 2026-02-28 |
 | 3. Code Quality | 4/4 | Complete   | 2026-03-01 |
-| 4. Deployment | 0/TBD | Not started | - |
+| 4. Deployment | 0/3 | Not started | - |
