@@ -23,7 +23,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. UAT Walkthrough | v1.0 | 3/3 | Complete | 2026-02-28 |
+| 1. UAT Walkthrough | 2/3 | In Progress|  | 2026-02-28 |
 | 2. UX / UI Polish | v1.0 | 4/4 | Complete | 2026-02-28 |
 | 3. Code Quality | v1.0 | 4/4 | Complete | 2026-03-01 |
 | 4. Deployment | v1.0 | 3/3 | Complete | 2026-03-01 |
@@ -33,7 +33,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 **Goal:** Produce a single consolidated idempotent SQL script (hol_setup.sql) that provisions a complete Snowflake HOL environment — database, schemas, RAW tables, reference data, synthetic transactions, pre-compiled dbt model DDL (staging views + intermediate/marts dynamic tables), service user, image repository, and Cortex Agent — runnable by dataops.live or pasted into a Snowflake worksheet.
 **Requirements**: TBD
 **Depends on:** Phase 0
-**Plans:** 3 plans
+**Plans:** 2/3 plans executed
 
 Plans:
 - [x] 01-01-PLAN.md — Assemble foundation sections (ACCOUNTADMIN bootstrap, warehouse/DB/schema setup, RAW tables, reference data, synthetic transaction generation) — completed 2026-03-01
