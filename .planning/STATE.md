@@ -22,11 +22,11 @@ See: .planning/PROJECT.md (updated 2026-03-01 after v1.0 milestone)
 
 ## Current Position
 
-Phase: MILESTONE v1.0 COMPLETE
-Status: All 4 phases, 14 plans, 22/22 requirements delivered. SPCS service RUNNING at https://b6b4qiky-aovnged-ennovate.snowflakecomputing.app
-Last activity: 2026-03-01 — v1.0 HOL Baseline Application milestone archived
+Phase: 01-generate-hands-on-lab-setup-script — Plan 01 of 3 complete
+Status: Executing HOL setup script generation phase. Foundation script (hol_setup_foundation.sql) complete.
+Last activity: 2026-03-01 — Completed 01-01: HOL setup foundation script (ACCOUNTADMIN bootstrap + RAW schema + reference data + synthetic data)
 
-Progress: [████████████] 100% (14/14 plans complete)
+Progress: [████████████] 100% (14/14 v1.0 plans complete) + 1/3 new phase plans complete
 
 ## Accumulated Context
 
@@ -37,6 +37,8 @@ Progress: [████████████] 100% (14/14 plans complete)
 ### Decisions
 
 All milestone decisions logged in PROJECT.md Key Decisions table.
+
+**01-01 (2026-03-01):** COMPUTE_WH creation and GRANT USAGE placed in ACCOUNTADMIN section before role switch; GRANT CREATE IMAGE REPOSITORY included in bootstrap; USE SCHEMA fully qualified as COCO_SDLC_HOL.RAW; GENERATE_SYNTHETIC_DATA call guarded by EXECUTE IMMEDIATE idempotency check.
 
 ### Pending Todos
 
@@ -49,5 +51,5 @@ None — all v1.0 pre-phase concerns resolved (SQL injection: CODE-04 ✓, crede
 ## Session Continuity
 
 Last session: 2026-03-01
-Stopped at: Milestone v1.0 HOL Baseline Application archived — all phases complete, git tagged v1.0
+Stopped at: Completed 01-01-PLAN.md — hol_setup_foundation.sql assembled (Sections 1-5)
 Resume file: None
