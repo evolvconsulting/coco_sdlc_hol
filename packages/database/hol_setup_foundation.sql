@@ -1,0 +1,48 @@
+-- HOL Setup Script — COCO SDLC Hands-On Lab
+-- This script provisions a complete Snowflake HOL environment.
+-- Run all sections sequentially in a Snowflake worksheet.
+-- The script is idempotent: safe to re-run without creating duplicate data or failing on existing objects.
+
+-- ============================================================
+-- SECTION 1: ACCOUNTADMIN Bootstrap
+-- ============================================================
+USE ROLE ACCOUNTADMIN;
+
+CREATE ROLE IF NOT EXISTS ATTENDEE_ROLE;
+GRANT ROLE ATTENDEE_ROLE TO ROLE SYSADMIN;
+
+GRANT CREATE DATABASE ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+GRANT CREATE SCHEMA ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+GRANT CREATE TABLE ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+GRANT BIND SERVICE ENDPOINT ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+GRANT CREATE COMPUTE POOL ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE ATTENDEE_ROLE;
+GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+GRANT CREATE SECRET ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+GRANT CREATE AGENT ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+GRANT CREATE IMAGE REPOSITORY ON ACCOUNT TO ROLE ATTENDEE_ROLE;
+
+CREATE WAREHOUSE IF NOT EXISTS COMPUTE_WH
+  WAREHOUSE_SIZE = XSMALL
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE
+  COMMENT = 'HOL warehouse for dbt dynamic tables and Cortex Agent';
+
+GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE ATTENDEE_ROLE;
+
+-- ============================================================
+-- SECTION 2: Database, Warehouse, and Schema Setup
+-- ============================================================
+USE ROLE ATTENDEE_ROLE;
+
+CREATE DATABASE IF NOT EXISTS COCO_SDLC_HOL
+    COMMENT = 'Performance Intelligence Dashboard for Fiserv payment analytics';
+
+USE DATABASE COCO_SDLC_HOL;
+
+CREATE SCHEMA IF NOT EXISTS RAW
+    COMMENT = 'Raw normalized OLTP-style tables with legacy naming conventions';
+CREATE SCHEMA IF NOT EXISTS STAGING;
+CREATE SCHEMA IF NOT EXISTS INTERMEDIATE;
+CREATE SCHEMA IF NOT EXISTS MARTS;
+CREATE SCHEMA IF NOT EXISTS PUBLIC;
