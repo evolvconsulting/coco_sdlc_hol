@@ -24,7 +24,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Generate HOL Setup Script | 3/3 | Complete | 2026-03-06 |
-| 2. UX / UI Polish | v1.0 | 4/4 | Complete | 2026-02-28 |
+| 2. UX / UI Polish | 3/3 | Complete   | 2026-03-06 | 2026-02-28 |
 | 3. Code Quality | v1.0 | 4/4 | Complete | 2026-03-01 |
 | 4. Deployment | v1.0 | 3/3 | Complete | 2026-03-01 |
 
@@ -45,7 +45,7 @@ Plans:
 **Goal:** Produce a single comprehensive markdown guide (HANDS_ON_LAB.md) that walks HOL participants through using Cortex Code to make code changes across the full SDLC — from reading a Jira ticket through committing and creating a PR — demonstrating AI-assisted development workflows on a real payment analytics codebase.
 **Requirements**: HOL-01 (architecture overview), HOL-02 (setup verification), HOL-03 (Cortex Code primer), HOL-04 (Task 1 dbt/semantic/agent changes), HOL-05 (Task 1 verification), HOL-06 (Confluence update), HOL-07 (Task 2 frontend KPI card), HOL-08 (wrap-up and takeaways), HOL-09 (troubleshooting appendix)
 **Depends on:** Phase 1
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
 - [ ] 02-01-PLAN.md — Write foundation sections: header, architecture overview, setup verification, Cortex Code primer
