@@ -17,7 +17,6 @@ By the end, you will have experienced AI-assisted development across every layer
 - Snowflake account (pre-configured by your instructor)
 - Git installed locally
 - Node.js (v18+) installed locally
-- WSL (Windows only -- required for Cortex Code CLI)
 
 > **Note:** The lab environment has been pre-configured using `hol_setup.sql`. You do not need to run this script. Your instructor has already provisioned the Snowflake database, schemas, roles, sample data, and all supporting objects.
 
@@ -96,8 +95,6 @@ The repository includes an `AGENTS.md` file at the root. Cortex Code reads this 
 ## Section 2: Environment Setup Verification (~5 min)
 
 In this section, you will verify that your pre-configured environment is working correctly. Each step includes the expected output so you can confirm everything is ready before starting the development tasks.
-
-> **Windows note:** If you are on Windows, you must use WSL (Windows Subsystem for Linux). Open a WSL terminal before running any commands in this lab.
 
 ### Step 1: Confirm Snowflake Connection
 
@@ -186,7 +183,9 @@ The following slash commands are used throughout this lab:
 
 ### 3.3 Install Jira MCP Skill
 
-Cortex Code connects to Jira via MCP (Model Context Protocol), allowing you to read and interact with Jira tickets directly from the coding assistant. In this lab, you will use this to pull ticket details for both development tasks.
+Cortex Code connects to Jira via MCP (Model Context Protocol), allowing you to read tickets, add comments, and transition status directly from the coding assistant. In this lab, the Jira connection is read-only -- you will use it to pull ticket details for both development tasks.
+
+> **Beyond the lab:** With write access, Cortex Code can add comments to tickets summarizing what was implemented, transition ticket status, and log time -- completing the full development loop without leaving the terminal.
 
 In Cortex Code, run:
 
@@ -204,7 +203,9 @@ cortex mcp add jira --url https://your-org.atlassian.net --auth-token <token>
 
 ### 3.4 Install Confluence MCP Skill
 
-The Confluence skill allows you to update documentation pages directly from Cortex Code. You will use this in Ticket 1 to update the data dictionary.
+The Confluence skill connects Cortex Code to your documentation wiki, enabling both reading and updating pages directly from the terminal. In this lab, the Confluence connection is read-only -- you will use it to pull the data dictionary for reference while implementing the new metric.
+
+> **Beyond the lab:** With write access, Cortex Code can update Confluence pages directly -- for example, adding a new metric to the data dictionary after implementing it in code. This keeps documentation in sync with code changes without context-switching to a browser.
 
 Install using the same pattern as Jira:
 
@@ -236,7 +237,7 @@ What database and schema does this project use?
 
 ## Section 4: Task 1 -- Add Retry Success Rate Metric (~30 min)
 
-In this task, you will add a new business metric -- retry success rate -- that measures what percentage of initially declined transactions succeeded when the customer retried. You will modify the dbt data model, the semantic view, the Cortex Agent instructions, and verify the change locally. This is a complete SDLC cycle: from reading a Jira ticket to committing code and updating documentation.
+In this task, you will add a new business metric -- retry success rate -- that measures what percentage of initially declined transactions succeeded when the customer retried. You will modify the dbt data model, the semantic view, the Cortex Agent instructions, and verify the change locally. This is a complete SDLC cycle: from reading a Jira ticket to committing code and referencing project documentation.
 
 ### Step 4.1: Read the Jira Ticket
 
@@ -256,11 +257,9 @@ Cortex Code will use the Jira MCP skill you configured in Section 3 to retrieve 
 
 ### Step 4.2: Create a Git Branch
 
-Create a feature branch for this work:
+Ask Cortex Code to create a feature branch:
 
-```bash
-git checkout -b feature/retry-success-rate
-```
+> Create a new git branch called feature/retry-success-rate and switch to it.
 
 This keeps your changes isolated from the main branch. You will push this branch after verifying the metric works.
 
@@ -330,7 +329,7 @@ The intermediate model (`int_authorizations__enriched`) is already configured as
 
 If the project has dbt tests, Cortex Code may update them to cover the new columns. Review any test changes for correctness.
 
-> **Note:** In this lab environment, dbt tests are not run directly -- the compiled DDL is what matters. You will apply the DDL changes to Snowflake in the verification step.
+> **Note:** In this lab environment, dbt tests are not run directly -- the compiled DDL is what matters. You will ask Cortex Code to apply the DDL changes to Snowflake in the verification step.
 
 ### Step 4.8: Review Semantic View Update
 
@@ -360,85 +359,55 @@ Verify the instruction text mentions retry success rate. For example, the `respo
 
 > "You are a helpful payment analytics assistant. Provide clear, concise answers about payment transactions, settlements, funding, chargebacks, retry success rates, and merchant performance. Format numerical data appropriately with dollar signs and percentages where relevant."
 
-### Step 4.10: Verify Locally
+### Step 4.10: Deploy and Verify in Snowflake
 
-Now verify that the changes work end-to-end in Snowflake. This has four sub-steps.
+Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Each sub-step is a prompt you enter into Cortex Code -- it will execute the SQL and show you the results directly in the CLI.
 
-**a) Apply DDL changes in a Snowflake Worksheet**
+**a) Apply DDL changes and refresh dynamic tables**
 
-Copy the updated `CREATE OR REPLACE DYNAMIC TABLE` statements (the compiled SQL from the modified dbt models) and run them in a Snowflake Worksheet. This applies the new columns to the live dynamic tables.
+> Run the compiled CREATE OR REPLACE DYNAMIC TABLE statements from the modified dbt models against Snowflake to apply the new columns. Then refresh both dynamic tables so the data is immediately available: ALTER DYNAMIC TABLE COCO_SDLC_HOL.INTERMEDIATE.INT_AUTHORIZATIONS__ENRICHED REFRESH; and ALTER DYNAMIC TABLE COCO_SDLC_HOL.MARTS.AUTHORIZATIONS REFRESH;
 
-Then manually refresh the dynamic tables so the new columns are populated immediately (dynamic tables do not auto-refresh on DDL changes within the lab timeframe):
+Cortex Code will execute the DDL and refresh commands. You should see confirmation that both tables were updated.
 
-```sql
-ALTER DYNAMIC TABLE COCO_SDLC_HOL.INTERMEDIATE.INT_AUTHORIZATIONS__ENRICHED REFRESH;
-ALTER DYNAMIC TABLE COCO_SDLC_HOL.MARTS.AUTHORIZATIONS REFRESH;
-```
+> **Why the refresh?** Dynamic tables refresh on a schedule (e.g., every hour). Without a manual refresh, you would have to wait for the next scheduled cycle before the new columns contain data.
 
-> **Important:** Dynamic tables refresh on a schedule (e.g., every hour). Without the manual refresh above, you would have to wait for the next scheduled refresh before the new columns contain data.
+**b) Rebuild the semantic view and verify**
 
-**b) Rebuild the semantic view**
+> Run the updated semantic view DDL from packages/dbt/analyses/payment_analytics_semantic_view.sql against Snowflake. Then run DESCRIBE SEMANTIC VIEW COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS and confirm RETRY_SUCCESS_RATE appears in the metrics list.
 
-Run the updated semantic view DDL from `payment_analytics_semantic_view.sql` in a Snowflake Worksheet. This registers the new `RETRY_SUCCESS_RATE` metric with the semantic view.
-
-Then verify the metric appears:
-
-```sql
-DESCRIBE SEMANTIC VIEW COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS;
-```
-
-You should see `RETRY_SUCCESS_RATE` listed among the metrics.
+Cortex Code will rebuild the semantic view and show the DESCRIBE output. Look for `RETRY_SUCCESS_RATE` in the results.
 
 **c) Verify the metric data**
 
-Run this query in a Snowflake Worksheet to confirm the retry columns contain data:
+> Query the AUTHORIZATIONS mart to verify the retry columns contain data. Calculate successful_retries, total_retries, and retry_success_rate_pct for clnt_id = 'dmcl' over the last 30 days.
 
-```sql
-SELECT
-  SUM(CASE WHEN retry_success_flag = 1 THEN 1 ELSE 0 END) AS successful_retries,
-  SUM(CASE WHEN retry_attempt_flag = 1 THEN 1 ELSE 0 END) AS total_retries,
-  ROUND(
-    SUM(CASE WHEN retry_success_flag = 1 THEN 1.0 ELSE 0 END) * 100.0 /
-    NULLIF(SUM(CASE WHEN retry_attempt_flag = 1 THEN 1 ELSE 0 END), 0),
-  2) AS retry_success_rate_pct
-FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
-WHERE clnt_id = 'dmcl'
-  AND transaction_date >= CURRENT_DATE - 30;
-```
-
-You should see a non-null `retry_success_rate_pct` value. The exact number depends on your sample data, but a typical value is between 20% and 80%.
+Cortex Code will run the verification query and display the results. You should see a non-null `retry_success_rate_pct` value. The exact number depends on your sample data, but a typical value is between 20% and 80%.
 
 **d) Test the Cortex Agent**
 
-Ask the Cortex Agent about retry success rate -- either through the local app's natural language query interface or directly in Cortex Code:
-
 > What is the retry success rate for the last 30 days?
 
-The agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` metric and return a meaningful answer.
+The Cortex Agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` metric and return a meaningful answer. This confirms the full chain works: dbt model → dynamic table → semantic view → Cortex Agent.
 
 ### Step 4.11: Commit and Push
 
-Once verification passes, commit your changes:
+Once verification passes, ask Cortex Code to commit and push:
 
-```bash
-git add packages/dbt/ packages/database/
-git commit -m "feat(dbt): add retry_success_rate to authorizations mart and semantic view"
-git push -u origin feature/retry-success-rate
-```
+> Commit all changes in packages/dbt/ and packages/database/ with the message "feat(dbt): add retry_success_rate to authorizations mart and semantic view". Then push to origin.
 
-This commits all dbt model changes, the semantic view update, and the Cortex Agent instruction change together as a single logical unit.
+Cortex Code will stage the files, create the commit, and push to the remote. This commits all dbt model changes, the semantic view update, and the Cortex Agent instruction change together as a single logical unit.
 
-### Step 4.12: Update Confluence Data Dictionary
+### Step 4.12: Reference the Confluence Data Dictionary
 
-The final step for this ticket is updating the data dictionary to document the new metric. In Cortex Code, use the Confluence MCP skill:
+Before wrapping up this ticket, use Cortex Code to read the existing data dictionary from Confluence. This demonstrates how MCP integrations let you pull project documentation directly into your coding workflow for reference:
 
-> Update the Confluence data dictionary page at [CONFLUENCE-DATA-DICTIONARY-URL] to add the retry_success_rate metric. It measures the percentage of initially declined transactions that succeeded on retry. It is computed from retry_attempt_flag and retry_success_flag in the AUTHORIZATIONS mart.
+> Read the Confluence data dictionary page at [CONFLUENCE-DATA-DICTIONARY-URL]. What metrics are currently documented? How should I document the new retry_success_rate metric to match the existing format?
 
 > **Note:** [CONFLUENCE-DATA-DICTIONARY-URL] is a placeholder -- your instructor will provide the actual Confluence page URL.
 
-Cortex Code will use the Confluence MCP skill to read the existing page and add the new metric entry. Review the proposed changes before confirming.
+Cortex Code will use the Confluence MCP skill to retrieve the page content and show you the existing metric documentation format. Note the structure -- in a real workflow, you would update this page to include the new metric. For this lab, the Confluence connection is read-only.
 
-This completes Ticket 1. You have added a new business metric end-to-end: from the intermediate dbt model through the mart, semantic view, Cortex Agent, and external documentation.
+This completes Ticket 1. You have added a new business metric end-to-end: from the intermediate dbt model through the mart, semantic view, and Cortex Agent.
 
 ---
 
@@ -466,8 +435,8 @@ Take a moment to review what you completed:
 - Passed `retry_attempt_flag` and `retry_success_flag` through to the authorizations mart
 - Added the `RETRY_SUCCESS_RATE` metric to the semantic view
 - Updated the Cortex Agent instructions to mention retry success rate
-- Verified the metric end-to-end in Snowflake (DDL apply, dynamic table refresh, SQL query)
-- Updated the data dictionary in Confluence via Cortex Code MCP
+- Verified the metric end-to-end in Snowflake via Cortex Code (DDL deploy, dynamic table refresh, SQL query)
+- Referenced the Confluence data dictionary via Cortex Code MCP to review existing documentation format
 - Committed and pushed your changes to the feature branch
 
 You are now ready for Task 2.
@@ -490,11 +459,9 @@ Cortex Code will use the Jira MCP skill to retrieve the ticket. You should see a
 
 ### Step 6.2: Create a Git Branch
 
-Create a new feature branch for this task:
+Ask Cortex Code to create a new feature branch:
 
-```bash
-git checkout -b feature/retry-success-kpi-card
-```
+> Create a new git branch called feature/retry-success-kpi-card and switch to it.
 
 This keeps the KPI card changes separate from the data model changes in Task 1.
 
@@ -580,40 +547,29 @@ This follows the exact same pattern as the existing KPI cards -- same `Col` grid
 
 ### Step 6.5: Verify Locally
 
-Start the dev server if it is not already running:
+Ask Cortex Code to start the dev server if it is not already running:
 
-```bash
-cd apps/frontend && npm run dev
-```
+> Start the frontend dev server from apps/frontend.
 
 Open [http://localhost:3000/analytics/authorization](http://localhost:3000/analytics/authorization) in your browser. You should see a new "Retry Success Rate" KPI card alongside the existing authorization KPIs. The card displays a percentage value with a green color indicator.
 
-If the card shows 0 or undefined, check that the TypeScript interface in `domain.ts` includes the `retrySuccessRate` field and that the API route returns the field in its response object.
+If the card shows 0 or undefined, ask Cortex Code to help debug:
+
+> The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs interface in domain.ts includes retrySuccessRate and that the API route in kpis/route.ts returns the field.
 
 ### Step 6.6: Commit and Push
 
-Once the KPI card displays correctly, commit your changes:
+Once the KPI card displays correctly, ask Cortex Code to commit and push:
 
-```bash
-git add apps/frontend/
-git commit -m "feat(frontend): add retry success rate KPI card to authorization dashboard"
-git push -u origin feature/retry-success-kpi-card
-```
+> Commit all changes in apps/frontend/ with the message "feat(frontend): add retry success rate KPI card to authorization dashboard". Then push to origin.
 
 ### Step 6.7: Create a Pull Request
 
-Create a pull request using the GitHub CLI:
-
-```bash
-gh pr create --title "Add retry success rate KPI card" \
-  --body "Adds Retry Success Rate metric to the authorization dashboard as a KPI card. Reads from the retry_success_rate field added in the previous ticket."
-```
-
-Or use Cortex Code to create the PR:
+Ask Cortex Code to create the pull request:
 
 > Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
 
-This completes Ticket 2. You have added a frontend KPI card that visualizes the backend metric you built in Task 1, following the existing component patterns in the codebase.
+Cortex Code will create the PR and return the URL. This completes Ticket 2. You have added a frontend KPI card that visualizes the backend metric you built in Task 1, following the existing component patterns in the codebase.
 
 ---
 
@@ -623,9 +579,9 @@ Congratulations! In this lab, you completed two full development cycles using Co
 
 ### What You Accomplished
 
-- **Task 1:** Added a new business metric (retry success rate) end-to-end through the data stack -- dbt intermediate model, marts dynamic table, semantic view, and Cortex Agent instructions. Verified the metric in Snowflake and updated the Confluence data dictionary.
+- **Task 1:** Added a new business metric (retry success rate) end-to-end through the data stack -- dbt intermediate model, marts dynamic table, semantic view, and Cortex Agent instructions. Verified the metric in Snowflake and referenced the Confluence data dictionary for documentation context.
 - **Task 2:** Added a frontend KPI card to visualize the new metric, following existing component patterns. Committed and created a pull request.
-- **Along the way:** Read Jira tickets via MCP, planned work with AI before executing, reviewed changes step-by-step, verified results locally and in Snowflake, committed code, updated documentation, and created a pull request -- all with Cortex Code as your AI coding assistant.
+- **Along the way:** Read Jira tickets and Confluence documentation via MCP, planned work with AI before executing, reviewed changes step-by-step, verified results locally and in Snowflake, committed code, and created a pull request -- all with Cortex Code as your AI coding assistant.
 
 ### Key Takeaways
 
@@ -644,9 +600,8 @@ Congratulations! In this lab, you completed two full development cycles using Co
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | `cortex: command not found` | CLI not installed or not in PATH | Run install script: `curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh` then restart terminal |
-| Windows install fails | Cortex Code requires WSL on Windows | Open a WSL terminal, then run the install script from within WSL |
-| Dynamic table shows old data | Dynamic tables refresh on schedule, not on DDL change | Run `ALTER DYNAMIC TABLE ... REFRESH;` manually (see Step 4.10a) |
-| Semantic view metric not found | YAML updated but view not rebuilt | Run the `CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(...)` statement in a Snowflake Worksheet (see Step 4.10b) |
+| Dynamic table shows old data | Dynamic tables refresh on schedule, not on DDL change | Ask Cortex Code to run `ALTER DYNAMIC TABLE ... REFRESH;` (see Step 4.10a) |
+| Semantic view metric not found | YAML updated but view not rebuilt | Ask Cortex Code to rerun the semantic view DDL from `payment_analytics_semantic_view.sql` (see Step 4.10b) |
 | KPI card shows 0 or undefined | TypeScript interface not updated | Add `retrySuccessRate: number` to `AuthorizationKPIs` in `apps/frontend/src/types/domain.ts` |
 | Cortex Agent gives generic answer | Agent instructions not updated | Rerun `03_create_agent.sql` with the updated `instructions.response` mentioning retry success rate |
 | `/plan` mode off after `/new` | Plan mode is session-scoped | Re-enable with `/plan` in each new session after using `/new` |
