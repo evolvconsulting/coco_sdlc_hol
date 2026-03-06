@@ -3352,11 +3352,6 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
         warehouse: COMPUTE_WH
   $$;
 
--- =============================================================================
--- Grant permissions on the agent
--- =============================================================================
-GRANT USAGE ON AGENT COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
-
 -- ============================================================
 -- SECTION 12: Final Grants
 -- ============================================================
