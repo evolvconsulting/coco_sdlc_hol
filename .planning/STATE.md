@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: planning
-stopped_at: Completed 01-03-PLAN.md — Phase 1 complete. hol_setup.sql (3363 lines, 12 sections) delivered.
-last_updated: "2026-03-06T18:36:13.795Z"
-last_activity: "2026-03-06 — Completed 01-03: Final assembly + human verification of 12-section hol_setup.sql"
+status: "Foundation sections delivered. Ready for 02-02 (Task 1: Retry Success Rate Metric)."
+stopped_at: Completed 02-01-PLAN.md
+last_updated: "2026-03-06T19:01:45.603Z"
+last_activity: "2026-03-06 — Completed 02-01: Foundation sections (header, architecture, setup verification, Cortex Code primer)"
 progress:
   total_phases: 2
   completed_phases: 1
-  total_plans: 3
-  completed_plans: 3
-  percent: 100
+  total_plans: 6
+  completed_plans: 4
+  percent: 67
 ---
 
 # Project State
@@ -21,15 +21,15 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01 after v1.0 milestone)
 
 **Core value:** Merchants can independently answer questions about their transaction performance without calling support — seeing approvals, fees, chargebacks, and funding in one place with their own data.
-**Current focus:** Planning next milestone (`/gsd:new-milestone`)
+**Current focus:** Phase 2 — Writing HANDS_ON_LAB.md instruction guide
 
 ## Current Position
 
-Phase: 01-generate-hands-on-lab-setup-script — Plan 03 of 3 complete (phase complete)
-Status: Phase 1 complete. Consolidated hol_setup.sql delivered. Ready for Phase 2 planning.
-Last activity: 2026-03-06 — Completed 01-03: Final assembly + human verification of 12-section hol_setup.sql
+Phase: 02-create-the-hands-on-lab-instruction-guide — Plan 01 of 3 complete
+Status: Foundation sections delivered. Ready for 02-02 (Task 1: Retry Success Rate Metric).
+Last activity: 2026-03-06 — Completed 02-01: Foundation sections (header, architecture, setup verification, Cortex Code primer)
 
-Progress: [████████████] 100% (14/14 v1.0 plans complete) + 3/3 Phase 1 plans complete
+Progress: [███████░░░] 67% (4/6 plans complete) — 1/3 Phase 2 plans complete
 
 ## Accumulated Context
 
@@ -48,6 +48,8 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 
 **01-03 (2026-03-06):** Duplicate GRANT USAGE ON AGENT removed (kept only in Section 12 Final Grants); RSA key placeholders use angle-bracket tokens for dataops.live substitution; Cortex Agent GRANT changed from SYSADMIN to ATTENDEE_ROLE; intermediate assembly files deleted after merge.
 
+**02-01 (2026-03-06):** ASCII art diagrams chosen over Mermaid for portability; all 7 MARTS tables included with RAW source mapping; suggested prompts framed as starting points per locked CONTEXT.md decision.
+
 ### Pending Todos
 
 1. Update README to make Cortex Code CLI the primary tool (`docs`)
@@ -58,6 +60,6 @@ None — all v1.0 pre-phase concerns resolved (SQL injection: CODE-04 ✓, crede
 
 ## Session Continuity
 
-Last session: 2026-03-06
-Stopped at: Completed 01-03-PLAN.md — Phase 1 complete. hol_setup.sql (3363 lines, 12 sections) delivered.
+Last session: 2026-03-06T19:01:45.599Z
+Stopped at: Completed 02-01-PLAN.md
 Resume file: None
