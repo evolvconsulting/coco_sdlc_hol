@@ -154,3 +154,80 @@ curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
 ```
 
 After installation, restart your terminal and run `cortex --version` again to confirm. Cortex Code CLI is Snowflake's AI coding assistant -- you will use it extensively throughout both tickets in this lab.
+
+---
+
+## Section 3: Cortex Code Primer (~10 min)
+
+In this section, you will learn the essential Cortex Code commands and set up the integrations needed for the lab tasks. By the end, you will be ready to use Cortex Code as your AI coding assistant throughout the development workflow.
+
+### 3.1 What is Cortex Code
+
+Cortex Code is Snowflake's AI coding assistant, generally available since February 2, 2026. Built on the Claude Code foundation, it runs directly in your terminal and provides AI-assisted development with Snowflake-native capabilities:
+
+- **Automatic repo context:** Reads the `AGENTS.md` file at the repo root to understand your project's data architecture, business rules, and key file paths.
+- **Snowflake-native features:** SQL execution, dbt skills, Snowflake object search, and RBAC awareness.
+- **MCP integrations:** Connect to Jira, Confluence, and other tools directly from the coding assistant.
+
+### 3.2 Key Slash Commands
+
+The following slash commands are used throughout this lab:
+
+| Command | Purpose |
+|---------|---------|
+| `/plan` | Enable plan mode -- Cortex Code shows an action plan before executing |
+| `/plan-off` | Disable plan mode -- return to direct execution |
+| `/new` | Start a fresh conversation (clears context) |
+| `/model` | Select AI model (auto, Opus 4.6, Sonnet 4.6, etc.) |
+| `/mcp` | Manage MCP integrations |
+| `/status` | Show current session status |
+
+> **Note:** Plan mode is session-scoped. After `/new`, you must re-enable `/plan` if you want plan mode in the new session.
+
+### 3.3 Install Jira MCP Skill
+
+Cortex Code connects to Jira via MCP (Model Context Protocol), allowing you to read and interact with Jira tickets directly from the coding assistant. In this lab, you will use this to pull ticket details for both development tasks.
+
+In Cortex Code, run:
+
+```
+/mcp
+```
+
+Then follow the prompts to add the Jira server. Alternatively, use the CLI:
+
+```bash
+cortex mcp add jira --url https://your-org.atlassian.net --auth-token <token>
+```
+
+> **Note:** Your instructor will provide the Jira instance URL and API token.
+
+### 3.4 Install Confluence MCP Skill
+
+The Confluence skill allows you to update documentation pages directly from Cortex Code. You will use this in Ticket 1 to update the data dictionary.
+
+Install using the same pattern as Jira:
+
+```bash
+cortex mcp add confluence --url https://your-org.atlassian.net --auth-token <token>
+```
+
+> **Note:** Your instructor will provide the Confluence instance URL and API token. This typically uses the same Atlassian instance as Jira.
+
+### 3.5 Quick Test -- Verify Cortex Code Reads Repo Context
+
+Launch Cortex Code from the repository root to verify it picks up the project context:
+
+```bash
+cortex
+```
+
+Once Cortex Code starts, ask it a question about the project:
+
+```
+What database and schema does this project use?
+```
+
+**Expected behavior:** Cortex Code should reference `COCO_SDLC_HOL` as the database and describe the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) based on the information in `AGENTS.md`. If it does, the repo context is loaded correctly.
+
+> **Note:** Suggested prompts throughout this lab are starting points -- feel free to rephrase in your own words. Cortex Code understands natural language variations.
