@@ -51,3 +51,14 @@ Plans:
 - [ ] 02-01-PLAN.md — Write foundation sections: header, architecture overview, setup verification, Cortex Code primer
 - [ ] 02-02-PLAN.md — Write Task 1 walkthrough (retry success rate metric end-to-end) and context switch
 - [ ] 02-03-PLAN.md — Write Task 2 walkthrough (KPI card), wrap-up, appendix, and human verification
+
+### Phase 3: Generate reference content for Jira tickets and Confluence documentation
+
+**Goal:** Produce reference .wiki files for Jira tickets (epic, two main stories, three backlog items) and a Confluence data dictionary page, then create the actual artifacts in Atlassian Cloud via REST API -- supporting the two development tasks in HANDS_ON_LAB.md and making the Jira board feel like a real project.
+**Requirements**: CONTENT-01 (Jira wiki markup files), CONTENT-02 (Confluence data dictionary), API-01 (Epic created), API-02 (Stories linked to epic), API-03 (Confluence page created), API-04 (Data dictionary omits retry_success_rate)
+**Depends on:** Phase 2
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03-01-PLAN.md — Generate Jira .wiki reference files (epic + 2 stories + 3 backlog) and Confluence data dictionary .wiki file
+- [ ] 03-02-PLAN.md — Create Atlassian artifact creation script and execute with human verification
