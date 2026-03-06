@@ -1,0 +1,26 @@
+h2. Description
+
+The Payment Analytics Platform Enhancements epic covers a set of improvements to the evolv Payment Analytics platform. This work focuses on expanding the metric library available through the Cortex Agent, improving dashboard visibility of key performance indicators, and strengthening data quality across payment domains.
+
+The platform currently provides analytics across authorizations, settlements, deposits, chargebacks, retrievals, and adjustments. This epic introduces new metrics that help merchants better understand transaction recovery patterns and adds dashboard components to surface those insights at a glance.
+
+{panel:title=Platform Context|borderStyle=solid|borderColor=#ccc|bgColor=#FFFFCE}
+The evolv Payment Analytics platform serves merchant clients who need to monitor and analyze their payment processing performance. Data flows through a medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) and is queryable via the Cortex Agent using natural language. Dashboard components visualize key metrics from the MARTS layer.
+{panel}
+
+h2. Scope
+
+* New business metrics for the authorizations domain
+* KPI card additions to the authorization dashboard
+* Data dictionary updates to reflect new metric definitions
+* Backlog items for future settlement, chargeback, and funding enhancements
+
+h2. Goals
+
+# Expand the analytical coverage of authorization transaction data
+# Improve dashboard usability by surfacing critical metrics as KPI cards
+# Maintain alignment between the data dictionary, semantic view, and dashboard
+
+h2. Labels
+
+platform, analytics, enhancements
