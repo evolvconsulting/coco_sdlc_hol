@@ -471,3 +471,200 @@ Take a moment to review what you completed:
 - Committed and pushed your changes to the feature branch
 
 You are now ready for Task 2.
+
+---
+
+## Section 6: Task 2 -- Add KPI Card to Dashboard (~20 min)
+
+In this task, you will add a KPI card to the authorization dashboard that displays the retry success rate metric you created in Task 1. This demonstrates a frontend change driven by the backend metric you just built.
+
+### Step 6.1: Read the Jira Ticket
+
+In Cortex Code, pull the ticket details for your second task:
+
+> Show me Jira ticket [TICKET-2]. What does it ask me to implement?
+
+> **Note:** [TICKET-2] is a placeholder -- your instructor will provide the actual Jira ticket ID.
+
+Cortex Code will use the Jira MCP skill to retrieve the ticket. You should see a description asking you to add a KPI card for the retry success rate metric to the authorization dashboard. Review the acceptance criteria before proceeding.
+
+### Step 6.2: Create a Git Branch
+
+Create a new feature branch for this task:
+
+```bash
+git checkout -b feature/retry-success-kpi-card
+```
+
+This keeps the KPI card changes separate from the data model changes in Task 1.
+
+### Step 6.3: Enable Plan Mode and Describe the Task
+
+In the Cortex Code terminal, enable plan mode:
+
+```
+/plan
+```
+
+Then describe the task. Suggested prompt:
+
+> Read Jira ticket [TICKET-2]. Look at apps/frontend/src/app/analytics/authorization/page.tsx, apps/frontend/src/components/ui/KPICard.tsx, and apps/frontend/src/types/domain.ts. Add a KPI card that shows the retry_success_rate from the authorization KPIs API. Follow the exact same pattern as the existing KPI cards.
+
+Review the plan. Confirm it includes changes to:
+
+- `apps/frontend/src/types/domain.ts` -- add `retrySuccessRate` to `AuthorizationKPIs` interface
+- `apps/frontend/src/app/api/analytics/authorization/kpis/route.ts` -- add SQL column and return field
+- `apps/frontend/src/app/analytics/authorization/page.tsx` -- add new `<Col>` and `<KPICard>`
+
+> **Important:** The TypeScript interface must be updated BEFORE the API route and page component. If Cortex Code's plan shows the page change first, ask it to reorder.
+
+### Step 6.4: Execute the Plan
+
+Once the plan looks complete, confirm execution:
+
+> The plan looks good. Execute it.
+
+Cortex Code will make changes to three files. Review each change as it is applied:
+
+**a) `apps/frontend/src/types/domain.ts`** -- add `retrySuccessRate: number` to the `AuthorizationKPIs` interface:
+
+```typescript
+export interface AuthorizationKPIs {
+  totalTransactions: number;
+  approvedCount: number;
+  declinedCount: number;
+  approvalRate: number;
+  totalAmount: number;
+  approvedAmount: number;
+  avgTicketSize: number;
+  retrySuccessRate: number;  // NEW
+  trends: {
+    transactions: number;
+    approvalRate: number;
+    amount: number;
+  };
+}
+```
+
+**b) `apps/frontend/src/app/api/analytics/authorization/kpis/route.ts`** -- add to the SQL SELECT:
+
+```sql
+ROUND(
+  SUM(CASE WHEN retry_success_flag = 1 THEN 1.0 ELSE 0 END) * 100.0 /
+  NULLIF(SUM(CASE WHEN retry_attempt_flag = 1 THEN 1 ELSE 0 END), 0),
+2) as retry_success_rate
+```
+
+And add to the return object:
+
+```typescript
+retrySuccessRate: Number(row.RETRY_SUCCESS_RATE) || 0,
+```
+
+**c) `apps/frontend/src/app/analytics/authorization/page.tsx`** -- add after the existing KPI cards in the `<Row gutter={[16, 16]}>` block:
+
+```tsx
+<Col xs={24} sm={12} lg={6}>
+  <KPICard
+    title="Retry Success Rate"
+    value={kpiData?.retrySuccessRate ?? 0}
+    format="percent"
+    description="Percentage of declined transactions that succeeded on retry"
+    loading={kpis.isLoading}
+    color="#52c41a"
+  />
+</Col>
+```
+
+This follows the exact same pattern as the existing KPI cards -- same `Col` grid layout, same `KPICard` component props, same data fetching hook.
+
+### Step 6.5: Verify Locally
+
+Start the dev server if it is not already running:
+
+```bash
+cd apps/frontend && npm run dev
+```
+
+Open [http://localhost:3000/analytics/authorization](http://localhost:3000/analytics/authorization) in your browser. You should see a new "Retry Success Rate" KPI card alongside the existing authorization KPIs. The card displays a percentage value with a green color indicator.
+
+If the card shows 0 or undefined, check that the TypeScript interface in `domain.ts` includes the `retrySuccessRate` field and that the API route returns the field in its response object.
+
+### Step 6.6: Commit and Push
+
+Once the KPI card displays correctly, commit your changes:
+
+```bash
+git add apps/frontend/
+git commit -m "feat(frontend): add retry success rate KPI card to authorization dashboard"
+git push -u origin feature/retry-success-kpi-card
+```
+
+### Step 6.7: Create a Pull Request
+
+Create a pull request using the GitHub CLI:
+
+```bash
+gh pr create --title "Add retry success rate KPI card" \
+  --body "Adds Retry Success Rate metric to the authorization dashboard as a KPI card. Reads from the retry_success_rate field added in the previous ticket."
+```
+
+Or use Cortex Code to create the PR:
+
+> Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
+
+This completes Ticket 2. You have added a frontend KPI card that visualizes the backend metric you built in Task 1, following the existing component patterns in the codebase.
+
+---
+
+## Section 7: Wrap-up (~5 min)
+
+Congratulations! In this lab, you completed two full development cycles using Cortex Code:
+
+### What You Accomplished
+
+- **Task 1:** Added a new business metric (retry success rate) end-to-end through the data stack -- dbt intermediate model, marts dynamic table, semantic view, and Cortex Agent instructions. Verified the metric in Snowflake and updated the Confluence data dictionary.
+- **Task 2:** Added a frontend KPI card to visualize the new metric, following existing component patterns. Committed and created a pull request.
+- **Along the way:** Read Jira tickets via MCP, planned work with AI before executing, reviewed changes step-by-step, verified results locally and in Snowflake, committed code, updated documentation, and created a pull request -- all with Cortex Code as your AI coding assistant.
+
+### Key Takeaways
+
+1. **Automatic repo context:** Cortex Code reads `AGENTS.md` at the repo root automatically -- no manual setup needed. This gives the AI full awareness of your data architecture, business rules, and file paths.
+2. **Plan mode for review:** The `/plan` command lets you review proposed changes before they happen. This is especially valuable when modifying multiple files across different layers of the stack.
+3. **MCP skills for full SDLC:** Jira and Confluence MCP integrations connect Cortex Code to your project management and documentation tools, keeping the entire development workflow in one terminal.
+4. **Extend existing patterns:** AI-assisted development works best when you follow established patterns in the codebase. Both tasks in this lab extended existing components and conventions rather than starting from scratch.
+5. **Context hygiene matters:** Use `/new` between tasks to keep context focused. A fresh conversation with only the relevant context produces better AI suggestions than a long conversation with stale context from a previous task.
+
+---
+
+## Appendix
+
+### A. Troubleshooting
+
+| Issue | Cause | Solution |
+|-------|-------|----------|
+| `cortex: command not found` | CLI not installed or not in PATH | Run install script: `curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh` then restart terminal |
+| Windows install fails | Cortex Code requires WSL on Windows | Open a WSL terminal, then run the install script from within WSL |
+| Dynamic table shows old data | Dynamic tables refresh on schedule, not on DDL change | Run `ALTER DYNAMIC TABLE ... REFRESH;` manually (see Step 4.10a) |
+| Semantic view metric not found | YAML updated but view not rebuilt | Run the `CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(...)` statement in a Snowflake Worksheet (see Step 4.10b) |
+| KPI card shows 0 or undefined | TypeScript interface not updated | Add `retrySuccessRate: number` to `AuthorizationKPIs` in `apps/frontend/src/types/domain.ts` |
+| Cortex Agent gives generic answer | Agent instructions not updated | Rerun `03_create_agent.sql` with the updated `instructions.response` mentioning retry success rate |
+| `/plan` mode off after `/new` | Plan mode is session-scoped | Re-enable with `/plan` in each new session after using `/new` |
+| Verification query returns empty | Missing `clnt_id` filter | Add `WHERE clnt_id = 'dmcl'` to all verification queries |
+
+### B. Resources
+
+- **Cortex Code CLI documentation:** [docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli](https://docs.snowflake.com/en/user-guide/cortex-code/cortex-code-cli)
+- **Cortex Code CLI reference:** [docs.snowflake.com/en/user-guide/cortex-code/cli-reference](https://docs.snowflake.com/en/user-guide/cortex-code/cli-reference)
+- **Cortex Code extensibility (MCP):** [docs.snowflake.com/en/user-guide/cortex-code/extensibility](https://docs.snowflake.com/en/user-guide/cortex-code/extensibility)
+- **dbt documentation:** [docs.getdbt.com](https://docs.getdbt.com)
+- **Snowflake Dynamic Tables:** [docs.snowflake.com/en/user-guide/dynamic-tables](https://docs.snowflake.com/en/user-guide/dynamic-tables)
+
+### C. Glossary
+
+- **Medallion architecture:** Data pipeline pattern with RAW (bronze), STAGING (silver), INTERMEDIATE/MARTS (gold) layers. Each layer progressively refines and enriches the data.
+- **Dynamic table:** A Snowflake table that auto-refreshes based on upstream changes, configured with a target lag (e.g., every hour). Dynamic tables do not refresh on DDL changes -- a manual refresh is required after schema modifications.
+- **Semantic view:** A YAML-defined metadata layer over tables that declares dimensions, facts, metrics, and relationships. It enables natural language queries by telling the Cortex Agent what data is available and how to query it.
+- **Cortex Agent:** A Snowflake AI agent that answers natural language questions by generating SQL queries against semantic view metadata. Defined in SQL with configurable instructions.
+- **MCP (Model Context Protocol):** A standard protocol for connecting AI tools to external services such as Jira, Confluence, and GitHub. Cortex Code uses MCP to integrate with project management and documentation tools.
+- **Plan mode:** A Cortex Code mode (enabled with `/plan`) where changes are proposed and reviewed before execution. The AI presents a numbered action plan and requires approval at each step.
