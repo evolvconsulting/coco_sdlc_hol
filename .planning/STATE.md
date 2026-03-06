@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: "Foundation sections delivered. Ready for 02-02 (Task 1: Retry Success Rate Metric)."
-stopped_at: Completed 02-01-PLAN.md
-last_updated: "2026-03-06T19:01:45.603Z"
-last_activity: "2026-03-06 — Completed 02-01: Foundation sections (header, architecture, setup verification, Cortex Code primer)"
+status: "Task 1 walkthrough and context switch sections delivered. Ready for 02-03 (Task 2: KPI Card + Wrap-up)."
+stopped_at: Completed 02-02-PLAN.md
+last_updated: "2026-03-06T19:05:56.382Z"
+last_activity: "2026-03-06 — Completed 02-02: Task 1 walkthrough (retry success rate metric) and context switch section"
 progress:
   total_phases: 2
   completed_phases: 1
   total_plans: 6
-  completed_plans: 4
-  percent: 67
+  completed_plans: 5
+  percent: 83
 ---
 
 # Project State
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-03-01 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 02-create-the-hands-on-lab-instruction-guide — Plan 01 of 3 complete
-Status: Foundation sections delivered. Ready for 02-02 (Task 1: Retry Success Rate Metric).
-Last activity: 2026-03-06 — Completed 02-01: Foundation sections (header, architecture, setup verification, Cortex Code primer)
+Phase: 02-create-the-hands-on-lab-instruction-guide — Plan 02 of 3 complete
+Status: Task 1 walkthrough and context switch sections delivered. Ready for 02-03 (Task 2: KPI Card + Wrap-up).
+Last activity: 2026-03-06 — Completed 02-02: Task 1 walkthrough (retry success rate metric) and context switch section
 
-Progress: [███████░░░] 67% (4/6 plans complete) — 1/3 Phase 2 plans complete
+Progress: [████████░░] 83% (5/6 plans complete) — 2/3 Phase 2 plans complete
 
 ## Accumulated Context
 
@@ -50,6 +50,8 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 
 **02-01 (2026-03-06):** ASCII art diagrams chosen over Mermaid for portability; all 7 MARTS tables included with RAW source mapping; suggested prompts framed as starting points per locked CONTEXT.md decision.
 
+**02-02 (2026-03-06):** Retry detection defined as window function on card_bin + card_last_four + transaction_amount within 5 min of decline; verification split into 4 sub-steps (DDL apply, semantic view rebuild, SQL query, Cortex Agent test); all prompts framed as suggestions; Jira/Confluence URLs use instructor-provided placeholders.
+
 ### Pending Todos
 
 1. Update README to make Cortex Code CLI the primary tool (`docs`)
@@ -60,6 +62,6 @@ None — all v1.0 pre-phase concerns resolved (SQL injection: CODE-04 ✓, crede
 
 ## Session Continuity
 
-Last session: 2026-03-06T19:01:45.599Z
-Stopped at: Completed 02-01-PLAN.md
+Last session: 2026-03-06T19:05:56.378Z
+Stopped at: Completed 02-02-PLAN.md
 Resume file: None
