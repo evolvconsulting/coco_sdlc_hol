@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: HOL Baseline Application
 status: complete
-last_updated: "2026-03-01"
+last_updated: "2026-03-06"
 progress:
   total_phases: 4
   completed_phases: 4
@@ -22,17 +22,18 @@ See: .planning/PROJECT.md (updated 2026-03-01 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 01-generate-hands-on-lab-setup-script — Plan 02 of 3 complete
-Status: Executing HOL setup script generation phase. dbt DDL layer (hol_setup_dbt.sql) complete.
-Last activity: 2026-03-01 — Completed 01-02: dbt DDL layer (11 staging views + 6 intermediate + 7 marts dynamic tables)
+Phase: 01-generate-hands-on-lab-setup-script — Plan 03 of 3 complete (phase complete)
+Status: Phase 1 complete. Consolidated hol_setup.sql delivered. Ready for Phase 2 planning.
+Last activity: 2026-03-06 — Completed 01-03: Final assembly + human verification of 12-section hol_setup.sql
 
-Progress: [████████████] 100% (14/14 v1.0 plans complete) + 2/3 new phase plans complete
+Progress: [████████████] 100% (14/14 v1.0 plans complete) + 3/3 Phase 1 plans complete
 
 ## Accumulated Context
 
 ### Roadmap Evolution
 
 - Phase 1 added: Generate hands on lab setup script
+- Phase 2 added: Create the Hands on Lab instruction guide
 
 ### Decisions
 
@@ -41,6 +42,8 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 **01-01 (2026-03-01):** COMPUTE_WH creation and GRANT USAGE placed in ACCOUNTADMIN section before role switch; GRANT CREATE IMAGE REPOSITORY included in bootstrap; USE SCHEMA fully qualified as COCO_SDLC_HOL.RAW; GENERATE_SYNTHETIC_DATA call guarded by EXECUTE IMMEDIATE idempotency check.
 
 **01-02 (2026-03-01):** Marts compiled SQL schema references corrected from COCO_SDLC_HOL.STAGING.int_* to COCO_SDLC_HOL.INTERMEDIATE.int_* (Pitfall 6 from RESEARCH.md); dynamic table DDL does not use parentheses around AS body; stg_clx_auth confirmed clean — no risk_score removal needed.
+
+**01-03 (2026-03-06):** Duplicate GRANT USAGE ON AGENT removed (kept only in Section 12 Final Grants); RSA key placeholders use angle-bracket tokens for dataops.live substitution; Cortex Agent GRANT changed from SYSADMIN to ATTENDEE_ROLE; intermediate assembly files deleted after merge.
 
 ### Pending Todos
 
@@ -52,6 +55,6 @@ None — all v1.0 pre-phase concerns resolved (SQL injection: CODE-04 ✓, crede
 
 ## Session Continuity
 
-Last session: 2026-03-01
-Stopped at: Completed 01-02-PLAN.md — hol_setup_dbt.sql assembled (Sections 6-8: 11 staging views + 6 intermediate + 7 marts dynamic tables)
+Last session: 2026-03-06
+Stopped at: Completed 01-03-PLAN.md — Phase 1 complete. hol_setup.sql (3363 lines, 12 sections) delivered.
 Resume file: None
