@@ -196,10 +196,8 @@ In Cortex Code, run:
 Then follow the prompts to add the Jira server. Alternatively, use the CLI:
 
 ```bash
-cortex mcp add jira --url https://your-org.atlassian.net --auth-token <token>
+cortex mcp add jira --url https://evolv-coco-sdlc-hol.atlassian.net --auth-token ATATT3xFfGF0D7Aiugi8RrvbyL4UHnMz-wrOpVZkykXnM7OQcUWgruzWN1HreG_iWhaVD9vfsuE_ZAtDIgTHG3xjRmue861sVE3v2nVs1_uqhjQ_XRsx4eSKVV1Zr8FFLZ1BMOdtusft0jPXZcrZkzmbA_KfOLjXOGDWqoNiKFkw-bRxuM5-iCU=64649D40
 ```
-
-> **Note:** Your instructor will provide the Jira instance URL and API token.
 
 ### 3.4 Install Confluence MCP Skill
 
@@ -210,10 +208,8 @@ The Confluence skill connects Cortex Code to your documentation wiki, enabling b
 Install using the same pattern as Jira:
 
 ```bash
-cortex mcp add confluence --url https://your-org.atlassian.net --auth-token <token>
+cortex mcp add confluence --url https://evolv-coco-sdlc-hol.atlassian.net --auth-token ATATT3xFfGF0JmTTc6yxUOmZbKA0ZlbDtsH8KZv3pijAYQ3Su0tUGnz7xODTQiYe16J1Xvz7nl6o-GtkOgkX0LWGcl-VcjygrFz9KNcAqDJqvOZlNyvmGn_ozYe5Bedn8QRqi2_nAMOaUNniftWkIYqNrHke4d09m0BnOJGfpUdLDOjwO-TWDq0=363884CD
 ```
-
-> **Note:** Your instructor will provide the Confluence instance URL and API token. This typically uses the same Atlassian instance as Jira.
 
 ### 3.5 Quick Test -- Verify Cortex Code Reads Repo Context
 
@@ -249,9 +245,9 @@ cortex
 
 Once Cortex Code starts, ask it to pull the ticket details:
 
-> Show me Jira ticket [TICKET-1]. What does it ask me to implement?
+> Show me Jira ticket EPA-2. What does it ask me to implement?
 
-> **Note:** [TICKET-1] is a placeholder -- your instructor will provide the actual Jira ticket ID (e.g., COCO-42).
+> **Note:** EPA-2 is a placeholder -- your instructor will provide the actual Jira ticket ID (e.g., COCO-42).
 
 Cortex Code will use the Jira MCP skill you configured in Section 3 to retrieve the ticket. You should see a description asking you to add a retry success rate metric to the authorizations domain. Review the acceptance criteria before proceeding.
 
@@ -401,9 +397,9 @@ Cortex Code will stage the files, create the commit, and push to the remote. Thi
 
 Before wrapping up this ticket, use Cortex Code to read the existing data dictionary from Confluence. This demonstrates how MCP integrations let you pull project documentation directly into your coding workflow for reference:
 
-> Read the Confluence data dictionary page at [CONFLUENCE-DATA-DICTIONARY-URL]. What metrics are currently documented? How should I document the new retry_success_rate metric to match the existing format?
+> Read the Confluence data dictionary page at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. What metrics are currently documented? How should I document the new retry_success_rate metric to match the existing format?
 
-> **Note:** [CONFLUENCE-DATA-DICTIONARY-URL] is a placeholder -- your instructor will provide the actual Confluence page URL.
+> **Note:** https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations is a placeholder -- your instructor will provide the actual Confluence page URL.
 
 Cortex Code will use the Confluence MCP skill to retrieve the page content and show you the existing metric documentation format. Note the structure -- in a real workflow, you would update this page to include the new metric. For this lab, the Confluence connection is read-only.
 
@@ -451,9 +447,9 @@ In this task, you will add a KPI card to the authorization dashboard that displa
 
 In Cortex Code, pull the ticket details for your second task:
 
-> Show me Jira ticket [TICKET-2]. What does it ask me to implement?
+> Show me Jira ticket EPA-3. What does it ask me to implement?
 
-> **Note:** [TICKET-2] is a placeholder -- your instructor will provide the actual Jira ticket ID.
+> **Note:** EPA-3 is a placeholder -- your instructor will provide the actual Jira ticket ID.
 
 Cortex Code will use the Jira MCP skill to retrieve the ticket. You should see a description asking you to add a KPI card for the retry success rate metric to the authorization dashboard. Review the acceptance criteria before proceeding.
 
@@ -475,7 +471,7 @@ In the Cortex Code terminal, enable plan mode:
 
 Then describe the task. Suggested prompt:
 
-> Read Jira ticket [TICKET-2]. Look at apps/frontend/src/app/analytics/authorization/page.tsx, apps/frontend/src/components/ui/KPICard.tsx, and apps/frontend/src/types/domain.ts. Add a KPI card that shows the retry_success_rate from the authorization KPIs API. Follow the exact same pattern as the existing KPI cards.
+> Read Jira ticket EPA-3. Look at apps/frontend/src/app/analytics/authorization/page.tsx, apps/frontend/src/components/ui/KPICard.tsx, and apps/frontend/src/types/domain.ts. Add a KPI card that shows the retry_success_rate from the authorization KPIs API. Follow the exact same pattern as the existing KPI cards.
 
 Review the plan. Confirm it includes changes to:
 
