@@ -439,3 +439,35 @@ The final step for this ticket is updating the data dictionary to document the n
 Cortex Code will use the Confluence MCP skill to read the existing page and add the new metric entry. Review the proposed changes before confirming.
 
 This completes Ticket 1. You have added a new business metric end-to-end: from the intermediate dbt model through the mart, semantic view, Cortex Agent, and external documentation.
+
+---
+
+## Section 5: Context Switch (~2 min)
+
+Before starting Task 2, you will clear your Cortex Code context. This simulates a real-world context switch -- moving from one ticket to the next without carrying stale context from the previous task.
+
+### Clear Context
+
+In the Cortex Code terminal, start a fresh conversation:
+
+```
+/new
+```
+
+This starts a fresh conversation. Cortex Code no longer has Task 1's context loaded. This is intentional -- it demonstrates good AI workflow hygiene: bring only the context needed for the task at hand.
+
+> **Note:** Plan mode is session-scoped. After `/new`, plan mode is off by default. You will re-enable it at the start of Task 2.
+
+### Review What You Accomplished in Task 1
+
+Take a moment to review what you completed:
+
+- Added retry detection logic (window function) to the intermediate dbt model
+- Passed `retry_attempt_flag` and `retry_success_flag` through to the authorizations mart
+- Added the `RETRY_SUCCESS_RATE` metric to the semantic view
+- Updated the Cortex Agent instructions to mention retry success rate
+- Verified the metric end-to-end in Snowflake (DDL apply, dynamic table refresh, SQL query)
+- Updated the data dictionary in Confluence via Cortex Code MCP
+- Committed and pushed your changes to the feature branch
+
+You are now ready for Task 2.
