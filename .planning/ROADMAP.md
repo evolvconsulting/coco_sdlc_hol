@@ -25,7 +25,7 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 |-------|-----------|----------------|--------|-----------|
 | 1. Generate HOL Setup Script | 3/3 | Complete | 2026-03-06 |
 | 2. UX / UI Polish | 3/3 | Complete   | 2026-03-06 | 2026-02-28 |
-| 3. Code Quality | v1.0 | 4/4 | Complete | 2026-03-01 |
+| 3. Code Quality | 2/2 | Complete   | 2026-03-06 | 2026-03-01 |
 | 4. Deployment | v1.0 | 3/3 | Complete | 2026-03-01 |
 
 ### Phase 1: Generate hands on lab setup script
@@ -57,7 +57,7 @@ Plans:
 **Goal:** Produce reference .wiki files for Jira tickets (epic, two main stories, three backlog items) and a Confluence data dictionary page, then create the actual artifacts in Atlassian Cloud via REST API -- supporting the two development tasks in HANDS_ON_LAB.md and making the Jira board feel like a real project.
 **Requirements**: CONTENT-01 (Jira wiki markup files), CONTENT-02 (Confluence data dictionary), API-01 (Epic created), API-02 (Stories linked to epic), API-03 (Confluence page created), API-04 (Data dictionary omits retry_success_rate)
 **Depends on:** Phase 2
-**Plans:** 2 plans
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 03-01-PLAN.md — Generate Jira .wiki reference files (epic + 2 stories + 3 backlog) and Confluence data dictionary .wiki file
