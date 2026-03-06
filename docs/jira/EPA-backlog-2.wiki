@@ -1,0 +1,22 @@
+h2. User Story
+
+As a risk operations manager, I want to receive alerts when chargeback rates exceed configurable thresholds so that I can take proactive action before card brand monitoring programs are triggered.
+
+h2. Business Context
+
+Card brands (Visa, Mastercard) operate chargeback monitoring programs that impose penalties on merchants exceeding defined thresholds. Visa's Dispute Monitoring Program triggers at a 0.9% chargeback rate, while Mastercard's Excessive Chargeback Program triggers at 1.5%. Being placed in these programs results in fines, increased processing fees, and potential account termination. Early warning alerts based on configurable thresholds allow risk teams to intervene before breaching card brand limits.
+
+h2. Acceptance Criteria
+
+# Alert thresholds are configurable per card brand (e.g., 0.75% for Visa, 1.2% for Mastercard)
+# Alerts trigger when the rolling 30-day chargeback rate approaches or exceeds a threshold
+# Alert notifications include the current chargeback rate, the threshold, and the card brand
+# Historical threshold breach events are logged for audit purposes
+
+h2. Priority
+
+Low
+
+h2. Labels
+
+chargebacks, alerting
