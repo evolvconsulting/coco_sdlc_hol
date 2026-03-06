@@ -50,7 +50,7 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 
 ### Pending Todos
 
-None.
+1. Update README to make Cortex Code CLI the primary tool (`docs`)
 
 ### Blockers/Concerns
 
