@@ -39,7 +39,7 @@ coco_sdlc_hol/
 │       └── analyses/
 │           └── payment_analytics_semantic_view_v2.sql
 │
-├── HANDS_ON_LAB.md                  # Lab instructions (start here)
+├── LAB_INSTRUCTIONS.md                  # Lab instructions (start here)
 ├── INFRASTRUCTURE.md                # Environment provisioning & deployment
 └── Dockerfile                       # Container image for SPCS deployment
 ```
@@ -117,7 +117,7 @@ cd coco_sdlc_hol
 
 ## Getting Started
 
-### 1. [Hands-On Lab Instructions](HANDS_ON_LAB.md)
+### 1. [Hands-On Lab Instructions](LAB_INSTRUCTIONS.md)
 
 Step-by-step guided lab (~90 minutes). Covers architecture overview, Cortex Code setup, and two development tasks driven entirely through Cortex Code CLI prompts.
 
