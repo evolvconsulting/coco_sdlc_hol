@@ -272,3 +272,97 @@ Read the Confluence data dictionary page at https://evolv-coco-sdlc-hol.atlassia
 > Watch for: After /new, plan mode is off. Participants must re-enable /plan at the start of Task 2.
 
 ---
+
+## Section 6: Task 2 — Add KPI Card to Dashboard (~20 min)
+
+**Step 6.1 — Read the Jira Ticket**
+
+```
+Show me Jira ticket EPA-3. What does it ask me to implement?
+```
+
+---
+
+**Step 6.2 — Create Feature Branch**
+
+```
+Create a new git branch called feature/retry-success-kpi-card and switch to it.
+```
+
+---
+
+**Step 6.3 — Enable Plan Mode and Describe Task**
+
+```cortex
+/plan
+```
+
+Then:
+```
+Read Jira ticket EPA-3. Look at apps/frontend/src/app/analytics/authorization/page.tsx, apps/frontend/src/components/ui/KPICard.tsx, and apps/frontend/src/types/domain.ts. Add a KPI card that shows the retry_success_rate from the authorization KPIs API. Follow the exact same pattern as the existing KPI cards.
+```
+
+> Watch for: Plan order wrong — TypeScript interface (domain.ts) must be updated BEFORE API route and page component. If page.tsx appears first, ask Cortex Code to reorder.
+
+> Watch for: Plan mode is session-scoped — after /new, participants must re-enable /plan. If Cortex Code starts executing immediately, remind them.
+
+---
+
+**Step 6.4 — Execute the Plan**
+
+```
+The plan looks good. Execute it.
+```
+
+---
+
+**Step 6.5 — Verify Locally**
+
+```
+Start the frontend dev server from apps/frontend.
+```
+
+Open http://localhost:3000/analytics/authorization. Expected behavior: "Retry Success Rate" KPI card visible, showing a percentage value with green color indicator.
+
+> Watch for: Card shows 0 or undefined — use debug prompt below.
+
+> Call out to group: Ticket 1 became Ticket 2's data source — same metric, different surface, full SDLC cycle complete.
+
+[If KPI card shows 0]:
+```
+The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs interface in domain.ts includes retrySuccessRate and that the API route in kpis/route.ts returns the field.
+```
+
+---
+
+**Step 6.6 — Commit and Push**
+
+```
+Commit all changes in apps/frontend/ with the message "feat(frontend): add retry success rate KPI card to authorization dashboard". Then push to origin.
+```
+
+---
+
+**Step 6.7 — Create a Pull Request**
+
+```
+Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
+```
+
+> Call out to group: Jira ticket read at the start, PR created at the end — full development loop without leaving the terminal.
+
+_Lab complete._
+
+---
+
+## Quick-Reference Troubleshooting
+
+| Issue | Cause | Fix |
+|-------|-------|-----|
+| `cortex: command not found` | CLI not in PATH | `curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh` then restart terminal |
+| Dynamic table shows old data | Refreshes on schedule, not on DDL | Ask Cortex Code: `ALTER DYNAMIC TABLE ... REFRESH;` (Step 4.10a) |
+| Semantic view metric not found | YAML updated but view not rebuilt | Ask Cortex Code to rerun semantic view DDL (Step 4.10b) |
+| KPI card shows 0 or undefined | TypeScript interface not updated | Add `retrySuccessRate: number` to `AuthorizationKPIs` in `domain.ts` |
+| Cortex Agent gives generic answer | Agent instructions not updated | Rerun `03_create_agent.sql` with updated `instructions.response` |
+| `/plan` mode off after `/new` | Plan mode is session-scoped | Re-enable with `/plan` in each new session |
+| Verification query returns empty | Missing `clnt_id` filter | Add `WHERE clnt_id = 'dmcl'` to all verification queries |
