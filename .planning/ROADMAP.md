@@ -62,3 +62,13 @@ Plans:
 Plans:
 - [ ] 03-01-PLAN.md â€” Generate Jira .wiki reference files (epic + 2 stories + 3 backlog) and Confluence data dictionary .wiki file
 - [ ] 03-02-PLAN.md â€” Create Atlassian artifact creation script and execute with human verification
+
+### Phase 4: Instructor reference sheet with prompt by prompt sequence
+
+**Goal:** Produce INSTRUCTOR_GUIDE.md at the repo root — a standalone instructor-facing live reference sheet listing every participant-typed input in sequence across the full lab, with timing cues, Watch for: callouts at sticking points, and Call out to group: notes at key transitions.
+**Requirements**: CONTEXT-04
+**Depends on:** Phase 3
+**Plans:** 1 plan
+
+Plans:
+- [ ] 04-01-PLAN.md — Write INSTRUCTOR_GUIDE.md: full prompt sequence, facilitation callouts, and troubleshooting table
