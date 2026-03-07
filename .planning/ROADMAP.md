@@ -24,9 +24,9 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
 | 1. Generate HOL Setup Script | 3/3 | Complete | 2026-03-06 |
-| 2. UX / UI Polish | 3/3 | Complete   | 2026-03-06 | 2026-02-28 |
-| 3. Code Quality | 2/2 | Complete   | 2026-03-06 | 2026-03-01 |
-| 4. Deployment | v1.0 | 3/3 | Complete | 2026-03-01 |
+| 2. Create Hands on Lab Instruction Guide | 3/3 | Complete | 2026-03-06 |
+| 3. Generate Reference Content for Jira/Confluence | 2/2 | Complete | 2026-03-06 |
+| 4. Instructor Reference Sheet | 1/1 | Complete | 2026-03-07 |
 
 ### Phase 1: Generate hands on lab setup script
 
@@ -65,10 +65,10 @@ Plans:
 
 ### Phase 4: Instructor reference sheet with prompt by prompt sequence
 
-**Goal:** Produce INSTRUCTOR_GUIDE.md at the repo root — a standalone instructor-facing live reference sheet listing every participant-typed input in sequence across the full lab, with timing cues, Watch for: callouts at sticking points, and Call out to group: notes at key transitions.
+**Goal:** Produce INSTRUCTOR_GUIDE.md at the repo root ï¿½ a standalone instructor-facing live reference sheet listing every participant-typed input in sequence across the full lab, with timing cues, Watch for: callouts at sticking points, and Call out to group: notes at key transitions.
 **Requirements**: CONTEXT-04
 **Depends on:** Phase 3
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
-- [ ] 04-01-PLAN.md — Write INSTRUCTOR_GUIDE.md: full prompt sequence, facilitation callouts, and troubleshooting table
+- [x] 04-01-PLAN.md â€” Write INSTRUCTOR_GUIDE.md: full prompt sequence, facilitation callouts, and troubleshooting table â€” completed 2026-03-07
