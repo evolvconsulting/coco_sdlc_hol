@@ -45,6 +45,46 @@
 
 ---
 
+## Milestone: v2.0 — HOL Content
+
+**Shipped:** 2026-03-08
+**Phases:** 4 | **Plans:** 9 | **Timeline:** 8 days (2026-02-28 → 2026-03-07)
+
+### What Was Built
+- `hol_setup.sql` — 12-section idempotent Snowflake provisioning script covering infra, dbt DDL (11 staging views + 6 intermediate + 7 marts dynamic tables), service user, image repo, semantic view, and Cortex Agent
+- `HANDS_ON_LAB.md` — 625-line participant guide: architecture overview, Cortex Code primer, Task 1 (retry success rate metric end-to-end), Task 2 (KPI card frontend), wrap-up, troubleshooting appendix
+- Live Atlassian project: EPA-1 through EPA-6 in Jira, Confluence data dictionary split across 6 domain pages — all created via REST API
+- `INSTRUCTOR_GUIDE.md` — sequenced prompt-by-prompt facilitation reference with timing, 13 "Watch for:" callouts, 6 "Call out to group:" notes, troubleshooting table
+
+### What Worked
+- Sequential phase ordering (SQL → lab guide → Atlassian → instructor guide) meant each phase had real artifacts to reference — no placeholder dependencies
+- Human verification checkpoints on hol_setup.sql (01-03) and INSTRUCTOR_GUIDE.md (04-01) caught real issues before completion; worth the interruption
+- REST API approach for Atlassian artifacts was cleaner than bash script — no local env dependencies, portable for any instructor
+- Suggested-prompt framing in HANDS_ON_LAB.md was the right call — Cortex Code exploration requires participant agency, not scripted commands
+
+### What Was Inefficient
+- 02-03 required a late pivot: Jira/Confluence MCP interactions changed to read-only "Beyond the lab" callouts after discovering API tokens would be exposed during facilitation — should have been caught in planning
+- hol_setup.sql had 3 plans (01-01, 01-02, 01-03) with intermediate assembly files that had to be cleaned up; a 2-plan structure (build + assemble) might have been simpler
+- HANDS_ON_LAB.md Atlassian URLs are still placeholders — requires instructor substitution before every delivery run; a pre-flight templating step would eliminate this friction
+
+### Patterns Established
+- HOL content ordering: SQL setup → participant guide → supporting artifacts → instructor guide — each layer references previous
+- REST API artifact creation pattern: store `.wiki` reference files first, then create via API — enables regeneration without re-running the full HOL
+- Instructor guide as last deliverable: requires complete participant guide to extract sequencing from
+
+### Key Lessons
+1. **Scope Jira/Confluence MCP interactions in planning, not mid-execution.** The read-only pivot in 02-03 added a revision cycle; "what API permissions will be live during facilitation?" is a planning question.
+2. **Participant guides need real ticket IDs, not placeholders.** EPA-2 and EPA-3 being live artifacts rather than `[TICKET_ID]` strings meaningfully improves the participant experience — worth the dependency on Phase 3.
+3. **Human verification checkpoints at content completion are high-value.** The 04-01 checkpoint caught edge cases (expected output placement, sub-step granularity) that automated checks missed.
+4. **Confluence page structure should mirror the product's domain structure.** The 6-domain split for the data dictionary was discovered during execution — should be a default for domain-oriented content.
+
+### Cost Observations
+- Model mix: primarily Sonnet 4.6 throughout
+- Sessions: ~6-8 sessions across 8 days (intermittent work)
+- Notable: Phase 4 (Instructor Guide) was the most iterative despite being 1 plan — content quality work benefits from human review gates
+
+---
+
 ## Cross-Milestone Trends
 
 ### Process Evolution
@@ -52,8 +92,11 @@
 | Milestone | Phases | Plans | Key Change |
 |-----------|--------|-------|------------|
 | v1.0 | 4 | 14 | First milestone — established UAT-first ordering and SPCS deployment pattern |
+| v2.0 | 4 | 9 | Content-focused milestone — REST API artifacts, human verification gates on deliverables |
 
 ### Top Lessons (Verified Across Milestones)
 
 1. UAT-first ordering surfaces real-data bugs before downstream work depends on correct behavior
 2. Grep-verify plan coverage before executing code quality phases to avoid plan insertions
+3. Human verification checkpoints on content deliverables catch quality issues automated checks miss
+4. Scope API/MCP permissions in planning — discovering access constraints mid-execution causes rework
