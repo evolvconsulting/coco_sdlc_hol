@@ -40,3 +40,13 @@ Full details: `.planning/milestones/v2.0-ROADMAP.md`
 | 2. Create Hands-on Lab Instruction Guide | v2.0 | 3/3 | Complete | 2026-03-06 |
 | 3. Generate Jira/Confluence Reference Content | v2.0 | 2/2 | Complete | 2026-03-06 |
 | 4. Instructor Reference Sheet | v2.0 | 1/1 | Complete | 2026-03-08 |
+
+### Phase 5: Instructor Claude Skill
+
+**Goal:** Create the `/facilitate` Claude Code skill — an interactive facilitation assistant that guides the instructor step-by-step through COCO SDLC HOL delivery with full coaching scripts, watch-fors, and fallback prompts.
+**Requirements**: SKILL-FILE, DIR-SETUP
+**Depends on:** Phase 4
+**Plans:** 1 plan
+
+Plans:
+- [ ] 05-01-PLAN.md — Create `.claude/skills/facilitate.md` skill file and verify behavior
