@@ -46,7 +46,7 @@ Full details: `.planning/milestones/v2.0-ROADMAP.md`
 **Goal:** Create the `/facilitate` Claude Code skill — an interactive facilitation assistant that guides the instructor step-by-step through COCO SDLC HOL delivery with full coaching scripts, watch-fors, and fallback prompts.
 **Requirements**: SKILL-FILE, DIR-SETUP
 **Depends on:** Phase 4
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 05-01-PLAN.md — Create `.claude/skills/facilitate.md` skill file and verify behavior
