@@ -107,15 +107,38 @@ cd coco_sdlc_hol
 
 All subsequent steps and tool invocations assume you are working from this directory.
 
-### Step 1: Confirm Snowflake Connection
+### Step 1: Configure and Confirm Snowflake Connection
 
-Each attendee has their own Snowflake account and a unique named connection configured during pre-lab setup. Run the following command using your connection name:
+Each attendee connects to their own Snowflake account. You will create a named connection profile, then verify it works.
+
+**1a. Add a named connection**
+
+Run the following and respond to each prompt as shown:
+
+```bash
+snow connection add
+```
+
+| Prompt | What to enter |
+|--------|---------------|
+| Name for this connection | `coco-hol` (or any name you prefer) |
+| Snowflake account name | Provided by your instructor (format: `orgname-accountname`) |
+| Snowflake username | Provided by your instructor |
+| Authenticator | `externalbrowser` (SSO) or `snowflake` (username/password) |
+| Role | `ATTENDEE_ROLE` |
+| Warehouse | `COMPUTE_WH` |
+| Database | `COCO_SDLC_HOL` |
+| Schema | `MARTS` |
+
+> **Note:** Role, warehouse, database, and schema are optional during setup but entering them now avoids needing to specify them on every command.
+
+**1b. Verify the connection**
+
+Replace `<your-connection>` with the name you chose above (e.g., `coco-hol`):
 
 ```bash
 snow sql -c <your-connection> -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA();"
 ```
-
-> **Note:** Replace `<your-connection>` with the connection name you configured. Your instructor will confirm the name if you are unsure.
 
 **Expected output:**
 

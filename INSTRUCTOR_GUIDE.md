@@ -27,10 +27,24 @@ cd coco_sdlc_hol
 
 ---
 
-**Step 1 — Confirm Snowflake Connection**
+**Step 1 — Configure and Confirm Snowflake Connection**
 
-Each attendee has a unique Snowflake account and a named connection configured during pre-lab setup. The connection name varies per attendee.
+Each attendee creates their own named connection with `snow connection add`, then verifies it.
 
+Prompts and recommended values:
+
+| Prompt | Value |
+|--------|-------|
+| Connection name | `coco-hol` (attendee's choice) |
+| Account name | Provide per-attendee (format: `orgname-accountname`) |
+| Username | Provide per-attendee |
+| Authenticator | `externalbrowser` (SSO) or `snowflake` |
+| Role | `ATTENDEE_ROLE` |
+| Warehouse | `COMPUTE_WH` |
+| Database | `COCO_SDLC_HOL` |
+| Schema | `MARTS` |
+
+Verification command (attendee substitutes their chosen connection name):
 ```bash
 snow sql -c <their-connection> -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA();"
 ```
@@ -44,8 +58,9 @@ Expected output:
 +----------------+--------------------+------------------+
 ```
 
-> Watch for: Role must be ATTENDEE_ROLE — if SYSADMIN, connection profile is wrong.
-> Watch for: "Error: no connection named 'ennovate'" — participant needs to use their own connection name from pre-lab setup.
+> Watch for: Role must be ATTENDEE_ROLE — if SYSADMIN or empty, `snow connection add` skipped the Role field.
+> Watch for: Browser auth window does not open — attendee may need to run `snow connection add` again and choose `snowflake` authenticator instead.
+> Watch for: "Account not found" or "invalid account" — check the account identifier format with the attendee (must be `orgname-accountname`, not a URL).
 
 ---
 
