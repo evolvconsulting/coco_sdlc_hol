@@ -50,3 +50,13 @@ Full details: `.planning/milestones/v2.0-ROADMAP.md`
 
 Plans:
 - [ ] 05-01-PLAN.md — Create `.claude/skills/facilitate.md` skill file and verify behavior
+
+### Phase 6: Update instructions to include step to fork the repository per Option A Standard open-source model
+
+**Goal:** Update the hands-on lab documentation so participants fork the public repo before cloning, following the standard open-source model (fork → clone fork → work → PR).
+**Requirements**: HOL-FORK-01, HOL-FORK-02, HOL-FORK-03, HOL-FORK-04, HOL-FORK-05
+**Depends on:** Phase 5
+**Plans:** 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Update LAB_INSTRUCTIONS.md, README.md, and INSTRUCTOR_GUIDE.md with fork-then-clone workflow
