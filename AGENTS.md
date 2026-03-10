@@ -13,6 +13,13 @@ Schemas:
 Client Filter: CLNT_ID = 'dmcl'
 ```
 
+## Atlassian
+
+```
+Site URL: https://evolv-coco-sdlc-hol.atlassian.net/
+Used by: Jira MCP, Confluence MCP
+```
+
 ## Data Architecture
 
 ### Medallion Layers
