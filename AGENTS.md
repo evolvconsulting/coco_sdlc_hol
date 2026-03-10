@@ -3,7 +3,7 @@
 ## Snowflake Connection
 
 ```
-Connection: <attendee-specific> (configured via `snow connection add` in Section 2)
+Connection: ennovate
 Database: COCO_SDLC_HOL
 Schemas:
   - RAW (source data)
@@ -82,6 +82,23 @@ RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tab
 
 - **Row-Level Security**: All queries filter by `CLNT_ID = 'dmcl'`
 - **PAN Masking**: Card numbers masked (first 6 + last 4 only)
+
+## Jira Integration (MCP)
+
+```
+Base URL: https://evolvconsulting-team-u2rm5pfv.atlassian.net/
+Auth: Basic Auth (email + API token)
+Email: daniel.phillips@evolvconsulting.com
+Project: LAB2
+```
+
+### Jira Board Structure
+
+| Layer | Tickets | Description |
+|-------|---------|-------------|
+| STAGING | LAB2-16 to LAB2-22 | Staging models (stg_clx_*) |
+| INTERMEDIATE | LAB2-23 to LAB2-28 | Enriched dynamic tables (int_*__enriched) |
+| MARTS | LAB2-29 to LAB2-35 | Business-ready analytics tables |
 
 ## Key Paths
 

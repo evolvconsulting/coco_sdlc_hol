@@ -1,23 +1,5 @@
 # Milestones
 
-## v2.0 HOL Content (Shipped: 2026-03-08)
-
-**Phases completed:** 4 phases, 9 plans
-**Timeline:** 2026-02-28 → 2026-03-07 (8 days)
-**Files changed:** 150 | **Lines added:** ~22,439
-
-**Delivered:** Complete HOL delivery package — Snowflake provisioning script, hands-on lab guide, live Atlassian project artifacts, and instructor facilitation guide covering the full AI-assisted SDLC workflow with Cortex Code.
-
-**Key accomplishments:**
-1. `hol_setup.sql` — single 12-section idempotent Snowflake script provisioning database, schemas, RAW tables, dbt DDL (11 staging views + 6 intermediate + 7 marts dynamic tables), service user, image repo, semantic view, and Cortex Agent
-2. `HANDS_ON_LAB.md` — 625-line lab guide: full SDLC cycle with Cortex Code across Task 1 (retry success rate metric: dbt → semantic view → Cortex Agent) and Task 2 (KPI card frontend change), with troubleshooting appendix
-3. Live Atlassian project — EPA-1 epic, EPA-2/EPA-3 stories, 3 backlog items, and Confluence data dictionary (6 domain pages + index) created via REST API; `create-atlassian-artifacts.sh` script included
-4. `INSTRUCTOR_GUIDE.md` — standalone facilitation guide with all ~30 participant prompts sequenced, timing cues at every section, 13 "Watch for:" callouts, 6 "Call out to group:" notes, conditional/fallback prompts, 7-row troubleshooting table
-
-**Archive:** `.planning/milestones/v2.0-ROADMAP.md`
-
----
-
 ## v1.0 HOL Baseline Application (Shipped: 2026-03-01)
 
 **Phases completed:** 4 phases, 14 plans

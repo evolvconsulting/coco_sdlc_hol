@@ -3,8 +3,7 @@
 ## Milestones
 
 - ✅ **v1.0 HOL Baseline Application** — Phases 1-4 (shipped 2026-03-01)
-- ✅ **v2.0 HOL Content** — Phases 1-4 (shipped 2026-03-08)
-- 📋 **v2.1** — (planned — define via `/gsd:new-milestone`)
+- 📋 **v1.1** — (planned — define via `/gsd:new-milestone`)
 
 ## Phases
 
@@ -20,33 +19,23 @@ Full details: `.planning/milestones/v1.0-ROADMAP.md`
 
 </details>
 
-<details>
-<summary>✅ v2.0 HOL Content (Phases 1-4) — SHIPPED 2026-03-08</summary>
-
-- [x] Phase 1: Generate HOL Setup Script (3/3 plans) — completed 2026-03-06
-- [x] Phase 2: Create Hands-on Lab Instruction Guide (3/3 plans) — completed 2026-03-06
-- [x] Phase 3: Generate Jira/Confluence Reference Content (2/2 plans) — completed 2026-03-06
-- [x] Phase 4: Instructor Reference Sheet (1/1 plan) — completed 2026-03-08
-
-Full details: `.planning/milestones/v2.0-ROADMAP.md`
-
-</details>
-
 ## Progress
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|
-| 1. Generate HOL Setup Script | v2.0 | 3/3 | Complete | 2026-03-06 |
-| 2. Create Hands-on Lab Instruction Guide | v2.0 | 3/3 | Complete | 2026-03-06 |
-| 3. Generate Jira/Confluence Reference Content | v2.0 | 2/2 | Complete | 2026-03-06 |
-| 4. Instructor Reference Sheet | v2.0 | 1/1 | Complete | 2026-03-08 |
+| 1. UAT Walkthrough | 2/3 | In Progress|  | 2026-02-28 |
+| 2. UX / UI Polish | v1.0 | 4/4 | Complete | 2026-02-28 |
+| 3. Code Quality | v1.0 | 4/4 | Complete | 2026-03-01 |
+| 4. Deployment | v1.0 | 3/3 | Complete | 2026-03-01 |
 
-### Phase 5: Instructor Claude Skill
+### Phase 1: Generate hands on lab setup script
 
-**Goal:** Create the `/facilitate` Claude Code skill — an interactive facilitation assistant that guides the instructor step-by-step through COCO SDLC HOL delivery with full coaching scripts, watch-fors, and fallback prompts.
-**Requirements**: SKILL-FILE, DIR-SETUP
-**Depends on:** Phase 4
-**Plans:** 1 plan
+**Goal:** Produce a single consolidated idempotent SQL script (hol_setup.sql) that provisions a complete Snowflake HOL environment — database, schemas, RAW tables, reference data, synthetic transactions, pre-compiled dbt model DDL (staging views + intermediate/marts dynamic tables), service user, image repository, and Cortex Agent — runnable by dataops.live or pasted into a Snowflake worksheet.
+**Requirements**: TBD
+**Depends on:** Phase 0
+**Plans:** 2/3 plans executed
 
 Plans:
-- [ ] 05-01-PLAN.md — Create `.claude/skills/facilitate.md` skill file and verify behavior
+- [x] 01-01-PLAN.md — Assemble foundation sections (ACCOUNTADMIN bootstrap, warehouse/DB/schema setup, RAW tables, reference data, synthetic transaction generation) — completed 2026-03-01
+- [ ] 01-02-PLAN.md — Assemble dbt DDL sections (11 staging views, 6 intermediate dynamic tables, 7 marts dynamic tables from compiled output)
+- [ ] 01-03-PLAN.md — Assemble final sections (service user, image repo, semantic view, Cortex Agent), merge into hol_setup.sql, human verification checkpoint
