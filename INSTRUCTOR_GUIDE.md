@@ -23,7 +23,7 @@ git clone https://github.com/evolvconsulting/coco_sdlc_hol.git
 cd coco_sdlc_hol
 ```
 
-> Watch for: Participants who skip this step will hit errors in Step 2 (missing `apps/frontend`) and Step 3.5 (Cortex Code won't find `AGENTS.md`).
+> Watch for: Participants who skip this step will hit errors in Step 2 (missing `apps/frontend`) and Step 3.4 (Cortex Code won't find `AGENTS.md`).
 
 ---
 
@@ -98,29 +98,19 @@ curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
 
 Sections 3.1 and 3.2 are instructor-led explanations — no participant inputs.
 
-**Step 3.3 — Install Jira MCP Skill**
+**Step 3.3 — Install Atlassian MCP**
+
+Single command covers both Jira and Confluence:
 
 ```bash
-cortex mcp add jira --url https://evolv-coco-sdlc-hol.atlassian.net --auth-token ATATT3xFfGF0D7Aiugi8RrvbyL4UHnMz-wrOpVZkykXnM7OQcUWgruzWN1HreG_iWhaVD9vfsuE_ZAtDIgTHG3xjRmue861sVE3v2nVs1_uqhjQ_XRsx4eSKVV1Zr8FFLZ1BMOdtusft0jPXZcrZkzmbA_KfOLjXOGDWqoNiKFkw-bRxuM5-iCU=64649D40
+cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorization: Basic dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU="
 ```
 
-[Alternative — interactive]:
-```
-/mcp
-```
-(then follow prompts to add Jira server)
+> Watch for: "command not found" for `cortex mcp add` — Cortex Code CLI not installed (back to Step 3).
 
 ---
 
-**Step 3.4 — Install Confluence MCP Skill**
-
-```bash
-cortex mcp add confluence --url https://evolv-coco-sdlc-hol.atlassian.net --auth-token ATATT3xFfGF0JmTTc6yxUOmZbKA0ZlbDtsH8KZv3pijAYQ3Su0tUGnz7xODTQiYe16J1Xvz7nl6o-GtkOgkX0LWGcl-VcjygrFz9KNcAqDJqvOZlNyvmGn_ozYe5Bedn8QRqi2_nAMOaUNniftWkIYqNrHke4d09m0BnOJGfpUdLDOjwO-TWDq0=363884CD
-```
-
----
-
-**Step 3.5 — Quick Test — Verify Cortex Code Reads Repo Context**
+**Step 3.4 — Quick Test — Verify Cortex Code Reads Repo Context**
 
 Participants should already be in the cloned repo root (from Step 0).
 

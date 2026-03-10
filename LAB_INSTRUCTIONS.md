@@ -218,37 +218,19 @@ The following slash commands are used throughout this lab:
 
 > **Note:** Plan mode is session-scoped. After `/new`, you must re-enable `/plan` if you want plan mode in the new session.
 
-### 3.3 Install Jira MCP Skill
+### 3.3 Install Atlassian MCP
 
-Cortex Code connects to Jira via MCP (Model Context Protocol), allowing you to read tickets, add comments, and transition status directly from the coding assistant. In this lab, the Jira connection is read-only -- you will use it to pull ticket details for both development tasks.
+A single Atlassian MCP connection gives Cortex Code access to both Jira and Confluence. In this lab it is read-only -- you will use it to pull Jira ticket details and reference the Confluence data dictionary.
 
-> **Beyond the lab:** With write access, Cortex Code can add comments to tickets summarizing what was implemented, transition ticket status, and log time -- completing the full development loop without leaving the terminal.
+> **Beyond the lab:** With write access, Cortex Code can add comments to Jira tickets, transition ticket status, log time, and update Confluence pages -- completing the full development loop without leaving the terminal.
 
-In Cortex Code, run:
-
-```
-/mcp
-```
-
-Then follow the prompts to add the Jira server. Alternatively, use the CLI:
+Run the following command in your terminal:
 
 ```bash
-cortex mcp add jira --url https://evolv-coco-sdlc-hol.atlassian.net --auth-token ATATT3xFfGF0D7Aiugi8RrvbyL4UHnMz-wrOpVZkykXnM7OQcUWgruzWN1HreG_iWhaVD9vfsuE_ZAtDIgTHG3xjRmue861sVE3v2nVs1_uqhjQ_XRsx4eSKVV1Zr8FFLZ1BMOdtusft0jPXZcrZkzmbA_KfOLjXOGDWqoNiKFkw-bRxuM5-iCU=64649D40
+cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorization: Basic dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU="
 ```
 
-### 3.4 Install Confluence MCP Skill
-
-The Confluence skill connects Cortex Code to your documentation wiki, enabling both reading and updating pages directly from the terminal. In this lab, the Confluence connection is read-only -- you will use it to pull the data dictionary for reference while implementing the new metric.
-
-> **Beyond the lab:** With write access, Cortex Code can update Confluence pages directly -- for example, adding a new metric to the data dictionary after implementing it in code. This keeps documentation in sync with code changes without context-switching to a browser.
-
-Install using the same pattern as Jira:
-
-```bash
-cortex mcp add confluence --url https://evolv-coco-sdlc-hol.atlassian.net --auth-token ATATT3xFfGF0JmTTc6yxUOmZbKA0ZlbDtsH8KZv3pijAYQ3Su0tUGnz7xODTQiYe16J1Xvz7nl6o-GtkOgkX0LWGcl-VcjygrFz9KNcAqDJqvOZlNyvmGn_ozYe5Bedn8QRqi2_nAMOaUNniftWkIYqNrHke4d09m0BnOJGfpUdLDOjwO-TWDq0=363884CD
-```
-
-### 3.5 Quick Test -- Verify Cortex Code Reads Repo Context
+### 3.4 Quick Test -- Verify Cortex Code Reads Repo Context
 
 From your cloned repository root (from Step 0), launch Cortex Code:
 
