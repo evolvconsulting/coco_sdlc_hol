@@ -38,7 +38,8 @@ Prompts and recommended values:
 | Connection name | `coco-hol` (attendee's choice) |
 | Account name | Provide per-attendee (format: `orgname-accountname`) |
 | Username | Provide per-attendee |
-| Authenticator | `externalbrowser` (SSO) or `snowflake` |
+| Password | Provide per-attendee |
+| Authenticator | `snowflake` |
 | Role | `ATTENDEE_ROLE` |
 | Warehouse | `COMPUTE_WH` |
 | Database | `COCO_SDLC_HOL` |
@@ -59,7 +60,7 @@ Expected output:
 ```
 
 > Watch for: Role must be ATTENDEE_ROLE — if SYSADMIN or empty, `snow connection add` skipped the Role field.
-> Watch for: Browser auth window does not open — attendee may need to run `snow connection add` again and choose `snowflake` authenticator instead.
+> Watch for: "Incorrect username or password" — confirm credentials with the attendee and re-run `snow connection add`.
 > Watch for: "Account not found" or "invalid account" — check the account identifier format with the attendee (must be `orgname-accountname`, not a URL).
 
 ---

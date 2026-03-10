@@ -124,7 +124,8 @@ snow connection add
 | Name for this connection | `coco-hol` (or any name you prefer) |
 | Snowflake account name | Provided by your instructor (format: `orgname-accountname`) |
 | Snowflake username | Provided by your instructor |
-| Authenticator | `externalbrowser` (SSO) or `snowflake` (username/password) |
+| Password | Provided by your instructor |
+| Authenticator | `snowflake` |
 | Role | `ATTENDEE_ROLE` |
 | Warehouse | `COMPUTE_WH` |
 | Database | `COCO_SDLC_HOL` |
