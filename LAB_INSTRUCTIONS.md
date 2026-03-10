@@ -393,27 +393,27 @@ Verify the instruction text mentions retry success rate. For example, the `respo
 
 ### Step 4.10: Deploy and Verify in Snowflake
 
-Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Each sub-step is a prompt you enter into Cortex Code -- it will execute the SQL and show you the results directly in the CLI.
+Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Type each prompt below directly into Cortex Code -- it will write and execute the necessary SQL for you.
 
 **a) Apply DDL changes and refresh dynamic tables**
 
-> Run the compiled CREATE OR REPLACE DYNAMIC TABLE statements from the modified dbt models against Snowflake to apply the new columns. Then refresh both dynamic tables so the data is immediately available: ALTER DYNAMIC TABLE COCO_SDLC_HOL.INTERMEDIATE.INT_AUTHORIZATIONS__ENRICHED REFRESH; and ALTER DYNAMIC TABLE COCO_SDLC_HOL.MARTS.AUTHORIZATIONS REFRESH;
+> Deploy my dbt model changes to Snowflake and manually refresh the intermediate and marts dynamic tables so the new retry columns have data right away.
 
-Cortex Code will execute the DDL and refresh commands. You should see confirmation that both tables were updated.
+Cortex Code will apply the DDL and trigger a refresh on both tables. You should see confirmation that both were updated.
 
 > **Why the refresh?** Dynamic tables refresh on a schedule (e.g., every hour). Without a manual refresh, you would have to wait for the next scheduled cycle before the new columns contain data.
 
 **b) Rebuild the semantic view and verify**
 
-> Run the updated semantic view DDL from packages/dbt/analyses/payment_analytics_semantic_view.sql against Snowflake. Then run DESCRIBE SEMANTIC VIEW COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS and confirm RETRY_SUCCESS_RATE appears in the metrics list.
+> Rebuild the semantic view from the updated DDL file and verify that RETRY_SUCCESS_RATE now appears as a metric.
 
-Cortex Code will rebuild the semantic view and show the DESCRIBE output. Look for `RETRY_SUCCESS_RATE` in the results.
+Cortex Code will execute the semantic view DDL and show you the DESCRIBE output. Look for `RETRY_SUCCESS_RATE` in the results.
 
 **c) Verify the metric data**
 
-> Query the AUTHORIZATIONS mart to verify the retry columns contain data. Calculate successful_retries, total_retries, and retry_success_rate_pct for clnt_id = 'dmcl' over the last 30 days.
+> Query the authorizations mart and show me the retry success rate for the last 30 days.
 
-Cortex Code will run the verification query and display the results. You should see a non-null `retry_success_rate_pct` value. The exact number depends on your sample data, but a typical value is between 20% and 80%.
+Cortex Code will run a verification query and display the results. You should see a non-null retry success rate value -- a typical result is between 20% and 80%.
 
 **d) Test the Cortex Agent**
 
