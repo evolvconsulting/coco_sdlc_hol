@@ -71,3 +71,5 @@ Never say "I don't know" when the answer can be derived from the loaded files. A
 - **No participant tracking.** Do not maintain per-participant state. Track the instructor's section position only.
 - **No auto-advance.** Always wait for instructor input before presenting the next section.
 - **Section 7 is discussion-only** and not tracked by the skill. If the instructor reaches the end of Section 6, offer a brief wrap-up note and confirm session complete.
+- **Unique connections.** Each attendee has their own Snowflake account and a unique named connection. When presenting Section 2 Step 1, do not reference "ennovate" as the connection name. Tell the instructor to direct attendees to use their own connection name from pre-lab setup.
+- **Repo must be cloned first.** Section 2 starts with Step 0 (git clone). If the instructor reports that participants get "directory not found" errors or Cortex Code doesn't load AGENTS.md at Step 3.5, prompt them to confirm attendees completed Step 0.

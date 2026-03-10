@@ -16,10 +16,23 @@ Instructor-led architecture walkthrough — no participant inputs.
 
 ## Section 2: Environment Setup Verification (~5 min)
 
-**Step 1 — Confirm Snowflake Connection**
+**Step 0 — Clone the Lab Repository**
 
 ```bash
-snow sql -c ennovate -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA();"
+git clone https://github.com/evolvconsulting/coco_sdlc_hol.git
+cd coco_sdlc_hol
+```
+
+> Watch for: Participants who skip this step will hit errors in Step 2 (missing `apps/frontend`) and Step 3.5 (Cortex Code won't find `AGENTS.md`).
+
+---
+
+**Step 1 — Confirm Snowflake Connection**
+
+Each attendee has a unique Snowflake account and a named connection configured during pre-lab setup. The connection name varies per attendee.
+
+```bash
+snow sql -c <their-connection> -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA();"
 ```
 
 Expected output:
@@ -32,6 +45,7 @@ Expected output:
 ```
 
 > Watch for: Role must be ATTENDEE_ROLE — if SYSADMIN, connection profile is wrong.
+> Watch for: "Error: no connection named 'ennovate'" — participant needs to use their own connection name from pre-lab setup.
 
 ---
 
@@ -92,6 +106,8 @@ cortex mcp add confluence --url https://evolv-coco-sdlc-hol.atlassian.net --auth
 
 **Step 3.5 — Quick Test — Verify Cortex Code Reads Repo Context**
 
+Participants should already be in the cloned repo root (from Step 0).
+
 ```bash
 cortex
 ```
@@ -103,7 +119,7 @@ What database and schema does this project use?
 
 Expected behavior: Response mentions `COCO_SDLC_HOL` and the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS).
 
-> Watch for: Response is generic and doesn't mention COCO_SDLC_HOL — Cortex Code must be launched from repo root, not a subdirectory.
+> Watch for: Response is generic and doesn't mention COCO_SDLC_HOL — Cortex Code must be launched from repo root, not a subdirectory. If participants haven't cloned yet (missed Step 0), stop and have them do that first.
 
 ---
 
