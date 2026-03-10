@@ -45,9 +45,8 @@ When presenting a section, always include from INSTRUCTOR_GUIDE.md:
 1. **Section header** with timing cue (e.g., "## Section 4: Task 1 — Add Retry Success Rate Metric (~30 min)")
 2. **All steps in order**, each with:
    - Step label matching INSTRUCTOR_GUIDE.md (e.g., "Step 4.3")
-   - Participant prompt(s) rendered as a distinct visual block so the instructor can read them aloud without confusion. Format every participant prompt as a blockquote preceded by a bold label:
-     > **📋 Participant prompt:**
-     > *"What database and schema does this project use?"*
+   - Participant prompt(s) formatted as blockquotes so they stand out from surrounding text:
+     > What database and schema does this project use?
    - Expected output for verification steps
    - Watch-for callout if present in INSTRUCTOR_GUIDE.md
    - Group callout cue if present in INSTRUCTOR_GUIDE.md
