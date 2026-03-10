@@ -226,25 +226,28 @@ _(Cortex Code updates 03_create_agent.sql automatically. Verify instruction text
 
 **Step 4.10a — Apply DDL and Refresh Dynamic Tables**
 
+Participant prompt to Cortex Code:
 ```
-Run the compiled CREATE OR REPLACE DYNAMIC TABLE statements from the modified dbt models against Snowflake to apply the new columns. Then refresh both dynamic tables so the data is immediately available: ALTER DYNAMIC TABLE COCO_SDLC_HOL.INTERMEDIATE.INT_AUTHORIZATIONS__ENRICHED REFRESH; and ALTER DYNAMIC TABLE COCO_SDLC_HOL.MARTS.AUTHORIZATIONS REFRESH;
+Deploy my dbt model changes to Snowflake and manually refresh the intermediate and marts dynamic tables so the new retry columns have data right away.
 ```
 
-Expected behavior: Confirmation that both tables were updated.
+Expected behavior: Cortex Code runs the compiled DDL and executes `ALTER DYNAMIC TABLE ... REFRESH` on both `INT_AUTHORIZATIONS__ENRICHED` and `AUTHORIZATIONS`. Participant sees confirmation that both tables were updated.
 
-> Watch for: Confirmation message missing — without refresh, new columns have no data.
+> Watch for: Cortex Code skips the refresh — remind participant to re-prompt asking it to also refresh the dynamic tables.
+> Watch for: DDL fails with "insufficient privileges" — attendee's connection is not using ATTENDEE_ROLE (re-check Step 1).
 
 ---
 
 **Step 4.10b — Rebuild Semantic View and Verify**
 
+Participant prompt to Cortex Code:
 ```
-Run the updated semantic view DDL from packages/dbt/analyses/payment_analytics_semantic_view.sql against Snowflake. Then run DESCRIBE SEMANTIC VIEW COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS and confirm RETRY_SUCCESS_RATE appears in the metrics list.
+Rebuild the semantic view from the updated DDL file and verify that RETRY_SUCCESS_RATE now appears as a metric.
 ```
 
-Expected behavior: RETRY_SUCCESS_RATE appears in DESCRIBE output.
+Expected behavior: Cortex Code runs the semantic view DDL from `payment_analytics_semantic_view.sql` and shows DESCRIBE output with `RETRY_SUCCESS_RATE` in the metrics list.
 
-> Watch for: Metric missing — ask Cortex Code to re-run the semantic view DDL manually.
+> Watch for: Metric missing from DESCRIBE — Cortex Code may have run an older cached version. Ask participant to re-prompt specifying the file path explicitly.
 
 > Call out to group: Metric is now live in the semantic view — Cortex Agent can answer questions about it.
 
@@ -252,13 +255,14 @@ Expected behavior: RETRY_SUCCESS_RATE appears in DESCRIBE output.
 
 **Step 4.10c — Verify Metric Data**
 
+Participant prompt to Cortex Code:
 ```
-Query the AUTHORIZATIONS mart to verify the retry columns contain data. Calculate successful_retries, total_retries, and retry_success_rate_pct for clnt_id = 'dmcl' over the last 30 days.
+Query the authorizations mart and show me the retry success rate for the last 30 days.
 ```
 
 Expected behavior: Non-null retry_success_rate_pct value (typically 20-80%).
 
-> Watch for: Zero rows — all queries must filter `clnt_id = 'dmcl'`.
+> Watch for: Zero rows or null values — Cortex Code may have omitted the `clnt_id = 'dmcl'` filter. Ask participant to re-prompt with "for clnt_id dmcl".
 
 ---
 
