@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: completed
-stopped_at: "05-01 paused at checkpoint:human-verify Task 2"
-last_updated: "2026-03-10T23:22:45.252Z"
+stopped_at: "Completed 05-01: facilitate skill written, human-approved, plan complete"
+last_updated: "2026-03-10T23:25:53.250Z"
 last_activity: "2026-03-07 — Completed 04-01: INSTRUCTOR_GUIDE.md written and human-approved"
 progress:
   total_phases: 1
@@ -25,11 +25,11 @@ See: .planning/PROJECT.md (updated 2026-03-01 after v1.0 milestone)
 
 ## Current Position
 
-Phase: 04-instructor-reference-sheet-with-prompt-by-prompt-sequence — Plan 01 of 1 complete (ALL PLANS COMPLETE)
-Status: All plans complete. INSTRUCTOR_GUIDE.md written, human-approved, and committed. All 4 phases of the project are complete.
-Last activity: 2026-03-07 — Completed 04-01: INSTRUCTOR_GUIDE.md written and human-approved
+Phase: 05-instructor-claude-skill — Plan 01 of 1 complete (ALL PLANS COMPLETE)
+Status: All plans complete. /facilitate skill written, human-approved (all 9 VALIDATION.md behaviors verified), and committed. All 5 phases of the project are complete.
+Last activity: 2026-03-10 — Completed 05-01: /facilitate Claude Code skill written and human-approved
 
-Progress: [██████████] 100% (9/9 plans complete) — 1/1 Phase 4 plans complete
+Progress: [██████████] 100% (10/10 plans complete) — 1/1 Phase 5 plans complete
 
 ## Accumulated Context
 
@@ -62,6 +62,7 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 **03-02 (2026-03-06):** Artifacts created directly via API rather than bash script; Confluence data dictionary split into 6 domain pages with index homepage; API tokens in HANDS_ON_LAB.md replaced with scoped read-only tokens.
 
 **04-01 (2026-03-07):** Section 7 (Wrap-up) omitted — no participant inputs; steps 4.6-4.9 retained as instructor tracking markers despite no participant-typed input; sub-steps 4.10a/b/c/d kept as separate entries to preserve per-verification tracking.
+- [Phase 05-instructor-claude-skill]: 05-01: Skill reads source files at runtime — not inlined — so it stays in sync as source files evolve; verification steps phrased as relay prompts only
 
 ### Pending Todos
 
@@ -73,6 +74,6 @@ None — all v1.0 pre-phase concerns resolved (SQL injection: CODE-04 ✓, crede
 
 ## Session Continuity
 
-Last session: 2026-03-10T23:22:45.249Z
-Stopped at: 05-01 paused at checkpoint:human-verify Task 2
+Last session: 2026-03-10T23:25:53.246Z
+Stopped at: Completed 05-01: facilitate skill written, human-approved, plan complete
 Resume file: None
