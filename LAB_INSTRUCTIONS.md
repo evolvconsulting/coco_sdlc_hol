@@ -94,15 +94,28 @@ The repository includes an `AGENTS.md` file at the root. Cortex Code reads this 
 
 ## Section 2: Environment Setup Verification (~5 min)
 
-In this section, you will verify that your pre-configured environment is working correctly. Each step includes the expected output so you can confirm everything is ready before starting the development tasks.
+In this section, you will clone the lab repository and verify that your pre-configured environment is working correctly. Each step includes the expected output so you can confirm everything is ready before starting the development tasks.
+
+### Step 0: Clone the Lab Repository
+
+Clone the repository and navigate to the project root:
+
+```bash
+git clone https://github.com/evolvconsulting/coco_sdlc_hol.git
+cd coco_sdlc_hol
+```
+
+All subsequent steps and tool invocations assume you are working from this directory.
 
 ### Step 1: Confirm Snowflake Connection
 
-Run the following command to verify your Snowflake CLI connection:
+Each attendee has their own Snowflake account and a unique named connection configured during pre-lab setup. Run the following command using your connection name:
 
 ```bash
-snow sql -c ennovate -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA();"
+snow sql -c <your-connection> -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA();"
 ```
+
+> **Note:** Replace `<your-connection>` with the connection name you configured. Your instructor will confirm the name if you are unsure.
 
 **Expected output:**
 
@@ -213,7 +226,7 @@ cortex mcp add confluence --url https://evolv-coco-sdlc-hol.atlassian.net --auth
 
 ### 3.5 Quick Test -- Verify Cortex Code Reads Repo Context
 
-Launch Cortex Code from the repository root to verify it picks up the project context:
+From your cloned repository root (from Step 0), launch Cortex Code:
 
 ```bash
 cortex
