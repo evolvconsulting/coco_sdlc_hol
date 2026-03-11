@@ -11,7 +11,7 @@
 
 -- Create database if not exists
 CREATE DATABASE IF NOT EXISTS COCO_SDLC_HOL
-    COMMENT = 'Performance Intelligence Dashboard for Fiserv payment analytics';
+    COMMENT = 'evolv Payment Analytics';
 
 USE DATABASE COCO_SDLC_HOL;
 

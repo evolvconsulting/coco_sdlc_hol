@@ -122,7 +122,7 @@
 - Read access to MARTS, STAGING, INTERMEDIATE schemas
 
 **Production:**
-- Deployment target: Vercel (inferred from `.vercel/` directory and Next.js usage pattern)
+- Deployment target: SPCS
 - Snowflake account connectivity required (JWT or password authentication)
 - Environment variables for Snowflake credentials (SNOWFLAKE_ACCOUNT, SNOWFLAKE_USER, SNOWFLAKE_WAREHOUSE, SNOWFLAKE_DATABASE, SNOWFLAKE_SCHEMA, and one of: SNOWFLAKE_PRIVATE_KEY, SNOWFLAKE_PRIVATE_KEY_PATH, or SNOWFLAKE_PASSWORD)
 
@@ -130,7 +130,7 @@
 - Snowflake (production data warehouse)
 - Database: COCO_SDLC_HOL
 - Schemas: MARTS (queries), STAGING, INTERMEDIATE (dbt models)
-- Warehouse: COMPUTE_WH (default for API queries), PERFORMANCE_INTELLIGENCE_WH (dbt profile)
+- Warehouse: COMPUTE_WH
 
 ---
 

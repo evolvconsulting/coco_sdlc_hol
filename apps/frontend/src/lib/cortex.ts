@@ -35,7 +35,7 @@ export async function sendCortexMessage(
       body: JSON.stringify({
         message,
         history: conversationHistory,
-        semantic_model: 'performance_intelligence',
+        semantic_model: 'payment_analytics',
       }),
     });
 
@@ -68,7 +68,7 @@ export async function* streamCortexMessage(
       body: JSON.stringify({
         message,
         history: conversationHistory,
-        semantic_model: 'performance_intelligence',
+        semantic_model: 'payment_analytics',
       }),
     });
 

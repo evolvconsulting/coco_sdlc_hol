@@ -177,7 +177,7 @@ cd apps/frontend && npm install && npm run dev
   > Ready on http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser. You should see the Performance Intelligence dashboard populated with real transaction data -- charts, KPI cards, and a natural language query interface.
+Open [http://localhost:3000](http://localhost:3000) in your browser. You should see the Payment Analytics dashboard populated with real transaction data -- charts, KPI cards, and a natural language query interface.
 
 If the dashboard loads with data, your local environment is correctly connected to the Snowflake backend. Leave this terminal running or stop the server with `Ctrl+C` (you will restart it during verification steps later).
 

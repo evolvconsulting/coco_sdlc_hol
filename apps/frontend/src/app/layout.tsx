@@ -10,7 +10,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Performance Intelligence | Fiserv",
+  title: "evolv Payment Analytics",
   description: "Self-service analytics dashboard for payment processing insights",
   icons: {
     icon: "/favicon.ico",

@@ -1,4 +1,4 @@
-// Domain types for Performance Intelligence Dashboard
+// Domain types for Payment Analytics Dashboard
 
 export type DomainType =
   | 'authorization'

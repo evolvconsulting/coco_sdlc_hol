@@ -1,16 +1,16 @@
 # =============================================================================
-# EVOLV PERFORMANCE INTELLIGENCE - dbt Project Configuration
+# EVOLV PAYMENT ANALYTICS - dbt Project Configuration
 # =============================================================================
 # This project demonstrates a medallion architecture transforming legacy OLTP
 # data through staging, intermediate, and marts layers.
 # =============================================================================
 
-name: 'evolv_performance_intelligence'
+name: 'evolv_payment_analytics'
 version: '1.0.0'
 config-version: 2
 
 # This setting configures which "profile" dbt uses for this project.
-profile: 'evolv_pi'
+profile: 'dev'
 
 # These configurations specify where dbt should look for different types of files.
 model-paths: ["models"]

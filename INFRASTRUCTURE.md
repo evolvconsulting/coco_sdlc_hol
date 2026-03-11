@@ -21,7 +21,7 @@ The account must be on **Enterprise tier or higher**. SPCS requires a region tha
 
 ## HOL Setup Script
 
-`packages/database/hol_setup.sql` is a single consolidated, idempotent SQL script that provisions the entire Snowflake environment for the lab. Run it once at the start of the lab.
+`hol_setup.sql` is a single consolidated, idempotent SQL script that provisions the entire Snowflake environment for the lab. Run it once at the start of the lab.
 
 ### What the script provisions
 
@@ -46,7 +46,7 @@ The account must be on **Enterprise tier or higher**. SPCS requires a region tha
 
 1. Open Snowsight and navigate to **Projects > Worksheets**
 2. Create a new worksheet
-3. Open `packages/database/hol_setup.sql` from this repo and paste the full contents
+3. Open `hol_setup.sql` from this repo and paste the full contents
 4. Click **Run All** (or use the keyboard shortcut)
 
 The script switches roles internally (`ACCOUNTADMIN` for Section 1, then `ATTENDEE_ROLE` for everything else). Make sure your Snowflake user has `ACCOUNTADMIN` or `SYSADMIN` access before running.
@@ -54,7 +54,7 @@ The script switches roles internally (`ACCOUNTADMIN` for Section 1, then `ATTEND
 **Option B -- Snow CLI**
 
 ```bash
-snow sql -f packages/database/hol_setup.sql --connection <your-connection-name>
+snow sql -f hol_setup.sql --connection <your-connection-name>
 ```
 
 ### Re-running the script

@@ -10,7 +10,7 @@
   - Configuration: `CORTEX_API_URL` environment variable (defaults to `/api/cortex`)
   - Authentication: Implicit (leverages Snowflake JWT)
   - Endpoints: `/api/cortex/chat` (standard), `/api/cortex/chat/stream` (streaming with SSE)
-  - Semantic model: `performance_intelligence`
+  - Semantic model: `evolv_payment_analytics`
 
 ## Data Storage
 

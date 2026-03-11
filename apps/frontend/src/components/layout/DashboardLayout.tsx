@@ -39,7 +39,7 @@ const EvolvLogo = ({ collapsed }: { collapsed: boolean }) => (
     </svg>
     {!collapsed && (
       <Text className="ml-2 text-white text-xs opacity-70">
-        Performance Intelligence
+        evolv Payment Analytics
       </Text>
     )}
   </div>

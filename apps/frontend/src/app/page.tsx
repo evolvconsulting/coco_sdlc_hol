@@ -74,7 +74,7 @@ export default function DashboardPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <Title level={2} className="!mb-1">
-            Performance Intelligence
+            evolv Payment Analytics
           </Title>
           <Text type="secondary">
             Analytics overview for DMCL - Last 30 days

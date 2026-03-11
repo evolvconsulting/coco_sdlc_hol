@@ -125,12 +125,10 @@ The chat route is completely separate from the analytics routes:
 
 **Environment variables required for chat (beyond base Snowflake config):**
 ```
-CORTEX_AGENT_DATABASE=COCO_SDLC_HOL   # or EVOLV_PERFORMANCE_INTELLIGENCE per .env.example
-CORTEX_AGENT_SCHEMA=CLEA              # or MARTS
-CORTEX_AGENT_NAME=PAYMENT_ANALYTICS_AGENT  # or PERFORMANCE_INTELLIGENCE_AGENT
+CORTEX_AGENT_DATABASE=COCO_SDLC_HOL
+CORTEX_AGENT_SCHEMA=MARTS
+CORTEX_AGENT_NAME=PAYMENT_ANALYTICS_AGENT
 ```
-
-**Note:** The `.env.example` shows `CORTEX_AGENT_DATABASE=EVOLV_PERFORMANCE_INTELLIGENCE` and `CORTEX_AGENT_SCHEMA=CLEA`, which is different from the analytics routes that use `COCO_SDLC_HOL.MARTS`. These may need to be aligned during UAT.
 
 ### Anti-Patterns to Avoid During UAT
 
@@ -358,14 +356,9 @@ SEVERITY: [Blocker / Major / Minor]
    - Recommendation: Run the date range diagnostic SQL in Snowflake Web UI as the first step of UAT.
 
 2. **Which Cortex Agent name is correct?**
-   - What we know: Code default is `PAYMENT_ANALYTICS_AGENT`; `.env.example` shows `PERFORMANCE_INTELLIGENCE_AGENT`; env var `CORTEX_AGENT_NAME` controls this.
+   - What we know: Code default is `PAYMENT_ANALYTICS_AGENT`; env var `CORTEX_AGENT_NAME` controls this.
    - What's unclear: Which agent name is actually deployed in the Snowflake account.
    - Recommendation: Check the Snowflake console → Cortex Agents list. Update `CORTEX_AGENT_NAME` in `.env.local` to match.
-
-3. **Is the Cortex Agent configured in COCO_SDLC_HOL.MARTS or EVOLV_PERFORMANCE_INTELLIGENCE.CLEA?**
-   - What we know: `.env.example` uses `EVOLV_PERFORMANCE_INTELLIGENCE` / `CLEA`; code default uses `COCO_SDLC_HOL` / `CLEA`.
-   - What's unclear: The actual database.schema where the Cortex agent is deployed.
-   - Recommendation: Verify in Snowflake during pre-flight. The mismatch between `.env.example` and code defaults is a known inconsistency to resolve.
 
 ---
 

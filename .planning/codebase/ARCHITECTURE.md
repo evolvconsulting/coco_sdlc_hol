@@ -20,7 +20,7 @@
 - Location: `apps/frontend/src/app/` and `apps/frontend/src/components/`
 - Contains: Next.js pages, React components, UI elements, charts, and layouts
 - Depends on: Backend API routes, hooks for data fetching, type definitions
-- Used by: End users accessing the performance intelligence dashboard
+- Used by: End users accessing the payment analytics dashboard
 
 **API Layer:**
 - Purpose: Server-side request handling and data transformation

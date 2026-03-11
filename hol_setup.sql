@@ -14,13 +14,10 @@ GRANT ROLE ATTENDEE_ROLE TO ROLE SYSADMIN;
 GRANT CREATE DATABASE ON ACCOUNT TO ROLE ATTENDEE_ROLE;
 GRANT CREATE SCHEMA ON ACCOUNT TO ROLE ATTENDEE_ROLE;
 GRANT CREATE TABLE ON ACCOUNT TO ROLE ATTENDEE_ROLE;
-GRANT BIND SERVICE ENDPOINT ON ACCOUNT TO ROLE ATTENDEE_ROLE;
-GRANT CREATE COMPUTE POOL ON ACCOUNT TO ROLE ATTENDEE_ROLE;
 GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE ATTENDEE_ROLE;
 GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE ATTENDEE_ROLE;
 GRANT CREATE SECRET ON ACCOUNT TO ROLE ATTENDEE_ROLE;
 GRANT CREATE AGENT ON ACCOUNT TO ROLE ATTENDEE_ROLE;
-GRANT CREATE IMAGE REPOSITORY ON ACCOUNT TO ROLE ATTENDEE_ROLE;
 
 CREATE WAREHOUSE IF NOT EXISTS COMPUTE_WH
   WAREHOUSE_SIZE = XSMALL
@@ -36,7 +33,7 @@ GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE ATTENDEE_ROLE;
 USE ROLE ATTENDEE_ROLE;
 
 CREATE DATABASE IF NOT EXISTS COCO_SDLC_HOL
-    COMMENT = 'Performance Intelligence Dashboard for Fiserv payment analytics';
+    COMMENT = 'evolv Payment Analytics hands-on lab environment with sample payment data and reference tables';
 
 USE DATABASE COCO_SDLC_HOL;
 
@@ -2615,12 +2612,7 @@ IWtMheYgsvDmdyaBX+joRy9w
   COMMENT = 'Unencrypted RSA private key for SPCS JWT key-pair auth';
 
 -- ============================================================
--- SECTION 10: Image Repository
--- ============================================================
-CREATE IMAGE REPOSITORY IF NOT EXISTS COCO_SDLC_HOL.PUBLIC.coco_sdlc_hol_repo;
-
--- ============================================================
--- SECTION 11: Semantic View + Cortex Agent
+-- SECTION 10: Semantic View + Cortex Agent
 -- ============================================================
 USE DATABASE COCO_SDLC_HOL;
 USE SCHEMA MARTS;
@@ -2629,7 +2621,7 @@ CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
   'COCO_SDLC_HOL.MARTS',
   $$
 name: PAYMENT_ANALYTICS
-description: Unified payment analytics semantic layer for Fiserv Performance Intelligence - with merchant relationships
+description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
 
 tables:
   # ============================================================================
@@ -3314,7 +3306,7 @@ $$,
 );
 
 CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
-  COMMENT = 'Cortex Agent for natural language queries on Evolv Performance Intelligence payment data'
+  COMMENT = 'Cortex Agent for natural language queries on evolv Payment Analytics data'
   PROFILE = '{"display_name": "Payment Analytics Assistant", "color": "blue"}'
   FROM SPECIFICATION
   $$
@@ -3353,7 +3345,7 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
   $$;
 
 -- ============================================================
--- SECTION 12: Final Grants
+-- SECTION 11: Final Grants
 -- ============================================================
 GRANT USAGE ON AGENT COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
 GRANT SELECT ON ALL TABLES IN SCHEMA COCO_SDLC_HOL.MARTS TO ROLE ATTENDEE_ROLE;
