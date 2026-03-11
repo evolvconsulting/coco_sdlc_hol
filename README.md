@@ -1,6 +1,6 @@
 # AI-Assisted SDLC Hands-On Lab with Cortex Code
 
-Build a self-service payment analytics dashboard powered by Snowflake Cortex Agent and a dbt medallion architecture -- using Cortex Code CLI as your AI coding assistant throughout the entire development workflow.
+Work a Jira ticket through completion by adding a new metric to a payment analytics platform end-to-end across the full data stack, surfacing it on the dashboard, using Cortex Code CLI as your AI coding assistant throughout the entire development workflow.
 
 ## What You Will Do
 
@@ -48,73 +48,13 @@ coco_sdlc_hol/
 
 ## Prerequisites
 
-**Complete these before the lab.** The Snowflake environment and application infrastructure will be pre-provisioned by your instructor -- you only need the local development tools below.
+Install these tools before the lab. Full install instructions and verification steps are in [LAB_INSTRUCTIONS.md](LAB_INSTRUCTIONS.md#prerequisites).
 
-Several tools require admin rights or may be blocked on corporate-managed machines -- flag any blockers to your facilitator in advance.
-
-### 1. Snowflake Account
-
-Your instructor will provide a Snowflake account pre-configured for the lab. You need credentials to connect to it.
-
-### 2. Snow CLI
-
-The Snowflake CLI (`snow`) is used to verify your Snowflake connection.
-
-**Install:** https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation
-
-```bash
-# Verify installation
-snow --version
-```
-
-> **Corporate machine note:** Snow CLI installation may require elevated privileges. If your IT policy blocks the installer, request a pre-approved install or ask your facilitator for a pre-configured machine.
-
-After installing, configure a connection:
-
-```bash
-snow connection add
-# Follow prompts: account identifier, username, authenticator (use "externalbrowser" for SSO)
-```
-
-### 3. Cortex Code CLI
-
-The primary tool for this lab -- Snowflake's AI coding assistant.
-
-**Install:** https://docs.snowflake.com/en/user-guide/cortex-code-cli
-
-```bash
-# Verify installation
-cortex --version
-```
-
-> **Corporate machine note:** The Cortex Code CLI may be flagged by endpoint security tools or require Python 3.9+. If you cannot install it, the lab facilitator can provide a shared environment.
-
-### 4. Node.js 20.x
-
-Required for running the frontend application locally.
-
-**Install:** https://nodejs.org/en/download (use the LTS version, 20.x)
-
-```bash
-node --version   # should print v20.x.x
-npm --version
-```
-
-### 5. Git
-
-```bash
-git --version
-```
-
-Fork and clone the lab repository:
-
-1. Fork: [https://github.com/evolvconsulting/coco_sdlc_hol](https://github.com/evolvconsulting/coco_sdlc_hol) → click **Fork**
-2. Clone your fork:
-
-```bash
-git clone https://github.com/<your-username>/coco_sdlc_hol.git
-cd coco_sdlc_hol
-```
+- **Snowflake account** -- provided by your instructor
+- **Snow CLI** -- [docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation](https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation)
+- **Cortex Code CLI** -- [docs.snowflake.com/en/user-guide/cortex-code-cli](https://docs.snowflake.com/en/user-guide/cortex-code-cli)
+- **Node.js 20.x** -- [nodejs.org/en/download](https://nodejs.org/en/download)
+- **Git**
 
 ---
 
