@@ -16,14 +16,18 @@ Instructor-led architecture walkthrough — no participant inputs.
 
 ## Section 2: Environment Setup Verification (~5 min)
 
-**Step 0 — Clone the Lab Repository**
+**Step 0 — Fork and Clone the Lab Repository**
+
+Participant action: Fork `evolvconsulting/coco_sdlc_hol` on GitHub, then clone their own fork:
 
 ```bash
-git clone https://github.com/evolvconsulting/coco_sdlc_hol.git
+git clone https://github.com/<their-username>/coco_sdlc_hol.git
 cd coco_sdlc_hol
 ```
 
 > Watch for: Participants who skip this step will hit errors in Step 2 (missing `apps/frontend`) and Step 3.4 (Cortex Code won't find `AGENTS.md`).
+> Watch for: Participant cloned the upstream URL (`evolvconsulting/coco_sdlc_hol`) instead of their fork — push in Step 4.11 will fail with "permission denied" or "protected branch." Diagnose with `git remote -v`; origin must show their username. Fix: `git remote set-url origin https://github.com/<their-username>/coco_sdlc_hol.git`.
+> Watch for: Participant skipped forking entirely — same push-failure symptom. Have them fork first on GitHub, then re-clone or update their remote with the fix command above.
 
 ---
 
