@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: completed
 stopped_at: "Completed 06-01: fork-then-clone instructions updated in LAB_INSTRUCTIONS.md, README.md, INSTRUCTOR_GUIDE.md — human-approved"
-last_updated: "2026-03-11T14:07:00.368Z"
+last_updated: "2026-03-11T15:28:24.252Z"
 last_activity: "2026-03-11 — Completed 06-01: fork-then-clone instructions updated across all three lab documents"
 progress:
   total_phases: 2
@@ -41,7 +41,7 @@ Progress: [██████████] 100% (11/11 plans complete) — 1/1 P
 - Phase 4 added: Instructor reference sheet with prompt by prompt sequence
 - Phase 5 added: Instructor Claude Skill
 - Phase 6 added: Update instructions to include step to fork the repository per Option A Standard open-source model
-- Phase 7 added: Add docker install to prerequisites and optional SPCS deployment step to the end of the lab
+- Phase 7 added: Separate out all SPCS components from the lab (leave SPCS setup in project, exclude from lab setup)
 
 ### Decisions
 
