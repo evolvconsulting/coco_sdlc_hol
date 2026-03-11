@@ -89,6 +89,7 @@ select
     
     -- Merchant info (RENAMED + ENRICHED from join)
     chargebacks.mrch_nm as merchant_name_on_dispute,
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
     merchants.cty as merchant_city,

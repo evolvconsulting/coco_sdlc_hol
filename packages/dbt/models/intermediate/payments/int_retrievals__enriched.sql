@@ -74,6 +74,7 @@ select
     retrievals.card_lst4 as card_last_four,
     
     -- Merchant info (ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
     

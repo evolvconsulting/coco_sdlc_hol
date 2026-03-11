@@ -132,11 +132,12 @@ models:
       
       **Column Name Transformation (Legacy -> Intermediate):**
       - `adj_am` -> `adjustment_amount`
-      - `adj_typ_cd` -> `adjustment_type_code`
-      - `adj_desc` -> `adjustment_description`
+      - `adj_typ` -> `adjustment_type_code`
+      - `rsn_desc` -> `adjustment_description`
       
       **Enrichment:**
       - Derived adjustment_type ('Credit'/'Debit') from type code
+      - Merchant ID and details from merchant master
     columns:
       - name: adjustment_id
         description: "Primary key (UUID)"
@@ -144,4 +145,6 @@ models:
       - name: adjustment_amount
         description: "Adjustment amount (clarified from adj_am)"
       - name: adjustment_type
-        description: "Derived: 'Credit' or 'Debit' from adj_typ_cd"
+        description: "Derived: 'Credit' or 'Debit' from adj_typ"
+      - name: merchant_id
+        description: "Merchant ID for semantic view relationships"

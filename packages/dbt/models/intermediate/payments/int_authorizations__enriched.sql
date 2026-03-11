@@ -84,6 +84,7 @@ select
     auth.card_lst4 as card_last_four,
     
     -- Merchant info (RENAMED + ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
     merchants.mcc as merchant_category_code,

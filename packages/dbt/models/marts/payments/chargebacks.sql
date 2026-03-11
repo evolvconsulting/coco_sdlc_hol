@@ -11,33 +11,37 @@ with enriched as (
 
 select
     -- Surrogate key
-    chargeback_id,
+    chargeback_id as chargeback_key,
 
     -- Dates
     dispute_received_date,
     original_transaction_date,
     response_due_date,
-    
+
+    -- Merchant
+    merchant_id,
+
     -- Reason info
     reason_code,
     reason_description,
-    
+
     -- Status
     chargeback_status,
     chargeback_outcome as outcome,
     lifecycle_stage,
-    
+
     -- Merchant info
     merchant_dba_name as merchant_name,
     merchant_city,
     merchant_state,
     merchant_category_code,
-    
+
     -- Card info
     card_brand,
-    
+
     -- Amounts
     dispute_amount,
-    original_transaction_amount as transaction_amount
+    original_transaction_amount as transaction_amount,
+    1 as disputes_count
 
 from enriched

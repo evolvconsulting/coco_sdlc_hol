@@ -11,45 +11,51 @@ with enriched as (
 
 select
     -- Surrogate key
-    authorization_id,
+    authorization_id as authorization_key,
 
     -- Transaction details
     transaction_date,
     transaction_time,
-    
+
+    -- Merchant
+    merchant_id,
+
     -- Card brand
     card_brand,
-    
+    card_type,
+    case when is_commercial_card then 'Commercial' else 'Consumer' end as card_category,
+
+    -- Entry mode
+    entry_mode,
+
     -- Approval status
     approval_status_code,
     approval_status,
     decline_reason_text as decline_reason,
-    
+
     -- Amount
     transaction_amount,
-    
+    1 as transactions_count,
+
     -- Merchant info
     merchant_dba_name as merchant_name,
     corporate_name,
     merchant_category_code,
-    
+
     -- Processor
     processor_id,
     processor_name,
-    
+
     -- Card details
     card_bin,
     card_last_four,
-    
+
     -- Transaction type
     payment_method,
     processing_network,
-    
+
     -- Response codes
     avs_response_code as avs_response,
-    cvv_response_code as cvv_response,
-
-    -- Risk
-    risk_score
+    cvv_response_code as cvv_response
 
 from enriched

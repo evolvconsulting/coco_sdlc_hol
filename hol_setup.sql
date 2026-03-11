@@ -12,12 +12,8 @@ CREATE ROLE IF NOT EXISTS ATTENDEE_ROLE;
 GRANT ROLE ATTENDEE_ROLE TO ROLE SYSADMIN;
 
 GRANT CREATE DATABASE ON ACCOUNT TO ROLE ATTENDEE_ROLE;
-GRANT CREATE SCHEMA ON ACCOUNT TO ROLE ATTENDEE_ROLE;
-GRANT CREATE TABLE ON ACCOUNT TO ROLE ATTENDEE_ROLE;
 GRANT IMPORTED PRIVILEGES ON DATABASE SNOWFLAKE TO ROLE ATTENDEE_ROLE;
 GRANT CREATE INTEGRATION ON ACCOUNT TO ROLE ATTENDEE_ROLE;
-GRANT CREATE SECRET ON ACCOUNT TO ROLE ATTENDEE_ROLE;
-GRANT CREATE AGENT ON ACCOUNT TO ROLE ATTENDEE_ROLE;
 
 CREATE WAREHOUSE IF NOT EXISTS COMPUTE_WH
   WAREHOUSE_SIZE = XSMALL
@@ -43,6 +39,16 @@ CREATE SCHEMA IF NOT EXISTS STAGING;
 CREATE SCHEMA IF NOT EXISTS INTERMEDIATE;
 CREATE SCHEMA IF NOT EXISTS MARTS;
 CREATE SCHEMA IF NOT EXISTS PUBLIC;
+
+-- Grant schema-level privileges to ATTENDEE_ROLE (requires ACCOUNTADMIN)
+USE ROLE ACCOUNTADMIN;
+GRANT ALL PRIVILEGES ON DATABASE COCO_SDLC_HOL TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.RAW TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.STAGING TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.MARTS TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.PUBLIC TO ROLE ATTENDEE_ROLE;
+USE ROLE ATTENDEE_ROLE;
 
 -- ============================================================
 -- SECTION 3: RAW Schema Tables
@@ -632,7 +638,7 @@ USING (
             ('dmcl', 'M028', 'S001', 'OhioHealth Riverside', 'OhioHealth Corp', 'OhioHealth Corporation', '3535 Olentangy River Rd', 'Columbus', 'OH', '43214', 'US', '614-555-2801', 'billing@ohiohealth.com', '8011', 'Doctors', 'Healthcare', 'OMAHA', 15, 'Active', '2019-03-15'),
             ('dmcl', 'M029', 'S001', 'Mount Carmel Health', 'Trinity Health', 'Trinity Health Corporation', '793 W State St', 'Columbus', 'OH', '43222', 'US', '614-555-2901', 'billing@mchs.com', '8011', 'Doctors', 'Healthcare', 'CARDNET', 12, 'Active', '2019-05-20'),
             ('dmcl', 'M030', 'S001', 'Bright Smiles Dental', 'Bright Smiles LLC', 'Bright Smiles Limited Liability Company', '1400 Dublin Rd', 'Columbus', 'OH', '43215', 'US', '614-555-3001', 'info@brightsmiles.com', '8021', 'Dentists and Orthodontists', 'Healthcare', 'OMAHA', 2, 'Active', '2022-01-10')
-        AS (CLNT_ID, MRCH_ID, LCTN_ID, LCTN_DBA_NM, CORP_DBA_NM, LGL_NM, ADDR_LN1, CTY, ST_CD, ZIP_CD, CNTRY_CD, PHN_NR, EMAIL_ADDR, MCC, MCC_DESC, BSNS_TYP, PLTF_ID, TRMNL_CT, STAT_CD, ONBRD_DT)
+        AS src(CLNT_ID, MRCH_ID, LCTN_ID, LCTN_DBA_NM, CORP_DBA_NM, LGL_NM, ADDR_LN1, CTY, ST_CD, ZIP_CD, CNTRY_CD, PHN_NR, EMAIL_ADDR, MCC, MCC_DESC, BSNS_TYP, PLTF_ID, TRMNL_CT, STAT_CD, ONBRD_DT)
     ) src
 ) AS src
 ON tgt.CLNT_ID = src.CLNT_ID AND tgt.MRCH_ID = src.MRCH_ID AND tgt.LCTN_ID = src.LCTN_ID
@@ -897,20 +903,20 @@ BEGIN
             END) AS BIN_ID,
         LPAD(UNIFORM(1000, 9999, RANDOM())::VARCHAR, 4, '0') AS CARD_LST4,
         -- Payment method distribution
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 45 THEN 'Chip'
-            WHEN BETWEEN 46 AND 75 THEN 'Contactless'
-            WHEN BETWEEN 76 AND 88 THEN 'Swipe'
+        CASE
+            WHEN UNIFORM(1, 100, RANDOM()) <= 45 THEN 'Chip'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 75 THEN 'Contactless'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 88 THEN 'Swipe'
             ELSE 'Keyed'
         END AS PYMT_MTHD,
         r.ntwrk AS NTWRK,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 50 THEN 'Chip'
-            WHEN BETWEEN 51 AND 80 THEN 'Contactless'
+        CASE
+            WHEN UNIFORM(1, 100, RANDOM()) <= 50 THEN 'Chip'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 80 THEN 'Contactless'
             ELSE 'Manual'
         END AS ENTRY_MD,
         r.PLTF_ID,
-        r.PLTF_ID || '-T' || LPAD(UNIFORM(1, r.TRMNL_CT, RANDOM())::VARCHAR, 3, '0') AS TRMNL_ID,
+        r.PLTF_ID || '-T' || LPAD((MOD(ABS(RANDOM()), GREATEST(r.TRMNL_CT, 1)) + 1)::VARCHAR, 3, '0') AS TRMNL_ID,
         CASE WHEN UNIFORM(0,1,RANDOM()) > 0.05 THEN 'Y' ELSE 'N' END AS AVS_RSLT,
         CASE WHEN UNIFORM(0,1,RANDOM()) > 0.02 THEN 'M' ELSE 'N' END AS CVV_RSLT
     FROM raw_txns r
@@ -984,7 +990,7 @@ BEGIN
                 ELSE 0.018
             END AS INTCHG_AM,
         CARD_BRND,
-        MAX(CARD_TYP) AS CARD_TYP,
+        CARD_TYP,
         CASE CARD_BRND
             WHEN 'Visa' THEN 'VS01'
             WHEN 'Mastercard' THEN 'MC01'
@@ -1001,7 +1007,7 @@ BEGIN
         MAX(NTWRK) AS PLTF_ID,
         NTWRK
     FROM approved_auths
-    GROUP BY TXN_DT, CARD_BRND, MRCH_KEY, CLNT_ID, MCC, NTWRK;
+    GROUP BY TXN_DT, CARD_BRND, CARD_TYP, MRCH_KEY, CLNT_ID, MCC, NTWRK;
 
     SELECT COUNT(*) INTO :total_settle FROM CLX_SETTLE;
 
@@ -1084,22 +1090,22 @@ BEGIN
         a.TXN_AM AS DSPUT_AM,
         a.TXN_AM AS TXN_AM,
         CASE WHEN UNIFORM(0,1,RANDOM()) > 0.6 THEN a.TXN_AM ELSE 0 END AS REPR_AM,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 15 THEN 'Open'
-            WHEN BETWEEN 16 AND 35 THEN 'Pending'
-            WHEN BETWEEN 36 AND 60 THEN 'Won'
-            WHEN BETWEEN 61 AND 85 THEN 'Lost'
+        CASE
+            WHEN UNIFORM(1, 100, RANDOM()) <= 15 THEN 'Open'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 35 THEN 'Pending'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 60 THEN 'Won'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 85 THEN 'Lost'
             ELSE 'Closed'
         END AS CBK_STAT,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 35 THEN 'Won'
-            WHEN BETWEEN 36 AND 85 THEN 'Lost'
+        CASE
+            WHEN UNIFORM(1, 100, RANDOM()) <= 35 THEN 'Won'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 85 THEN 'Lost'
             ELSE NULL
         END AS CBK_WIN_LOSS,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 75 THEN '1st Chargeback'
-            WHEN BETWEEN 76 AND 90 THEN '2nd Chargeback'
-            WHEN BETWEEN 91 AND 97 THEN 'Pre-Arbitration'
+        CASE
+            WHEN UNIFORM(1, 100, RANDOM()) <= 75 THEN '1st Chargeback'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 90 THEN '2nd Chargeback'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 97 THEN 'Pre-Arbitration'
             ELSE 'Arbitration'
         END AS CBK_CYCL,
         cr.CBK_RSN_ID,
@@ -1158,23 +1164,23 @@ BEGIN
              THEN DATEADD(DAY, UNIFORM(5, 25, RANDOM()) + 10, a.TXN_DT)
              ELSE NULL END AS FULFMT_DT,
         a.TXN_AM AS RTRVL_AM,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 25 THEN 'Open'
-            WHEN BETWEEN 26 AND 50 THEN 'Fulfilled'
-            WHEN BETWEEN 51 AND 75 THEN 'Closed'
+        CASE
+            WHEN UNIFORM(1, 100, RANDOM()) <= 25 THEN 'Open'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 50 THEN 'Fulfilled'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 75 THEN 'Closed'
             ELSE 'Expired'
         END AS RTRVL_STAT,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 70 THEN 'Complete'
-            WHEN BETWEEN 71 AND 90 THEN 'Partial'
+        CASE
+            WHEN UNIFORM(1, 100, RANDOM()) <= 70 THEN 'Complete'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 90 THEN 'Partial'
             ELSE 'None'
         END AS FULFMT_STAT,
         'RQ' || LPAD(UNIFORM(1, 15, RANDOM())::VARCHAR, 2, '0') AS RSN_CD,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 30 THEN 'Cardholder Does Not Recognize'
-            WHEN BETWEEN 31 AND 50 THEN 'Cardholder Request for Copy'
-            WHEN BETWEEN 51 AND 70 THEN 'Fraud Investigation'
-            WHEN BETWEEN 71 AND 85 THEN 'Compliance Review'
+        CASE
+            WHEN UNIFORM(1, 100, RANDOM()) <= 30 THEN 'Cardholder Does Not Recognize'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 50 THEN 'Cardholder Request for Copy'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 70 THEN 'Fraud Investigation'
+            WHEN UNIFORM(1, 100, RANDOM()) <= 85 THEN 'Compliance Review'
             ELSE 'Issuer Request'
         END AS RSN_DESC,
         a.CARD_BRND,
@@ -1192,9 +1198,9 @@ BEGIN
     -- Generate Adjustments (fees, credits, monthly charges)
     -- ==========================================================================
     INSERT INTO CLX_ADJ (
-        ADJ_ID, CLNT_ID, MRCH_KEY, ADJ_REF_NR, ADJ_DT, EFF_DT, ORIG_TXN_DT,
-        ADJ_AM, ADJ_TYP_CD, ADJ_CD, ADJ_DESC, ADJ_CTGR, FEE_TYP_CD,
-        FEE_DESC, RLTD_TXN_ID, RLTD_TXN_TYP, ADJ_STAT, PLTF_ID, CRT_BY
+        ADJ_ID, CLNT_ID, MRCH_KEY, REF_NR, ADJ_DT, EFF_DT, POST_DT,
+        ADJ_AM, ADJ_TYP, RSN_CD, RSN_DESC, GL_ACCT, DEPT_CD,
+        NOTES_TX, BTCH_REF, ADJ_STAT, PLTF_ID, APRVD_BY
     )
     WITH adj_types AS (
         SELECT 'C' AS type_cd, 'Monthly Volume Bonus' AS desc_tx, 'CREDIT' AS category, 'MVB' AS adj_cd, 50.00 AS min_am, 500.00 AS max_am, 0.05 AS frequency UNION ALL
@@ -1222,25 +1228,24 @@ BEGIN
         UUID_STRING() AS ADJ_ID,
         m.CLNT_ID,
         m.MRCH_KEY,
-        'ADJ-' || DATE_PART(YEAR, d.adj_date) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS ADJ_REF_NR,
+        'ADJ-' || DATE_PART(YEAR, d.adj_date) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS REF_NR,
         d.adj_date AS ADJ_DT,
         d.adj_date AS EFF_DT,
-        NULL AS ORIG_TXN_DT,
+        NULL AS POST_DT,
         CASE at.type_cd
-            WHEN 'C' THEN UNIFORM(at.min_am, at.max_am, RANDOM())::NUMBER(15,2)
-            ELSE -UNIFORM(at.min_am, at.max_am, RANDOM())::NUMBER(15,2)
+            WHEN 'C' THEN (at.min_am + (at.max_am - at.min_am) * UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()))::NUMBER(15,2)
+            ELSE -(at.min_am + (at.max_am - at.min_am) * UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()))::NUMBER(15,2)
         END AS ADJ_AM,
-        at.type_cd AS ADJ_TYP_CD,
-        at.adj_cd AS ADJ_CD,
-        at.desc_tx AS ADJ_DESC,
-        at.category AS ADJ_CTGR,
-        at.adj_cd AS FEE_TYP_CD,
-        at.desc_tx AS FEE_DESC,
-        NULL AS RLTD_TXN_ID,
-        NULL AS RLTD_TXN_TYP,
+        at.type_cd AS ADJ_TYP,
+        at.adj_cd AS RSN_CD,
+        at.desc_tx AS RSN_DESC,
+        at.category AS GL_ACCT,
+        at.adj_cd AS DEPT_CD,
+        at.desc_tx AS NOTES_TX,
+        NULL AS BTCH_REF,
         'Processed' AS ADJ_STAT,
         m.PLTF_ID,
-        'SYSTEM' AS CRT_BY
+        'SYSTEM' AS APRVD_BY
     FROM date_range d
     CROSS JOIN merchants m
     CROSS JOIN adj_types at
@@ -1753,29 +1758,28 @@ renamed as (
         mrch_key,
 
         -- Reference (legacy names)
-        adj_ref_nr,
+        ref_nr,
 
         -- Dates (legacy names)
         adj_dt,
         eff_dt,
-        orig_txn_dt,
+        post_dt,
 
         -- Amount (legacy names)
         adj_am,
-        adj_typ_cd,
+        adj_typ,
 
         -- Codes (legacy names)
-        adj_cd,
-        adj_desc,
-        adj_ctgr,
+        rsn_cd,
+        rsn_desc,
+        gl_acct,
 
         -- Fee info (legacy names)
-        fee_typ_cd,
-        fee_desc,
+        dept_cd,
+        notes_tx,
 
         -- Related transaction (legacy names)
-        rltd_txn_id,
-        rltd_txn_typ,
+        btch_ref,
 
         -- Status (legacy names)
         adj_stat,
@@ -1784,7 +1788,7 @@ renamed as (
         pltf_id,
 
         -- Audit fields
-        crt_by,
+        aprvd_by,
         crt_ts,
         upd_ts
 
@@ -1860,6 +1864,7 @@ select
     auth.card_lst4 as card_last_four,
 
     -- Merchant info (RENAMED + ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
     merchants.mcc as merchant_category_code,
@@ -1946,6 +1951,7 @@ select
     settlements.plan_desc as interchange_plan_description,
 
     -- Merchant info (ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
 
@@ -2023,6 +2029,7 @@ select
     right(deposits.txn_ctgr, 3) as minor_category_code,
 
     -- Merchant info (ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
 
@@ -2104,6 +2111,7 @@ select
     chargebacks.card_lst4 as card_last_four,
 
     -- Merchant info (RENAMED + ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     chargebacks.mrch_nm as merchant_name_on_dispute,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
@@ -2183,6 +2191,7 @@ select
     retrievals.card_lst4 as card_last_four,
 
     -- Merchant info (ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
 
@@ -2223,41 +2232,41 @@ select
     adjustments.adj_id as adjustment_id,
 
     -- Reference
-    adjustments.adj_ref_nr as adjustment_reference_number,
+    adjustments.ref_nr as adjustment_reference_number,
 
     -- Dates (RENAMED from legacy)
     adjustments.adj_dt as adjustment_date,
     adjustments.eff_dt as effective_date,
-    adjustments.orig_txn_dt as original_transaction_date,
+    adjustments.post_dt as original_transaction_date,
 
     -- Amount (RENAMED from legacy)
     adjustments.adj_am as adjustment_amount,
 
     -- Type (RENAMED + DERIVED from legacy)
-    adjustments.adj_typ_cd as adjustment_type_code,
+    adjustments.adj_typ as adjustment_type_code,
     case
-        when adjustments.adj_typ_cd = 'C' then 'Credit'
-        when adjustments.adj_typ_cd = 'D' then 'Debit'
+        when adjustments.adj_typ = 'C' then 'Credit'
+        when adjustments.adj_typ = 'D' then 'Debit'
         else 'Unknown'
     end as adjustment_type,
 
     -- Codes (RENAMED from legacy)
-    adjustments.adj_cd as adjustment_code,
-    adjustments.adj_desc as adjustment_description,
-    adjustments.adj_ctgr as adjustment_category,
+    adjustments.rsn_cd as adjustment_code,
+    adjustments.rsn_desc as adjustment_description,
+    adjustments.gl_acct as adjustment_category,
 
     -- Fee info (RENAMED from legacy)
-    adjustments.fee_typ_cd as fee_type_code,
-    adjustments.fee_desc as fee_description,
+    adjustments.dept_cd as fee_type_code,
+    adjustments.notes_tx as fee_description,
 
     -- Related transaction (RENAMED from legacy)
-    adjustments.rltd_txn_id as related_transaction_id,
-    adjustments.rltd_txn_typ as related_transaction_type,
+    adjustments.btch_ref as related_transaction_id,
 
     -- Status (RENAMED from legacy)
     adjustments.adj_stat as adjustment_status,
 
     -- Merchant info (ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
 
@@ -2266,7 +2275,7 @@ select
     processors.pltf_nm as processor_name,
 
     -- Audit
-    adjustments.crt_by as created_by
+    adjustments.aprvd_by as created_by
 
 from adjustments
 left join merchants
@@ -2337,12 +2346,22 @@ with enriched as (
 )
 
 select
+    authorization_id as authorization_key,
+
     -- Transaction details
     transaction_date,
     transaction_time,
 
+    -- Merchant
+    merchant_id,
+
     -- Card brand
     card_brand,
+    card_type,
+    case when is_commercial_card then 'Commercial' else 'Consumer' end as card_category,
+
+    -- Entry mode
+    entry_mode,
 
     -- Approval status
     approval_status_code,
@@ -2351,6 +2370,7 @@ select
 
     -- Amount
     transaction_amount,
+    1 as transactions_count,
 
     -- Merchant info
     merchant_dba_name as merchant_name,
@@ -2385,9 +2405,14 @@ with enriched as (
 )
 
 select
+    settlement_id as settlement_key,
+
     -- Dates
     settlement_date,
     batch_date,
+
+    -- Merchant
+    merchant_id,
 
     -- Card info
     card_brand,
@@ -2412,7 +2437,8 @@ select
     net_settlement_amount as net_amount,
     gross_sales_amount as sales_amount,
     refund_amount,
-    discount_fee_amount as discount_amount
+    discount_fee_amount as discount_amount,
+    interchange_fee_amount as interchange_amount
 
 from enriched
 ;
@@ -2426,12 +2452,18 @@ with enriched as (
 )
 
 select
+    deposit_id as deposit_key,
+
     -- Dates
     deposit_date,
     settlement_date,
 
+    -- Merchant
+    merchant_id,
+
     -- Status
     payment_status,
+    payment_method,
 
     -- Merchant info
     merchant_dba_name as merchant_name,
@@ -2469,10 +2501,15 @@ with enriched as (
 )
 
 select
+    chargeback_id as chargeback_key,
+
     -- Dates
     dispute_received_date,
     original_transaction_date,
     response_due_date,
+
+    -- Merchant
+    merchant_id,
 
     -- Reason info
     reason_code,
@@ -2494,7 +2531,8 @@ select
 
     -- Amounts
     dispute_amount,
-    original_transaction_amount as transaction_amount
+    original_transaction_amount as transaction_amount,
+    1 as disputes_count
 
 from enriched
 ;
@@ -2508,10 +2546,15 @@ with enriched as (
 )
 
 select
+    retrieval_id as retrieval_key,
+
     -- Dates
     original_sale_date,
     response_due_date,
     fulfillment_date,
+
+    -- Merchant
+    merchant_id,
 
     -- Status
     retrieval_status,
@@ -2529,7 +2572,8 @@ select
     card_brand,
 
     -- Amount
-    retrieval_amount
+    retrieval_amount,
+    1 as retrievals_count
 
 from enriched
 ;
@@ -2543,9 +2587,14 @@ with enriched as (
 )
 
 select
+    adjustment_id as adjustment_key,
+
     -- Dates
     adjustment_date,
     effective_date,
+
+    -- Merchant
+    merchant_id,
 
     -- Codes
     adjustment_code,
@@ -2569,6 +2618,7 @@ from enriched
 -- ============================================================
 -- SECTION 9: Service User + RSA Key Secret
 -- ============================================================
+USE ROLE ACCOUNTADMIN;
 
 -- Service user for SPCS JWT key-pair auth
 CREATE USER IF NOT EXISTS COCO_SDLC_HOL_SERVICE_USER
@@ -2577,6 +2627,8 @@ CREATE USER IF NOT EXISTS COCO_SDLC_HOL_SERVICE_USER
   COMMENT = 'Service user for SPCS container key-pair auth';
 
 GRANT ROLE ATTENDEE_ROLE TO USER COCO_SDLC_HOL_SERVICE_USER;
+
+USE ROLE ATTENDEE_ROLE;
 
 -- Private key stored as Secret for container injection
 CREATE OR REPLACE SECRET COCO_SDLC_HOL.PUBLIC.coco_sdlc_hol_private_key

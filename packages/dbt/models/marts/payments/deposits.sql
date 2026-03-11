@@ -11,27 +11,31 @@ with enriched as (
 
 select
     -- Surrogate key
-    deposit_id,
+    deposit_id as deposit_key,
 
     -- Dates
     deposit_date,
     settlement_date,
-    
+
+    -- Merchant
+    merchant_id,
+
     -- Status
     payment_status,
-    
+    payment_method,
+
     -- Merchant info
     merchant_dba_name as merchant_name,
     corporate_name,
-    
+
     -- Bank info
     bank_account_last_four,
-    
+
     -- Categories
     transaction_category,
     major_category_code,
     minor_category_code,
-    
+
     -- Amounts
     total_deposit_amount as deposit_amount,
     net_sales_amount,
@@ -40,7 +44,7 @@ select
     adjustment_amount,
     interchange_charges_amount as interchange_charges,
     service_charges_amount as service_charges,
-    
+
     -- Counts
     item_count
 

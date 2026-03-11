@@ -77,6 +77,7 @@ select
     settlements.plan_desc as interchange_plan_description,
     
     -- Merchant info (ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
     
