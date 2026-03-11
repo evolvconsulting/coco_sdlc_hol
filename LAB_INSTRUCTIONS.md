@@ -214,6 +214,22 @@ snow sql -c <your-connection> -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CUR
 
 This confirms your Snowflake CLI is configured with the correct connection profile, role, database, and schema. The `ATTENDEE_ROLE` has been granted the permissions needed for all lab tasks.
 
+**1c. Create the frontend environment file**
+
+The frontend app reads Snowflake connection details from a `.env.local` file. An `.env.example` is provided with everything pre-configured except your account identifier.
+
+```bash
+cp apps/frontend/.env.example apps/frontend/.env.local
+```
+
+Then open `apps/frontend/.env.local` and set `SNOWFLAKE_ACCOUNT` to the same account identifier you used in Step 1a (format: `orgname-accountname`):
+
+```
+SNOWFLAKE_ACCOUNT=orgname-accountname
+```
+
+All other values (service user, private key, database, schema, Cortex Agent name) are pre-populated and do not need to change.
+
 ### Step 2: Confirm Local App Runs
 
 Start the frontend application to verify it can connect to Snowflake and display real data:
