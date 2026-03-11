@@ -1,5 +1,5 @@
 -- =============================================================================
--- EVOLV PERFORMANCE INTELLIGENCE - Cortex Agent
+-- EVOLV PAYMENT ANALYTICS - Cortex Agent
 -- =============================================================================
 -- This script creates the Cortex Agent for natural language query processing
 -- using the Payment Analytics semantic view.
@@ -12,7 +12,7 @@ USE SCHEMA COCO_SDLC_HOL.MARTS;
 -- =============================================================================
 
 CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
-  COMMENT = 'Cortex Agent for natural language queries on Evolv Performance Intelligence payment data'
+  COMMENT = 'Cortex Agent for natural language queries on evolv Payment Analytics data'
   PROFILE = '{"display_name": "Payment Analytics Assistant", "color": "blue"}'
   FROM SPECIFICATION
   $$

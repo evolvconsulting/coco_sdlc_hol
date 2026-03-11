@@ -1,18 +1,18 @@
 # =============================================================================
-# EVOLV PERFORMANCE INTELLIGENCE - Snowflake-Native dbt Profile
+# EVOLV PAYMENT ANALYTICS - Snowflake-Native dbt Profile
 # =============================================================================
 # This profile is used for Snowflake-native dbt execution via EXECUTE DBT PROJECT.
 # NOTE: No password or env_var() fields - auth is handled by Snowflake session.
 # =============================================================================
 
-evolv_pi:
+dev:
   target: dev
   outputs:
     dev:
       type: snowflake
       account: XLB91549
       user: TRENT.FOLEY@EVOLVCONSULTING.COM
-      authenticator: externalbrowser    # ← Add this
+      authenticator: externalbrowser
       role: SYSADMIN
       database: COCO_SDLC_HOL
       warehouse: COMPUTE_WH

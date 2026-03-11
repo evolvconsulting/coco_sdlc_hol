@@ -5,7 +5,7 @@ CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
   'COCO_SDLC_HOL.MARTS',
   $$
 name: PAYMENT_ANALYTICS
-description: Unified payment analytics semantic layer for Fiserv Performance Intelligence - with merchant relationships
+description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
 
 tables:
   # ============================================================================

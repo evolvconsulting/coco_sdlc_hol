@@ -1,10 +1,10 @@
 # =============================================================================
-# EVOLV PERFORMANCE INTELLIGENCE - dbt Profile Configuration (Example)
+# EVOLV PAYMENT ANALYTICS - dbt Profile Configuration (Example)
 # =============================================================================
 # Copy this file to ~/.dbt/profiles.yml and update with your credentials
 # =============================================================================
 
-evolv_pi:
+dev:
   target: dev
   outputs:
     dev:
@@ -14,8 +14,8 @@ evolv_pi:
       password: <your_password>
       role: SYSADMIN
       database: COCO_SDLC_HOL
-      warehouse: PERFORMANCE_INTELLIGENCE_WH
+      warehouse: COMPUTE_WH
       schema: PUBLIC
       threads: 4
       client_session_keep_alive: False
-      query_tag: dbt_evolv_pi
+      query_tag: dbt_evolv_payment_analytics
