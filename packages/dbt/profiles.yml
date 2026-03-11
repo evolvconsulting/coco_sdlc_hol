@@ -13,7 +13,6 @@ dev:
       account: orgname-accountname
       user: USER
       password: "Sn0wf@ll"
-      authenticator: snowflake
       role: ATTENDEE_ROLE
       database: COCO_SDLC_HOL
       warehouse: COMPUTE_WH
