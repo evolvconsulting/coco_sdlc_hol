@@ -14,7 +14,7 @@ Work through two Jira tickets using Cortex Code to add a new business metric end
 | Layer | Technology | Purpose |
 |-------|------------|---------|
 | Frontend | Next.js 14, Ant Design, AG Grid, ECharts | Dashboard UI |
-| Backend | Node.js 20 + Express | API service |
+| Backend | Next.js API Routes | Snowflake query endpoints |
 | NL Queries | Snowflake Cortex Agent | Natural language to SQL |
 | Data | Snowflake + dbt | Medallion architecture |
 | AI Assistant | Cortex Code CLI | AI-assisted development |
