@@ -96,14 +96,24 @@ The repository includes an `AGENTS.md` file at the root. Cortex Code reads this 
 
 In this section, you will clone the lab repository and verify that your pre-configured environment is working correctly. Each step includes the expected output so you can confirm everything is ready before starting the development tasks.
 
-### Step 0: Clone the Lab Repository
+### Step 0: Fork and Clone the Lab Repository
 
-Clone the repository and navigate to the project root:
+**0a. Fork the repository**
+
+Navigate to [https://github.com/evolvconsulting/coco_sdlc_hol](https://github.com/evolvconsulting/coco_sdlc_hol) in your browser and click **Fork** (top-right). Accept the defaults and click **Create fork**.
+
+You now have your own copy of the repository at `https://github.com/<your-username>/coco_sdlc_hol`.
+
+**0b. Clone YOUR fork (not the upstream)**
 
 ```bash
-git clone https://github.com/evolvconsulting/coco_sdlc_hol.git
+git clone https://github.com/<your-username>/coco_sdlc_hol.git
 cd coco_sdlc_hol
 ```
+
+Replace `<your-username>` with your GitHub username.
+
+> **Why fork?** The upstream repository restricts direct pushes to main. By working in your own fork, you can push your branches freely and submit pull requests back to the upstream repository when ready.
 
 All subsequent steps and tool invocations assume you are working from this directory.
 
