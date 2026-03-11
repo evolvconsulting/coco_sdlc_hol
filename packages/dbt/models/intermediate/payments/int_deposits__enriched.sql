@@ -79,6 +79,7 @@ select
     right(deposits.txn_ctgr, 3) as minor_category_code,
     
     -- Merchant info (ENRICHED from join)
+    merchants.mrch_id as merchant_id,
     merchants.lctn_dba_nm as merchant_dba_name,
     merchants.corp_dba_nm as corporate_name,
     

@@ -257,20 +257,20 @@ BEGIN
             END) AS BIN_ID,
         LPAD(UNIFORM(1000, 9999, RANDOM())::VARCHAR, 4, '0') AS CARD_LST4,
         -- Payment method distribution
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 45 THEN 'Chip'
-            WHEN BETWEEN 46 AND 75 THEN 'Contactless'
-            WHEN BETWEEN 76 AND 88 THEN 'Swipe'
+        CASE 
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 45 THEN 'Chip'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 46 AND 75 THEN 'Contactless'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 76 AND 88 THEN 'Swipe'
             ELSE 'Keyed'
         END AS PYMT_MTHD,
         r.ntwrk AS NTWRK,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 50 THEN 'Chip'
-            WHEN BETWEEN 51 AND 80 THEN 'Contactless'
+        CASE 
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 50 THEN 'Chip'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 51 AND 80 THEN 'Contactless'
             ELSE 'Manual'
         END AS ENTRY_MD,
         r.PLTF_ID,
-        r.PLTF_ID || '-T' || LPAD(UNIFORM(1, r.TRMNL_CT, RANDOM())::VARCHAR, 3, '0') AS TRMNL_ID,
+        r.PLTF_ID || '-T' || LPAD((MOD(ABS(RANDOM()), GREATEST(r.TRMNL_CT, 1)) + 1)::VARCHAR, 3, '0') AS TRMNL_ID,
         CASE WHEN UNIFORM(0,1,RANDOM()) > 0.05 THEN 'Y' ELSE 'N' END AS AVS_RSLT,
         CASE WHEN UNIFORM(0,1,RANDOM()) > 0.02 THEN 'M' ELSE 'N' END AS CVV_RSLT
     FROM raw_txns r
@@ -344,7 +344,7 @@ BEGIN
                 ELSE 0.018
             END AS INTCHG_AM,
         CARD_BRND,
-        MAX(CARD_TYP) AS CARD_TYP,
+        CARD_TYP,
         CASE CARD_BRND
             WHEN 'Visa' THEN 'VS01'
             WHEN 'Mastercard' THEN 'MC01'
@@ -518,23 +518,23 @@ BEGIN
              THEN DATEADD(DAY, UNIFORM(5, 25, RANDOM()) + 10, a.TXN_DT) 
              ELSE NULL END AS FULFMT_DT,
         a.TXN_AM AS RTRVL_AM,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 25 THEN 'Open'
-            WHEN BETWEEN 26 AND 50 THEN 'Fulfilled'
-            WHEN BETWEEN 51 AND 75 THEN 'Closed'
+        CASE 
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 25 THEN 'Open'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 26 AND 50 THEN 'Fulfilled'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 51 AND 75 THEN 'Closed'
             ELSE 'Expired'
         END AS RTRVL_STAT,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 70 THEN 'Complete'
-            WHEN BETWEEN 71 AND 90 THEN 'Partial'
+        CASE 
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 70 THEN 'Complete'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 71 AND 90 THEN 'Partial'
             ELSE 'None'
         END AS FULFMT_STAT,
         'RQ' || LPAD(UNIFORM(1, 15, RANDOM())::VARCHAR, 2, '0') AS RSN_CD,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 30 THEN 'Cardholder Does Not Recognize'
-            WHEN BETWEEN 31 AND 50 THEN 'Cardholder Request for Copy'
-            WHEN BETWEEN 51 AND 70 THEN 'Fraud Investigation'
-            WHEN BETWEEN 71 AND 85 THEN 'Compliance Review'
+        CASE 
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 30 THEN 'Cardholder Does Not Recognize'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 31 AND 50 THEN 'Cardholder Request for Copy'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 51 AND 70 THEN 'Fraud Investigation'
+            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 71 AND 85 THEN 'Compliance Review'
             ELSE 'Issuer Request'
         END AS RSN_DESC,
         a.CARD_BRND,
@@ -582,25 +582,24 @@ BEGIN
         UUID_STRING() AS ADJ_ID,
         m.CLNT_ID,
         m.MRCH_KEY,
-        'ADJ-' || DATE_PART(YEAR, d.adj_date) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS ADJ_REF_NR,
+        'ADJ-' || DATE_PART(YEAR, d.adj_date) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS REF_NR,
         d.adj_date AS ADJ_DT,
         d.adj_date AS EFF_DT,
-        NULL AS ORIG_TXN_DT,
+        NULL AS POST_DT,
         CASE at.type_cd 
-            WHEN 'C' THEN UNIFORM(at.min_am, at.max_am, RANDOM())::NUMBER(15,2)
-            ELSE -UNIFORM(at.min_am, at.max_am, RANDOM())::NUMBER(15,2)
+            WHEN 'C' THEN (at.min_am + (at.max_am - at.min_am) * UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()))::NUMBER(15,2)
+            ELSE -(at.min_am + (at.max_am - at.min_am) * UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()))::NUMBER(15,2)
         END AS ADJ_AM,
-        at.type_cd AS ADJ_TYP_CD,
-        at.adj_cd AS ADJ_CD,
-        at.desc_tx AS ADJ_DESC,
-        at.category AS ADJ_CTGR,
-        at.adj_cd AS FEE_TYP_CD,
-        at.desc_tx AS FEE_DESC,
-        NULL AS RLTD_TXN_ID,
-        NULL AS RLTD_TXN_TYP,
+        at.type_cd AS ADJ_TYP,
+        at.adj_cd AS RSN_CD,
+        at.desc_tx AS RSN_DESC,
+        at.category AS GL_ACCT,
+        at.adj_cd AS DEPT_CD,
+        at.desc_tx AS NOTES_TX,
+        NULL AS BTCH_REF,
         'Processed' AS ADJ_STAT,
         m.PLTF_ID,
-        'SYSTEM' AS CRT_BY
+        'SYSTEM' AS APRVD_BY
     FROM date_range d
     CROSS JOIN merchants m
     CROSS JOIN adj_types at

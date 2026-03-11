@@ -19,29 +19,28 @@ renamed as (
         mrch_key,
         
         -- Reference (legacy names)
-        adj_ref_nr,
+        ref_nr,
         
         -- Dates (legacy names)
         adj_dt,
         eff_dt,
-        orig_txn_dt,
+        post_dt,
         
         -- Amount (legacy names)
         adj_am,
-        adj_typ_cd,
+        adj_typ,
         
         -- Codes (legacy names)
-        adj_cd,
-        adj_desc,
-        adj_ctgr,
+        rsn_cd,
+        rsn_desc,
+        gl_acct,
         
         -- Fee info (legacy names)
-        fee_typ_cd,
-        fee_desc,
+        dept_cd,
+        notes_tx,
         
         -- Related transaction (legacy names)
-        rltd_txn_id,
-        rltd_txn_typ,
+        btch_ref,
         
         -- Status (legacy names)
         adj_stat,
@@ -50,7 +49,7 @@ renamed as (
         pltf_id,
         
         -- Audit fields
-        crt_by,
+        aprvd_by,
         crt_ts,
         upd_ts
         

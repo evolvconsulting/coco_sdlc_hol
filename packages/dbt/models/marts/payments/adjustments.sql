@@ -11,11 +11,14 @@ with enriched as (
 
 select
     -- Surrogate key
-    adjustment_id,
+    adjustment_id as adjustment_key,
 
     -- Dates
     adjustment_date,
     effective_date,
+    
+    -- Merchant
+    merchant_id,
     
     -- Codes
     adjustment_code,

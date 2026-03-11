@@ -11,30 +11,34 @@ with enriched as (
 
 select
     -- Surrogate key
-    retrieval_id,
+    retrieval_id as retrieval_key,
 
     -- Dates
     original_sale_date,
     response_due_date,
     fulfillment_date,
-    
+
+    -- Merchant
+    merchant_id,
+
     -- Status
     retrieval_status,
-    
+
     -- Reason
     reason_code,
     reason_description,
 
     -- Reference
     acquirer_reference_number as reference_number,
-    
+
     -- Merchant info
     merchant_dba_name as merchant_name,
-    
+
     -- Card info
     card_brand,
-    
+
     -- Amount
-    retrieval_amount
+    retrieval_amount,
+    1 as retrievals_count
 
 from enriched
