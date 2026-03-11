@@ -36,9 +36,8 @@ The account must be on **Enterprise tier or higher**. SPCS requires a region tha
 | 7. Intermediate Dynamic Tables | 6 dynamic tables in `COCO_SDLC_HOL.INTERMEDIATE` (1-hour lag) |
 | 8. Marts Dynamic Tables | 7 dynamic tables in `COCO_SDLC_HOL.MARTS` (1-hour lag) |
 | 9. Service User + RSA Secret | `COCO_SDLC_HOL_SERVICE_USER` for SPCS JWT auth; private key stored as a Secret |
-| 10. Image Repository | `COCO_SDLC_HOL.PUBLIC.coco_sdlc_hol_repo` for the Docker image |
-| 11. Semantic View + Cortex Agent | `PAYMENT_ANALYTICS` semantic view; `PAYMENT_ANALYTICS_AGENT` |
-| 12. Final Grants | USAGE on agent + SELECT on all mart/staging/intermediate objects for ATTENDEE_ROLE |
+| 10. Semantic View + Cortex Agent | `PAYMENT_ANALYTICS` semantic view; `PAYMENT_ANALYTICS_AGENT` |
+| 11. Final Grants | USAGE on agent + SELECT on all mart/staging/intermediate objects for ATTENDEE_ROLE |
 
 ### How to run it
 

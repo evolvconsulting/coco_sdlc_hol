@@ -5,6 +5,8 @@
 
 ## What You Will Build
 
+The solution you are working on is a **payments analytics platform** built on Snowflake. It processes transaction data — including payment attempts, retries, and outcomes — and exposes key metrics through a natural language Cortex Agent and a React dashboard, enabling business users to query payment performance without writing SQL.
+
 In this lab, you will add a **retry success rate** metric end-to-end across the full data stack, working through two Jira tickets using Snowflake's AI coding assistant, Cortex Code:
 
 - **Ticket 1 (~30 min):** Add the retry success rate metric to the dbt mart, semantic view, and Cortex Agent -- making it queryable via natural language.
@@ -14,11 +16,60 @@ By the end, you will have experienced AI-assisted development across every layer
 
 ## Prerequisites
 
-- Snowflake account (pre-configured by your instructor)
-- Git installed locally
-- Node.js (v18+) installed locally
+**Complete these before the lab.** The Snowflake environment will be pre-provisioned by your instructor -- you only need the local development tools below.
+
+> Several tools may require admin rights or be blocked on corporate-managed machines. Flag any blockers to your facilitator in advance.
+
+### 1. Snowflake Account
+
+Your instructor will provide a Snowflake account pre-configured for the lab. You need credentials to connect to it.
 
 > **Note:** The lab environment has been pre-configured using `hol_setup.sql`. You do not need to run this script. Your instructor has already provisioned the Snowflake database, schemas, roles, sample data, and all supporting objects.
+
+### 2. Snow CLI
+
+The Snowflake CLI (`snow`) is used to verify your Snowflake connection and run SQL from the terminal.
+
+**Install:** https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation
+
+```bash
+# Verify installation
+snow --version
+```
+
+> **Corporate machine note:** Snow CLI installation may require elevated privileges. If your IT policy blocks the installer, request a pre-approved install or ask your facilitator for a pre-configured machine.
+
+### 3. Cortex Code CLI
+
+The primary tool for this lab -- Snowflake's AI coding assistant.
+
+**Install:** https://docs.snowflake.com/en/user-guide/cortex-code-cli
+
+```bash
+# Verify installation
+cortex --version
+```
+
+> **Corporate machine note:** The Cortex Code CLI may be flagged by endpoint security tools or require Python 3.9+. If you cannot install it, the lab facilitator can provide a shared environment.
+
+### 4. Node.js 20.x
+
+Required for running the frontend application locally.
+
+**Install:** https://nodejs.org/en/download (use the LTS version, 20.x)
+
+```bash
+node --version   # should print v20.x.x
+npm --version
+```
+
+### 5. Git
+
+```bash
+git --version
+```
+
+Fork and clone the lab repository -- instructions are in Section 2, Step 0.
 
 ---
 
