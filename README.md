@@ -106,10 +106,13 @@ npm --version
 git --version
 ```
 
-Clone the lab repository:
+Fork and clone the lab repository:
+
+1. Fork: [https://github.com/evolvconsulting/coco_sdlc_hol](https://github.com/evolvconsulting/coco_sdlc_hol) → click **Fork**
+2. Clone your fork:
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/<your-username>/coco_sdlc_hol.git
 cd coco_sdlc_hol
 ```
 
