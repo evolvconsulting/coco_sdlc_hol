@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 status: verifying
 stopped_at: "Completed 05-01: facilitate skill written, human-approved, plan complete"
-last_updated: "2026-03-10T23:30:37.996Z"
+last_updated: "2026-03-11T00:01:17.851Z"
 last_activity: "2026-03-10 — Completed 05-01: /facilitate Claude Code skill written and human-approved"
 progress:
-  total_phases: 1
+  total_phases: 2
   completed_phases: 1
-  total_plans: 1
+  total_plans: 2
   completed_plans: 1
   percent: 100
 ---
@@ -40,6 +40,8 @@ Progress: [██████████] 100% (10/10 plans complete) — 1/1 P
 - Phase 3 added: Generate reference content for Jira tickets and Confluence documentation
 - Phase 4 added: Instructor reference sheet with prompt by prompt sequence
 - Phase 5 added: Instructor Claude Skill
+- Phase 6 added: Update instructions to include step to fork the repository per Option A Standard open-source model
+- Phase 7 added: Add docker install to prerequisites and optional SPCS deployment step to the end of the lab
 
 ### Decisions
 
