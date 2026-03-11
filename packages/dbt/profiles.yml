@@ -10,10 +10,10 @@ dev:
   outputs:
     dev:
       type: snowflake
-      account: XLB91549
-      user: TRENT.FOLEY@EVOLVCONSULTING.COM
-      authenticator: externalbrowser
-      role: SYSADMIN
+      account: orgname-accountname
+      user: USER
+      authenticator: snowflake
+      role: ATTENDEE_ROLE
       database: COCO_SDLC_HOL
       warehouse: COMPUTE_WH
       schema: STAGING

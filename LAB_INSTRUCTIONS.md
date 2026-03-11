@@ -226,6 +226,18 @@ SNOWFLAKE_ACCOUNT=orgname-accountname
 
 All other values (service user, private key, database, schema, Cortex Agent name) are pre-populated and do not need to change.
 
+**1d. Set your account in the dbt profile**
+
+The repository includes a pre-configured `packages/dbt/profiles.yml` for running dbt models locally. You only need to fill in your account identifier — all other values are pre-set for lab participants.
+
+Open `packages/dbt/profiles.yml` and set `account` to the same account identifier you used in Step 1a (format: `orgname-accountname`):
+
+```yaml
+account: orgname-accountname
+```
+
+All other values (`user`, `authenticator`, `role`, `database`, `warehouse`, `schema`) are pre-populated and do not need to change.
+
 ### Step 2: Confirm Local App Runs
 
 Start the frontend application to verify it can connect to Snowflake and display real data:

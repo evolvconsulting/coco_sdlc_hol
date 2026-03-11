@@ -2549,6 +2549,7 @@ select
     retrieval_id as retrieval_key,
 
     -- Dates
+    retrieval_received_date,
     original_sale_date,
     response_due_date,
     fulfillment_date,
@@ -3113,6 +3114,10 @@ tables:
         description: Unique identifier for retrieval
         expr: RETRIEVAL_KEY
         data_type: VARCHAR
+      - name: RETRIEVAL_RECEIVED_DATE
+        description: Date the retrieval request was received
+        expr: RETRIEVAL_RECEIVED_DATE
+        data_type: DATE
       - name: ORIGINAL_SALE_DATE
         description: Date of original sale
         expr: ORIGINAL_SALE_DATE

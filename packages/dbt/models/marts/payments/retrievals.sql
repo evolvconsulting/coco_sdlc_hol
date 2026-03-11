@@ -14,6 +14,7 @@ select
     retrieval_id as retrieval_key,
 
     -- Dates
+    retrieval_received_date,
     original_sale_date,
     response_due_date,
     fulfillment_date,

@@ -445,6 +445,10 @@ tables:
         description: Unique identifier for retrieval
         expr: RETRIEVAL_KEY
         data_type: VARCHAR
+      - name: RETRIEVAL_RECEIVED_DATE
+        description: Date the retrieval request was received
+        expr: RETRIEVAL_RECEIVED_DATE
+        data_type: DATE
       - name: ORIGINAL_SALE_DATE
         description: Date of original sale
         expr: ORIGINAL_SALE_DATE
