@@ -34,7 +34,7 @@ clean-targets:
 # =============================================================================
 
 models:
-  coco_sdlc_hol:
+  evolv_payment_analytics:
     # Staging layer - Views over raw tables
     staging:
       +materialized: view
