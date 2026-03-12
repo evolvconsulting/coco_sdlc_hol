@@ -1204,9 +1204,9 @@ BEGIN
     -- Generate Adjustments (fees, credits, monthly charges)
     -- ==========================================================================
     INSERT INTO CLX_ADJ (
-        ADJ_ID, CLNT_ID, MRCH_KEY, REF_NR, ADJ_DT, EFF_DT, POST_DT,
-        ADJ_AM, ADJ_TYP, RSN_CD, RSN_DESC, GL_ACCT, DEPT_CD,
-        NOTES_TX, BTCH_REF, ADJ_STAT, PLTF_ID, APRVD_BY
+        ADJ_ID, CLNT_ID, MRCH_KEY, ADJ_REF_NR, ADJ_DT, EFF_DT, ORIG_TXN_DT,
+        ADJ_AM, ADJ_TYP_CD, ADJ_CD, ADJ_DESC, ADJ_CTGR, FEE_TYP_CD,
+        FEE_DESC, RLTD_TXN_ID, ADJ_STAT, PLTF_ID, CRT_BY
     )
     WITH adj_types AS (
         SELECT 'C' AS type_cd, 'Monthly Volume Bonus' AS desc_tx, 'CREDIT' AS category, 'MVB' AS adj_cd, 50.00 AS min_am, 500.00 AS max_am, 0.05 AS frequency UNION ALL
@@ -1234,24 +1234,24 @@ BEGIN
         UUID_STRING() AS ADJ_ID,
         m.CLNT_ID,
         m.MRCH_KEY,
-        'ADJ-' || DATE_PART(YEAR, d.adj_date) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS REF_NR,
+        'ADJ-' || DATE_PART(YEAR, d.adj_date) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS ADJ_REF_NR,
         d.adj_date AS ADJ_DT,
         d.adj_date AS EFF_DT,
-        NULL AS POST_DT,
+        NULL AS ORIG_TXN_DT,
         CASE at.type_cd
             WHEN 'C' THEN (at.min_am + (at.max_am - at.min_am) * UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()))::NUMBER(15,2)
             ELSE -(at.min_am + (at.max_am - at.min_am) * UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()))::NUMBER(15,2)
         END AS ADJ_AM,
-        at.type_cd AS ADJ_TYP,
-        at.adj_cd AS RSN_CD,
-        at.desc_tx AS RSN_DESC,
-        at.category AS GL_ACCT,
-        at.adj_cd AS DEPT_CD,
-        at.desc_tx AS NOTES_TX,
-        NULL AS BTCH_REF,
+        at.type_cd AS ADJ_TYP_CD,
+        at.adj_cd AS ADJ_CD,
+        at.desc_tx AS ADJ_DESC,
+        at.category AS ADJ_CTGR,
+        at.adj_cd AS FEE_TYP_CD,
+        at.desc_tx AS FEE_DESC,
+        NULL AS RLTD_TXN_ID,
         'Processed' AS ADJ_STAT,
         m.PLTF_ID,
-        'SYSTEM' AS APRVD_BY
+        'SYSTEM' AS CRT_BY
     FROM date_range d
     CROSS JOIN merchants m
     CROSS JOIN adj_types at
@@ -1764,28 +1764,29 @@ renamed as (
         mrch_key,
 
         -- Reference (legacy names)
-        ref_nr,
+        adj_ref_nr,
 
         -- Dates (legacy names)
         adj_dt,
         eff_dt,
-        post_dt,
+        orig_txn_dt,
 
         -- Amount (legacy names)
         adj_am,
-        adj_typ,
+        adj_typ_cd,
 
         -- Codes (legacy names)
-        rsn_cd,
-        rsn_desc,
-        gl_acct,
+        adj_cd,
+        adj_desc,
+        adj_ctgr,
 
         -- Fee info (legacy names)
-        dept_cd,
-        notes_tx,
+        fee_typ_cd,
+        fee_desc,
 
         -- Related transaction (legacy names)
-        btch_ref,
+        rltd_txn_id,
+        rltd_txn_typ,
 
         -- Status (legacy names)
         adj_stat,
@@ -1794,7 +1795,7 @@ renamed as (
         pltf_id,
 
         -- Audit fields
-        aprvd_by,
+        crt_by,
         crt_ts,
         upd_ts
 
@@ -2238,35 +2239,35 @@ select
     adjustments.adj_id as adjustment_id,
 
     -- Reference
-    adjustments.ref_nr as adjustment_reference_number,
+    adjustments.adj_ref_nr as adjustment_reference_number,
 
     -- Dates (RENAMED from legacy)
     adjustments.adj_dt as adjustment_date,
     adjustments.eff_dt as effective_date,
-    adjustments.post_dt as original_transaction_date,
+    adjustments.orig_txn_dt as original_transaction_date,
 
     -- Amount (RENAMED from legacy)
     adjustments.adj_am as adjustment_amount,
 
     -- Type (RENAMED + DERIVED from legacy)
-    adjustments.adj_typ as adjustment_type_code,
+    adjustments.adj_typ_cd as adjustment_type_code,
     case
-        when adjustments.adj_typ = 'C' then 'Credit'
-        when adjustments.adj_typ = 'D' then 'Debit'
+        when adjustments.adj_typ_cd = 'C' then 'Credit'
+        when adjustments.adj_typ_cd = 'D' then 'Debit'
         else 'Unknown'
     end as adjustment_type,
 
     -- Codes (RENAMED from legacy)
-    adjustments.rsn_cd as adjustment_code,
-    adjustments.rsn_desc as adjustment_description,
-    adjustments.gl_acct as adjustment_category,
+    adjustments.adj_cd as adjustment_code,
+    adjustments.adj_desc as adjustment_description,
+    adjustments.adj_ctgr as adjustment_category,
 
     -- Fee info (RENAMED from legacy)
-    adjustments.dept_cd as fee_type_code,
-    adjustments.notes_tx as fee_description,
+    adjustments.fee_typ_cd as fee_type_code,
+    adjustments.fee_desc as fee_description,
 
     -- Related transaction (RENAMED from legacy)
-    adjustments.btch_ref as related_transaction_id,
+    adjustments.rltd_txn_id as related_transaction_id,
 
     -- Status (RENAMED from legacy)
     adjustments.adj_stat as adjustment_status,
@@ -2281,7 +2282,7 @@ select
     processors.pltf_nm as processor_name,
 
     -- Audit
-    adjustments.aprvd_by as created_by
+    adjustments.crt_by as created_by
 
 from adjustments
 left join merchants

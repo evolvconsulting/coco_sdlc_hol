@@ -154,5 +154,5 @@ models:
         tests: [unique, not_null]
       - name: adj_am
         description: "Adjustment amount (legacy: ADJ_AM)"
-      - name: adj_typ
-        description: "Adjustment type: C=Credit, D=Debit (legacy: ADJ_TYP)"
+      - name: adj_typ_cd
+        description: "Adjustment type code: C=Credit, D=Debit (legacy: ADJ_TYP_CD)"
