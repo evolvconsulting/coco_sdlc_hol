@@ -56,7 +56,7 @@ Install these tools before the lab. Full install instructions and verification s
 - **Node.js 20.x** -- [nodejs.org/en/download](https://nodejs.org/en/download)
 - **Git**
 - **uv** (Python package manager) -- [docs.astral.sh/uv/getting-started/installation](https://docs.astral.sh/uv/getting-started/installation)
-- **dbt** (dbt-snowflake) -- `uv tool install "dbt-snowflake>=1.9.0"` (after installing uv)
+- **dbt** (dbt-snowflake) -- `uv tool install "dbt-core>=1.9.0" --with dbt-snowflake` (after installing uv)
 
 ---
 

@@ -107,7 +107,7 @@ uv --version
 Cortex Code uses the local `dbt` CLI to apply model changes to Snowflake during the lab. Install the Snowflake adapter (which includes dbt-core):
 
 ```bash
-uv tool install "dbt-snowflake>=1.9.0"
+uv tool install "dbt-core>=1.9.0" --with dbt-snowflake
 ```
 
 **Verify:**
@@ -116,7 +116,7 @@ uv tool install "dbt-snowflake>=1.9.0"
 dbt --version
 ```
 
-> **pip fallback:** If you used the pip path above, run `pip install "dbt-snowflake>=1.9.0"` instead.
+> **pip fallback:** If you used the pip path above, run `pip install "dbt-core>=1.9.0" dbt-snowflake` instead.
 
 ---
 

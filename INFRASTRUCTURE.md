@@ -136,8 +136,8 @@ The dbt models are already compiled into `hol_setup.sql` -- you do not need to r
 
 ```bash
 # Install dbt-snowflake first (if not already installed)
-uv tool install "dbt-snowflake>=1.9.0"
-# pip fallback: pip install "dbt-snowflake>=1.9.0"
+uv tool install "dbt-core>=1.9.0" --with dbt-snowflake
+# pip fallback: pip install "dbt-core>=1.9.0" dbt-snowflake
 
 cd packages/dbt
 dbt deps
