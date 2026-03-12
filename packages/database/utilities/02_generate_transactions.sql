@@ -554,7 +554,7 @@ BEGIN
     INSERT INTO CLX_ADJ (
         ADJ_ID, CLNT_ID, MRCH_KEY, ADJ_REF_NR, ADJ_DT, EFF_DT, ORIG_TXN_DT,
         ADJ_AM, ADJ_TYP_CD, ADJ_CD, ADJ_DESC, ADJ_CTGR, FEE_TYP_CD,
-        FEE_DESC, RLTD_TXN_ID, RLTD_TXN_TYP, ADJ_STAT, PLTF_ID, CRT_BY
+        FEE_DESC, RLTD_TXN_ID, ADJ_STAT, PLTF_ID, CRT_BY
     )
     WITH adj_types AS (
         SELECT 'C' AS type_cd, 'Monthly Volume Bonus' AS desc_tx, 'CREDIT' AS category, 'MVB' AS adj_cd, 50.00 AS min_am, 500.00 AS max_am, 0.05 AS frequency UNION ALL
@@ -582,24 +582,24 @@ BEGIN
         UUID_STRING() AS ADJ_ID,
         m.CLNT_ID,
         m.MRCH_KEY,
-        'ADJ-' || DATE_PART(YEAR, d.adj_date) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS REF_NR,
+        'ADJ-' || DATE_PART(YEAR, d.adj_date) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS ADJ_REF_NR,
         d.adj_date AS ADJ_DT,
         d.adj_date AS EFF_DT,
-        NULL AS POST_DT,
-        CASE at.type_cd 
+        NULL AS ORIG_TXN_DT,
+        CASE at.type_cd
             WHEN 'C' THEN (at.min_am + (at.max_am - at.min_am) * UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()))::NUMBER(15,2)
             ELSE -(at.min_am + (at.max_am - at.min_am) * UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()))::NUMBER(15,2)
         END AS ADJ_AM,
-        at.type_cd AS ADJ_TYP,
-        at.adj_cd AS RSN_CD,
-        at.desc_tx AS RSN_DESC,
-        at.category AS GL_ACCT,
-        at.adj_cd AS DEPT_CD,
-        at.desc_tx AS NOTES_TX,
-        NULL AS BTCH_REF,
+        at.type_cd AS ADJ_TYP_CD,
+        at.adj_cd AS ADJ_CD,
+        at.desc_tx AS ADJ_DESC,
+        at.category AS ADJ_CTGR,
+        at.adj_cd AS FEE_TYP_CD,
+        at.desc_tx AS FEE_DESC,
+        NULL AS RLTD_TXN_ID,
         'Processed' AS ADJ_STAT,
         m.PLTF_ID,
-        'SYSTEM' AS APRVD_BY
+        'SYSTEM' AS CRT_BY
     FROM date_range d
     CROSS JOIN merchants m
     CROSS JOIN adj_types at
