@@ -12,7 +12,7 @@ USE ROLE ACCOUNTADMIN;
 -- capacity outside the account's home region. Required for Snowflake Cortex
 -- inference (e.g. COMPLETE, CLASSIFY_TEXT) to work; out of scope for the lab
 -- but must be enabled before lab exercises that use Cortex AI features.
-ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'ANY';
+ALTER ACCOUNT SET CORTEX_ENABLED_CROSS_REGION = 'AWS_US';
 
 CREATE ROLE IF NOT EXISTS ATTENDEE_ROLE;
 GRANT ROLE ATTENDEE_ROLE TO ROLE SYSADMIN;
