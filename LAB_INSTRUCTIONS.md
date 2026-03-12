@@ -75,13 +75,15 @@ Fork and clone the lab repository -- instructions are in Section 2, Step 0.
 
 uv manages Python and packages without requiring a separate Python install or virtual environment setup. It is used to install dbt in the next step.
 
-**Install:**
+**Install (macOS / Linux):**
 
 ```bash
-# macOS / Linux
 curl -LsSf https://astral.sh/uv/install.sh | sh
+```
 
-# Windows (PowerShell)
+**Install (Windows PowerShell):**
+
+```powershell
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
