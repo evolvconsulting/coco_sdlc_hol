@@ -349,7 +349,9 @@ cortex
 
 Once Cortex Code starts, ask it to pull the ticket details:
 
-> Show me Jira ticket EPA-2. What does it ask me to implement?
+```
+Show me Jira ticket EPA-2. What does it ask me to implement?
+```
 
 > **Note:** EPA-2 is a placeholder -- your instructor will provide the actual Jira ticket ID (e.g., COCO-42).
 
