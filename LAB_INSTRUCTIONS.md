@@ -87,8 +87,9 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
 ```
 
+**Verify:**
+
 ```bash
-# Verify installation
 uv --version
 ```
 
@@ -100,8 +101,11 @@ Cortex Code uses the local `dbt` CLI to apply model changes to Snowflake during 
 
 ```bash
 uv tool install "dbt-snowflake>=1.9.0"
+```
 
-# Verify installation
+**Verify:**
+
+```bash
 dbt --version
 ```
 
