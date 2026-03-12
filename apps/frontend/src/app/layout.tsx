@@ -13,7 +13,11 @@ export const metadata: Metadata = {
   title: "evolv Payment Analytics",
   description: "Self-service analytics dashboard for payment processing insights",
   icons: {
-    icon: "/favicon.ico",
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    apple: "/icon-192.png",
   },
 };
 
