@@ -32,8 +32,9 @@ The Snowflake CLI (`snow`) is used to verify your Snowflake connection and run S
 
 **Install:** https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation
 
+**Verify:**
+
 ```bash
-# Verify installation
 snow --version
 ```
 
@@ -45,8 +46,9 @@ The primary tool for this lab -- Snowflake's AI coding assistant.
 
 **Install:** https://docs.snowflake.com/en/user-guide/cortex-code-cli
 
+**Verify:**
+
 ```bash
-# Verify installation
 cortex --version
 ```
 
@@ -58,8 +60,13 @@ Required for running the frontend application locally.
 
 **Install:** https://nodejs.org/en/download (use the LTS version, 20.x)
 
+**Verify** (should print v20.x.x):
+
 ```bash
-node --version   # should print v20.x.x
+node --version
+```
+
+```bash
 npm --version
 ```
 
