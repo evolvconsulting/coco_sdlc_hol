@@ -29,9 +29,9 @@ RETURNS NUMBER(15,2)
 LANGUAGE SQL
 AS
 $$
-    CASE 
+    CASE
         -- Grocery: Average $45, range $5-$350, higher on weekends and evenings
-        WHEN MCC = '5411' THEN 
+        WHEN MCC = '5411' THEN
             CASE WHEN HOUR_OF_DAY BETWEEN 17 AND 20 THEN UNIFORM(25.00, 180.00, RANDOM())::NUMBER(15,2)
                  ELSE UNIFORM(8.00, 120.00, RANDOM())::NUMBER(15,2) END
         -- Gas stations: Average $45, range $15-$85
@@ -69,7 +69,7 @@ RETURNS NUMBER(8,6)
 LANGUAGE SQL
 AS
 $$
-    CASE 
+    CASE
         WHEN MCC = '5411' THEN 0.0035    -- Grocery: 0.35%
         WHEN MCC IN ('5541', '5542') THEN 0.0025  -- Gas: 0.25%
         WHEN MCC = '5812' THEN 0.0012    -- Restaurants: 0.12%
@@ -111,7 +111,7 @@ DECLARE
 BEGIN
     -- Calculate number of days
     days_count := DATEDIFF(DAY, START_DATE, END_DATE) + 1;
-    
+
     -- Clear existing data
     TRUNCATE TABLE IF EXISTS CLX_AUTH;
     TRUNCATE TABLE IF EXISTS CLX_SETTLE;
@@ -119,7 +119,7 @@ BEGIN
     TRUNCATE TABLE IF EXISTS CLX_CBK;
     TRUNCATE TABLE IF EXISTS CLX_RTRVL;
     TRUNCATE TABLE IF EXISTS CLX_ADJ;
-    
+
     -- ==========================================================================
     -- Generate Authorization Transactions with realistic patterns
     -- ==========================================================================
@@ -129,7 +129,7 @@ BEGIN
         ENTRY_MD, PLTF_ID, TRMNL_ID, AVS_RSLT, CVV_RSLT
     )
     WITH date_range AS (
-        SELECT 
+        SELECT
             DATEADD(DAY, SEQ4(), :START_DATE) AS txn_date,
             -- Day of week adjustment (more transactions on weekends for retail)
             CASE DAYOFWEEK(DATEADD(DAY, SEQ4(), :START_DATE))
@@ -151,10 +151,10 @@ BEGIN
     ),
     txn_slots AS (
         -- Generate time slots with realistic hourly distribution
-        SELECT 
+        SELECT
             SEQ4() AS slot_id,
             -- Peak hours: lunch (11-13) and evening (17-20)
-            CASE 
+            CASE
                 WHEN SEQ4() % 24 BETWEEN 11 AND 13 THEN 1.8  -- Lunch rush
                 WHEN SEQ4() % 24 BETWEEN 17 AND 20 THEN 2.0  -- Evening rush
                 WHEN SEQ4() % 24 BETWEEN 9 AND 11 THEN 1.3   -- Morning shopping
@@ -167,10 +167,10 @@ BEGIN
         FROM TABLE(GENERATOR(ROWCOUNT => :BASE_TXNS_PER_DAY * 2))
     ),
     merchants AS (
-        SELECT 
+        SELECT
             MRCH_KEY, CLNT_ID, MCC, PLTF_ID, TRMNL_CT,
             -- Transaction frequency weighting by store type
-            CASE 
+            CASE
                 WHEN MCC = '5411' THEN 3.0   -- Grocery: highest frequency
                 WHEN MCC = '5814' THEN 2.5   -- Fast food: very high frequency
                 WHEN MCC IN ('5541', '5542') THEN 2.0  -- Gas: high frequency
@@ -201,6 +201,7 @@ BEGIN
         WHERE DCLN_RSN_ID != 'D042'  -- Exclude approved reference
     ),
     -- Generate raw transactions with all combinations
+    -- Pre-evaluate random values for correlated decisions and correct distributions
     raw_txns AS (
         SELECT
             d.txn_date,
@@ -217,7 +218,18 @@ BEGIN
             cb.brand,
             cb.ntwrk,
             cb.weight AS brand_weight,
-            RANDOM() AS rand_val
+            -- Pre-evaluate randoms for correlated approval/decline decisions
+            UNIFORM(0, 1, RANDOM()) AS approval_rand,
+            (:BASE_APPROVAL_RATE
+                - CASE cb.brand WHEN 'American Express' THEN 0.02 ELSE 0 END
+                - CASE WHEN m.MCC = '5732' THEN 0.03 ELSE 0 END
+                - CASE WHEN m.MCC = '7011' THEN 0.02 ELSE 0 END
+            ) AS adjusted_approval_rate,
+            -- Pre-evaluate randoms for correct probability distributions
+            UNIFORM(1, 100, RANDOM()) AS pymt_rand,
+            UNIFORM(1, 100, RANDOM()) AS entry_rand,
+            UNIFORM(1, 100, RANDOM()) AS avs_rand,
+            UNIFORM(1, 100, RANDOM()) AS cvv_rand
         FROM date_range d
         CROSS JOIN txn_slots t
         CROSS JOIN merchants m
@@ -232,57 +244,65 @@ BEGIN
         TIMEADD(MINUTE, UNIFORM(0, 59, RANDOM()), TIMEADD(HOUR, r.hour_of_day, '00:00:00'::TIME)) AS TXN_TM,
         TIMESTAMPADD(MINUTE, UNIFORM(0, 59, RANDOM()), TIMESTAMPADD(HOUR, r.hour_of_day, r.txn_date::TIMESTAMP_NTZ)) AS TXN_TS,
         GENERATE_REALISTIC_AMOUNT(r.MCC, r.hour_of_day) AS TXN_AM,
-        -- Approval rate varies by card brand and MCC
-        CASE 
-            WHEN UNIFORM(0, 1, RANDOM()) < (
-                :BASE_APPROVAL_RATE 
-                - CASE r.brand WHEN 'American Express' THEN 0.02 ELSE 0 END
-                - CASE WHEN r.MCC = '5732' THEN 0.03 ELSE 0 END
-                - CASE WHEN r.MCC = '7011' THEN 0.02 ELSE 0 END
-            ) THEN 1 
-            ELSE 2 
-        END AS APRVL_CD,
-        CASE WHEN UNIFORM(0, 1, RANDOM()) >= :BASE_APPROVAL_RATE 
-             THEN (SELECT DCLN_RSN_ID FROM decline_reasons WHERE SFT_DCLN_FLG = (UNIFORM(0,1,RANDOM()) > 0.6) ORDER BY RANDOM() LIMIT 1) 
+        -- Approval code (correlated with decline reason via approval_rand)
+        CASE WHEN r.approval_rand < r.adjusted_approval_rate THEN 1 ELSE 2 END AS APRVL_CD,
+        -- Decline reason only populated for declined transactions
+        CASE WHEN r.approval_rand >= r.adjusted_approval_rate
+             THEN (SELECT DCLN_RSN_ID FROM decline_reasons WHERE SFT_DCLN_FLG = (UNIFORM(0,1,RANDOM()) > 0.6) ORDER BY RANDOM() LIMIT 1)
              ELSE NULL END AS DCLN_RSN_ID,
-        CASE WHEN UNIFORM(0, 1, RANDOM()) >= :BASE_APPROVAL_RATE 
-             THEN (SELECT DCLN_RSN_DESC FROM decline_reasons WHERE SFT_DCLN_FLG = (UNIFORM(0,1,RANDOM()) > 0.6) ORDER BY RANDOM() LIMIT 1) 
+        CASE WHEN r.approval_rand >= r.adjusted_approval_rate
+             THEN (SELECT DCLN_RSN_DESC FROM decline_reasons WHERE SFT_DCLN_FLG = (UNIFORM(0,1,RANDOM()) > 0.6) ORDER BY RANDOM() LIMIT 1)
              ELSE NULL END AS DCLN_RSN_TX,
-        COALESCE(b.BIN_ID, 
-            CASE r.brand 
-                WHEN 'Visa' THEN '411111' 
+        COALESCE(b.BIN_ID,
+            CASE r.brand
+                WHEN 'Visa' THEN '411111'
                 WHEN 'Mastercard' THEN '520000'
                 WHEN 'American Express' THEN '370000'
                 ELSE '601100'
             END) AS BIN_ID,
         LPAD(UNIFORM(1000, 9999, RANDOM())::VARCHAR, 4, '0') AS CARD_LST4,
-        -- Payment method distribution
-        CASE 
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 45 THEN 'Chip'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 46 AND 75 THEN 'Contactless'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 76 AND 88 THEN 'Swipe'
+        -- Payment method distribution (single random, correct probabilities)
+        CASE
+            WHEN r.pymt_rand <= 45 THEN 'Chip'
+            WHEN r.pymt_rand <= 75 THEN 'Contactless'
+            WHEN r.pymt_rand <= 88 THEN 'Swipe'
             ELSE 'Keyed'
         END AS PYMT_MTHD,
         r.ntwrk AS NTWRK,
-        CASE 
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 50 THEN 'Chip'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 51 AND 80 THEN 'Contactless'
+        -- Entry mode distribution (single random, correct probabilities)
+        CASE
+            WHEN r.entry_rand <= 50 THEN 'Chip'
+            WHEN r.entry_rand <= 80 THEN 'Contactless'
             ELSE 'Manual'
         END AS ENTRY_MD,
         r.PLTF_ID,
         r.PLTF_ID || '-T' || LPAD((MOD(ABS(RANDOM()), GREATEST(r.TRMNL_CT, 1)) + 1)::VARCHAR, 3, '0') AS TRMNL_ID,
-        CASE WHEN UNIFORM(0,1,RANDOM()) > 0.05 THEN 'Y' ELSE 'N' END AS AVS_RSLT,
-        CASE WHEN UNIFORM(0,1,RANDOM()) > 0.02 THEN 'M' ELSE 'N' END AS CVV_RSLT
+        -- Realistic AVS response codes (Y=full match, A=address only, Z=zip only, N=no match, U=unavailable, S=not supported)
+        CASE
+            WHEN r.avs_rand <= 70 THEN 'Y'
+            WHEN r.avs_rand <= 82 THEN 'A'
+            WHEN r.avs_rand <= 90 THEN 'Z'
+            WHEN r.avs_rand <= 95 THEN 'N'
+            WHEN r.avs_rand <= 98 THEN 'U'
+            ELSE 'S'
+        END AS AVS_RSLT,
+        -- Realistic CVV response codes (M=match, N=no match, P=not processed, U=issuer unable)
+        CASE
+            WHEN r.cvv_rand <= 88 THEN 'M'
+            WHEN r.cvv_rand <= 93 THEN 'N'
+            WHEN r.cvv_rand <= 97 THEN 'P'
+            ELSE 'U'
+        END AS CVV_RSLT
     FROM raw_txns r
     LEFT JOIN bins b ON b.CARD_BRND = r.brand
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY r.txn_date, r.MRCH_KEY, r.hour_of_day ORDER BY RANDOM()) <= 
+    QUALIFY ROW_NUMBER() OVER (PARTITION BY r.txn_date, r.MRCH_KEY, r.hour_of_day ORDER BY RANDOM()) <=
         CEIL(r.store_frequency * r.day_multiplier * r.month_multiplier);
-    
+
     SELECT COUNT(*) INTO :total_auth FROM CLX_AUTH;
-    
+
     -- ==========================================================================
     -- Generate Settlement Data (based on approved authorizations)
-    -- Settlement happens T+1 with batching by merchant
+    -- Settlement happens T+1 with batching by merchant + date + card brand
     -- ==========================================================================
     INSERT INTO CLX_SETTLE (
         SETTLE_ID, CLNT_ID, MRCH_KEY, RCRD_DT, BTCH_DT, PRCS_DT,
@@ -291,7 +311,7 @@ BEGIN
         BTCH_REF, PLTF_ID, NTWRK
     )
     WITH approved_auths AS (
-        SELECT 
+        SELECT
             a.CLNT_ID,
             a.MRCH_KEY,
             a.TXN_DT,
@@ -299,11 +319,27 @@ BEGIN
             a.NTWRK,
             b.CARD_BRND,
             b.CARD_TYP,
-            m.MCC
+            m.MCC,
+            m.PLTF_ID
         FROM CLX_AUTH a
         JOIN GLB_BIN b ON a.BIN_ID = b.BIN_ID
         JOIN CLX_MRCH_MSTR m ON a.MRCH_KEY = m.MRCH_KEY
         WHERE a.APRVL_CD = 1
+    ),
+    settle_agg AS (
+        SELECT
+            CLNT_ID,
+            MRCH_KEY,
+            TXN_DT,
+            CARD_BRND,
+            MAX(MCC) AS MCC,
+            MAX(CARD_TYP) AS CARD_TYP,
+            MAX(NTWRK) AS NTWRK,
+            MAX(PLTF_ID) AS PLTF_ID,
+            COUNT(*) AS SALES_CT,
+            SUM(TXN_AM) AS SALES_AM
+        FROM approved_auths
+        GROUP BY TXN_DT, CARD_BRND, MRCH_KEY, CLNT_ID
     )
     SELECT
         UUID_STRING() AS SETTLE_ID,
@@ -312,8 +348,8 @@ BEGIN
         DATEADD(DAY, 1, TXN_DT) AS RCRD_DT,
         TXN_DT AS BTCH_DT,
         DATEADD(DAY, 1, TXN_DT) AS PRCS_DT,
-        COUNT(*) AS SALES_CT,
-        FLOOR(COUNT(*) * 
+        SALES_CT,
+        FLOOR(SALES_CT *
             CASE MCC
                 WHEN '5732' THEN 0.045
                 WHEN '5311' THEN 0.035
@@ -321,24 +357,31 @@ BEGIN
                 ELSE 0.015
             END
         )::NUMBER AS RFND_CT,
-        COUNT(*) - FLOOR(COUNT(*) * 0.02)::NUMBER AS NET_CT,
-        SUM(TXN_AM) AS SALES_AM,
-        SUM(TXN_AM) * 
+        SALES_CT - FLOOR(SALES_CT *
+            CASE MCC
+                WHEN '5732' THEN 0.045
+                WHEN '5311' THEN 0.035
+                WHEN '7011' THEN 0.025
+                ELSE 0.015
+            END
+        )::NUMBER AS NET_CT,
+        SALES_AM,
+        SALES_AM *
             CASE MCC
                 WHEN '5732' THEN 0.045
                 WHEN '5311' THEN 0.035
                 WHEN '7011' THEN 0.025
                 ELSE 0.015
             END AS RFND_AM,
-        SUM(TXN_AM) * 0.98 AS PRCS_NET_AM,
-        SUM(TXN_AM) * 
+        SALES_AM * 0.98 AS PRCS_NET_AM,
+        SALES_AM *
             CASE CARD_BRND
                 WHEN 'American Express' THEN 0.029
                 WHEN 'Discover' THEN 0.024
                 ELSE 0.022
             END AS DSCN_AM,
-        SUM(TXN_AM) * 
-            CASE 
+        SALES_AM *
+            CASE
                 WHEN CARD_BRND = 'American Express' THEN 0.021
                 WHEN CARD_TYP = 'Debit' THEN 0.0073
                 ELSE 0.018
@@ -358,13 +401,12 @@ BEGIN
             ELSE 'Discover Standard'
         END AS PLAN_DESC,
         'BTH-' || TO_CHAR(TXN_DT, 'YYYYMMDD') || '-' || MRCH_KEY AS BTCH_REF,
-        MAX(NTWRK) AS PLTF_ID,
+        PLTF_ID,
         NTWRK
-    FROM approved_auths
-    GROUP BY TXN_DT, CARD_BRND, MRCH_KEY, CLNT_ID, MCC, NTWRK;
-    
+    FROM settle_agg;
+
     SELECT COUNT(*) INTO :total_settle FROM CLX_SETTLE;
-    
+
     -- ==========================================================================
     -- Generate Funding Data (based on settlements)
     -- Funding happens T+2 with aggregation by merchant
@@ -377,34 +419,42 @@ BEGIN
     )
     SELECT
         UUID_STRING() AS FUND_ID,
-        CLNT_ID,
-        MRCH_KEY,
-        DATEADD(DAY, 1, RCRD_DT) AS FUNDED_DT,
-        RCRD_DT AS SETTLE_DT,
-        DATEADD(DAY, 1, RCRD_DT) AS EXPCT_DT,
-        SUM(PRCS_NET_AM) - SUM(DSCN_AM) AS DPST_AM,
-        SUM(PRCS_NET_AM) AS NET_SALES_AM,
-        SUM(DSCN_AM) AS FEES_AM,
-        SUM(PRCS_NET_AM) * 0.003 AS CBK_AM,
+        s.CLNT_ID,
+        s.MRCH_KEY,
+        DATEADD(DAY, 1, s.RCRD_DT) AS FUNDED_DT,
+        s.RCRD_DT AS SETTLE_DT,
+        DATEADD(DAY, 1, s.RCRD_DT) AS EXPCT_DT,
+        SUM(s.PRCS_NET_AM) - SUM(s.DSCN_AM) AS DPST_AM,
+        SUM(s.PRCS_NET_AM) AS NET_SALES_AM,
+        SUM(s.DSCN_AM) AS FEES_AM,
+        SUM(s.PRCS_NET_AM) * 0.003 AS CBK_AM,
         0 AS ADJ_AM,
-        SUM(PRCS_NET_AM) * 0.001 AS RSRV_AM,
-        SUM(SALES_CT) AS ITEM_CT,
-        SUM(SALES_CT) AS SALES_CT,
-        SUM(RFND_CT) AS RFND_CT,
+        SUM(s.PRCS_NET_AM) * 0.001 AS RSRV_AM,
+        SUM(s.SALES_CT) AS ITEM_CT,
+        SUM(s.SALES_CT) AS SALES_CT,
+        SUM(s.RFND_CT) AS RFND_CT,
         CASE WHEN UNIFORM(0,1,RANDOM()) > 0.02 THEN 'Completed' ELSE 'Pending' END AS PYMT_STAT,
         CASE WHEN UNIFORM(0,1,RANDOM()) > 0.15 THEN 'ACH' ELSE 'Wire' END AS PYMT_MTHD,
         LPAD(UNIFORM(1000, 9999, RANDOM())::VARCHAR, 4, '0') AS DDA_LST4,
-        'Chase Bank NA' AS BANK_NM,
+        -- Diversified bank names by platform
+        CASE m.PLTF_ID
+            WHEN 'OMAHA' THEN 'Chase Bank NA'
+            WHEN 'NORTH' THEN 'Wells Fargo Bank'
+            WHEN 'CARDNET' THEN 'Bank of America NA'
+            WHEN 'BAMS' THEN 'US Bank NA'
+            ELSE 'PNC Bank NA'
+        END AS BANK_NM,
         'Settlement' AS TXN_CTGR,
         'Net Funding' AS FUND_TYP,
-        'FND-' || TO_CHAR(RCRD_DT, 'YYYYMMDD') || '-' || MRCH_KEY AS BTCH_REF,
+        'FND-' || TO_CHAR(s.RCRD_DT, 'YYYYMMDD') || '-' || s.MRCH_KEY AS BTCH_REF,
         'ACH' || LPAD(UNIFORM(100000000, 999999999, RANDOM())::VARCHAR, 15, '0') AS ACH_TRC,
-        MAX(PLTF_ID) AS PLTF_ID
-    FROM CLX_SETTLE
-    GROUP BY RCRD_DT, MRCH_KEY, CLNT_ID;
-    
+        m.PLTF_ID
+    FROM CLX_SETTLE s
+    JOIN CLX_MRCH_MSTR m ON s.MRCH_KEY = m.MRCH_KEY
+    GROUP BY s.RCRD_DT, s.MRCH_KEY, s.CLNT_ID, m.PLTF_ID;
+
     SELECT COUNT(*) INTO :total_fund FROM CLX_FUND;
-    
+
     -- ==========================================================================
     -- Generate Chargeback Data with industry-realistic rates
     -- ==========================================================================
@@ -419,7 +469,7 @@ BEGIN
         FROM CBK_RSN_CD
     ),
     auth_with_brand AS (
-        SELECT 
+        SELECT
             a.*,
             b.CARD_BRND,
             m.LCTN_DBA_NM,
@@ -428,64 +478,79 @@ BEGIN
         JOIN GLB_BIN b ON a.BIN_ID = b.BIN_ID
         JOIN CLX_MRCH_MSTR m ON a.MRCH_KEY = m.MRCH_KEY
         WHERE a.APRVL_CD = 1
+    ),
+    -- Pre-evaluate random values for correct probability distributions
+    cbk_candidates AS (
+        SELECT
+            a.*,
+            cr.CBK_RSN_ID,
+            cr.RSN_DESC,
+            cr.RSN_CTGR,
+            UNIFORM(1, 100, RANDOM()) AS stat_rand,
+            UNIFORM(1, 100, RANDOM()) AS winloss_rand,
+            UNIFORM(1, 100, RANDOM()) AS cycle_rand
+        FROM auth_with_brand a
+        CROSS JOIN cbk_reasons cr
+        WHERE cr.NTWRK = CASE a.CARD_BRND
+                WHEN 'Visa' THEN 'Visa'
+                WHEN 'Mastercard' THEN 'Mastercard'
+                WHEN 'American Express' THEN 'Amex'
+                ELSE 'Discover' END
+          AND UNIFORM(0, 1, RANDOM()) < GET_CHARGEBACK_RATE(a.MCC)
+        QUALIFY ROW_NUMBER() OVER (PARTITION BY a.AUTH_ID ORDER BY RANDOM()) = 1
     )
     SELECT
         UUID_STRING() AS CBK_ID,
-        a.CLNT_ID,
-        a.MRCH_KEY,
-        'CBK-' || DATE_PART(YEAR, a.TXN_DT) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS CASE_NR,
+        c.CLNT_ID,
+        c.MRCH_KEY,
+        'CBK-' || DATE_PART(YEAR, c.TXN_DT) || '-' || LPAD(ROW_NUMBER() OVER (ORDER BY RANDOM())::VARCHAR, 8, '0') AS CASE_NR,
         'ARN' || LPAD(UNIFORM(100000000000, 999999999999, RANDOM())::VARCHAR, 15, '0') AS ARN,
-        DATEADD(DAY, UNIFORM(15, 45, RANDOM()), a.TXN_DT) AS DSPUT_RCVD_DT,
-        a.TXN_DT AS ORIG_TXN_DT,
-        DATEADD(DAY, UNIFORM(15, 45, RANDOM()) + 30, a.TXN_DT) AS DUE_DT,
-        CASE WHEN UNIFORM(0,1,RANDOM()) > 0.3 
-             THEN DATEADD(DAY, UNIFORM(20, 60, RANDOM()), a.TXN_DT) 
+        DATEADD(DAY, UNIFORM(15, 45, RANDOM()), c.TXN_DT) AS DSPUT_RCVD_DT,
+        c.TXN_DT AS ORIG_TXN_DT,
+        DATEADD(DAY, UNIFORM(15, 45, RANDOM()) + 30, c.TXN_DT) AS DUE_DT,
+        CASE WHEN UNIFORM(0,1,RANDOM()) > 0.3
+             THEN DATEADD(DAY, UNIFORM(20, 60, RANDOM()), c.TXN_DT)
              ELSE NULL END AS RSLVD_DT,
-        a.TXN_AM AS DSPUT_AM,
-        a.TXN_AM AS TXN_AM,
-        CASE WHEN UNIFORM(0,1,RANDOM()) > 0.6 THEN a.TXN_AM ELSE 0 END AS REPR_AM,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 15 THEN 'Open'
-            WHEN BETWEEN 16 AND 35 THEN 'Pending'
-            WHEN BETWEEN 36 AND 60 THEN 'Won'
-            WHEN BETWEEN 61 AND 85 THEN 'Lost'
+        c.TXN_AM AS DSPUT_AM,
+        c.TXN_AM AS TXN_AM,
+        CASE WHEN UNIFORM(0,1,RANDOM()) > 0.6 THEN c.TXN_AM ELSE 0 END AS REPR_AM,
+        -- Chargeback status (single random, correct distribution)
+        CASE
+            WHEN c.stat_rand BETWEEN 1 AND 15 THEN 'Open'
+            WHEN c.stat_rand BETWEEN 16 AND 35 THEN 'Pending'
+            WHEN c.stat_rand BETWEEN 36 AND 60 THEN 'Won'
+            WHEN c.stat_rand BETWEEN 61 AND 85 THEN 'Lost'
             ELSE 'Closed'
         END AS CBK_STAT,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 35 THEN 'Won'
-            WHEN BETWEEN 36 AND 85 THEN 'Lost'
+        -- Win/loss outcome (single random, correct distribution)
+        CASE
+            WHEN c.winloss_rand BETWEEN 1 AND 35 THEN 'Won'
+            WHEN c.winloss_rand BETWEEN 36 AND 85 THEN 'Lost'
             ELSE NULL
         END AS CBK_WIN_LOSS,
-        CASE UNIFORM(1, 100, RANDOM())
-            WHEN BETWEEN 1 AND 75 THEN '1st Chargeback'
-            WHEN BETWEEN 76 AND 90 THEN '2nd Chargeback'
-            WHEN BETWEEN 91 AND 97 THEN 'Pre-Arbitration'
+        -- Chargeback cycle (single random, correct distribution)
+        CASE
+            WHEN c.cycle_rand BETWEEN 1 AND 75 THEN '1st Chargeback'
+            WHEN c.cycle_rand BETWEEN 76 AND 90 THEN '2nd Chargeback'
+            WHEN c.cycle_rand BETWEEN 91 AND 97 THEN 'Pre-Arbitration'
             ELSE 'Arbitration'
         END AS CBK_CYCL,
-        cr.CBK_RSN_ID,
-        cr.RSN_DESC AS RSN_DESC_OVRD,
-        cr.RSN_CTGR,
-        a.CARD_BRND,
-        a.CARD_LST4,
-        a.LCTN_DBA_NM AS MRCH_NM,
+        c.CBK_RSN_ID,
+        c.RSN_DESC AS RSN_DESC_OVRD,
+        c.RSN_CTGR,
+        c.CARD_BRND,
+        c.CARD_LST4,
+        c.LCTN_DBA_NM AS MRCH_NM,
         UNIFORM(0,1,RANDOM()) > 0.3 AS RESP_SENT_FLG,
-        CASE WHEN UNIFORM(0,1,RANDOM()) > 0.3 
-             THEN DATEADD(DAY, UNIFORM(5, 25, RANDOM()), a.TXN_DT) 
+        CASE WHEN UNIFORM(0,1,RANDOM()) > 0.3
+             THEN DATEADD(DAY, UNIFORM(5, 25, RANDOM()), c.TXN_DT)
              ELSE NULL END AS RESP_DT,
         UNIFORM(0,1,RANDOM()) > 0.4 AS DOCS_SBMTD_FLG,
-        a.PLTF_ID
-    FROM auth_with_brand a
-    CROSS JOIN cbk_reasons cr
-    WHERE cr.NTWRK = CASE a.CARD_BRND 
-            WHEN 'Visa' THEN 'Visa' 
-            WHEN 'Mastercard' THEN 'Mastercard'
-            WHEN 'American Express' THEN 'Amex'
-            ELSE 'Discover' END
-      AND UNIFORM(0, 1, RANDOM()) < GET_CHARGEBACK_RATE(a.MCC)
-    QUALIFY ROW_NUMBER() OVER (PARTITION BY a.AUTH_ID ORDER BY RANDOM()) = 1;
-    
+        c.PLTF_ID
+    FROM cbk_candidates c;
+
     SELECT COUNT(*) INTO :total_cbk FROM CLX_CBK;
-    
+
     -- ==========================================================================
     -- Generate Retrieval Requests (pre-chargeback inquiries)
     -- Retrieval rate is typically 2-3x the chargeback rate
@@ -497,7 +562,7 @@ BEGIN
         DOCS_SBMTD_FLG, SBMSN_MTHD, PLTF_ID
     )
     WITH auth_with_brand AS (
-        SELECT 
+        SELECT
             a.*,
             b.CARD_BRND,
             m.MCC
@@ -505,49 +570,61 @@ BEGIN
         JOIN GLB_BIN b ON a.BIN_ID = b.BIN_ID
         JOIN CLX_MRCH_MSTR m ON a.MRCH_KEY = m.MRCH_KEY
         WHERE a.APRVL_CD = 1
+    ),
+    -- Pre-evaluate random values for correct probability distributions
+    rtrvl_candidates AS (
+        SELECT
+            a.*,
+            UNIFORM(1, 100, RANDOM()) AS stat_rand,
+            UNIFORM(1, 100, RANDOM()) AS fulfmt_rand,
+            UNIFORM(1, 100, RANDOM()) AS rsn_rand
+        FROM auth_with_brand a
+        WHERE UNIFORM(0, 1, RANDOM()) < (GET_CHARGEBACK_RATE(a.MCC) * 2.5)
     )
     SELECT
         UUID_STRING() AS RTRVL_ID,
-        a.CLNT_ID,
-        a.MRCH_KEY,
+        r.CLNT_ID,
+        r.MRCH_KEY,
         'ARN' || LPAD(UNIFORM(100000000000, 999999999999, RANDOM())::VARCHAR, 15, '0') AS ARN,
-        DATEADD(DAY, UNIFORM(5, 25, RANDOM()), a.TXN_DT) AS RTRVL_RCVD_DT,
-        a.TXN_DT AS SALE_DT,
-        DATEADD(DAY, UNIFORM(5, 25, RANDOM()) + 20, a.TXN_DT) AS DUE_DT,
-        CASE WHEN UNIFORM(0, 1, RANDOM()) < 0.70 
-             THEN DATEADD(DAY, UNIFORM(5, 25, RANDOM()) + 10, a.TXN_DT) 
+        DATEADD(DAY, UNIFORM(5, 25, RANDOM()), r.TXN_DT) AS RTRVL_RCVD_DT,
+        r.TXN_DT AS SALE_DT,
+        DATEADD(DAY, UNIFORM(5, 25, RANDOM()) + 20, r.TXN_DT) AS DUE_DT,
+        CASE WHEN UNIFORM(0, 1, RANDOM()) < 0.70
+             THEN DATEADD(DAY, UNIFORM(5, 25, RANDOM()) + 10, r.TXN_DT)
              ELSE NULL END AS FULFMT_DT,
-        a.TXN_AM AS RTRVL_AM,
-        CASE 
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 25 THEN 'Open'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 26 AND 50 THEN 'Fulfilled'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 51 AND 75 THEN 'Closed'
+        r.TXN_AM AS RTRVL_AM,
+        -- Retrieval status (single random, correct distribution)
+        CASE
+            WHEN r.stat_rand <= 25 THEN 'Open'
+            WHEN r.stat_rand <= 50 THEN 'Fulfilled'
+            WHEN r.stat_rand <= 75 THEN 'Closed'
             ELSE 'Expired'
         END AS RTRVL_STAT,
-        CASE 
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 70 THEN 'Complete'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 71 AND 90 THEN 'Partial'
+        -- Fulfillment status (single random, correct distribution)
+        CASE
+            WHEN r.fulfmt_rand <= 70 THEN 'Complete'
+            WHEN r.fulfmt_rand <= 90 THEN 'Partial'
             ELSE 'None'
         END AS FULFMT_STAT,
         'RQ' || LPAD(UNIFORM(1, 15, RANDOM())::VARCHAR, 2, '0') AS RSN_CD,
-        CASE 
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 1 AND 30 THEN 'Cardholder Does Not Recognize'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 31 AND 50 THEN 'Cardholder Request for Copy'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 51 AND 70 THEN 'Fraud Investigation'
-            WHEN UNIFORM(1, 100, RANDOM()) BETWEEN 71 AND 85 THEN 'Compliance Review'
+        -- Reason description (single random, correct distribution)
+        CASE
+            WHEN r.rsn_rand <= 30 THEN 'Cardholder Does Not Recognize'
+            WHEN r.rsn_rand <= 50 THEN 'Cardholder Request for Copy'
+            WHEN r.rsn_rand <= 70 THEN 'Fraud Investigation'
+            WHEN r.rsn_rand <= 85 THEN 'Compliance Review'
             ELSE 'Issuer Request'
         END AS RSN_DESC,
-        a.CARD_BRND,
-        a.CARD_LST4,
+        r.CARD_BRND,
+        r.CARD_LST4,
         'Transaction receipt, signed copy' AS DOCS_REQD,
         UNIFORM(0, 1, RANDOM()) > 0.3 AS DOCS_SBMTD_FLG,
         CASE WHEN UNIFORM(0,1,RANDOM()) > 0.4 THEN 'Portal' ELSE 'Fax' END AS SBMSN_MTHD,
-        a.PLTF_ID
-    FROM auth_with_brand a
-    WHERE UNIFORM(0, 1, RANDOM()) < (GET_CHARGEBACK_RATE(a.MCC) * 2.5);
-    
+        r.PLTF_ID
+    FROM rtrvl_candidates r;
+
     SELECT COUNT(*) INTO :total_rtv FROM CLX_RTRVL;
-    
+
     -- ==========================================================================
     -- Generate Adjustments (fees, credits, monthly charges)
     -- ==========================================================================
@@ -557,17 +634,17 @@ BEGIN
         FEE_DESC, RLTD_TXN_ID, ADJ_STAT, PLTF_ID, CRT_BY
     )
     WITH adj_types AS (
-        SELECT 'C' AS type_cd, 'Monthly Volume Bonus' AS desc_tx, 'CREDIT' AS category, 'MVB' AS adj_cd, 50.00 AS min_am, 500.00 AS max_am, 0.05 AS frequency UNION ALL
-        SELECT 'D', 'Monthly Statement Fee', 'FEE', 'MSF', 5.00, 25.00, 0.40 UNION ALL
-        SELECT 'D', 'PCI Compliance Fee', 'FEE', 'PCI', 19.95, 79.95, 0.30 UNION ALL
-        SELECT 'C', 'Rate Adjustment Credit', 'RATE', 'RAC', 10.00, 150.00, 0.08 UNION ALL
-        SELECT 'D', 'Equipment Lease Fee', 'FEE', 'EQP', 29.95, 99.95, 0.25 UNION ALL
-        SELECT 'D', 'Chargeback Fee', 'FEE', 'CBK', 15.00, 35.00, 0.15 UNION ALL
-        SELECT 'C', 'Early Settlement Bonus', 'PROMO', 'ESB', 25.00, 200.00, 0.03 UNION ALL
-        SELECT 'D', 'Annual Account Fee', 'FEE', 'ANN', 79.00, 199.00, 0.02 UNION ALL
-        SELECT 'D', 'Batch Processing Fee', 'FEE', 'BPF', 0.10, 5.00, 0.50 UNION ALL
-        SELECT 'D', 'Network Access Fee', 'FEE', 'NAF', 4.95, 14.95, 0.20 UNION ALL
-        SELECT 'C', 'Referral Credit', 'PROMO', 'REF', 50.00, 250.00, 0.02
+        SELECT 'C' AS type_cd, 'Monthly Volume Bonus' AS desc_tx, 'CREDIT' AS category, 'MVB' AS adj_cd, 'VOL' AS fee_cd, 'Volume incentive program' AS fee_desc_tx, 50.00 AS min_am, 500.00 AS max_am, 0.05 AS frequency UNION ALL
+        SELECT 'D', 'Monthly Statement Fee', 'FEE', 'MSF', 'STMT', 'Monthly account statement generation', 5.00, 25.00, 0.40 UNION ALL
+        SELECT 'D', 'PCI Compliance Fee', 'FEE', 'PCI', 'CMPL', 'PCI-DSS compliance program fee', 19.95, 79.95, 0.30 UNION ALL
+        SELECT 'C', 'Rate Adjustment Credit', 'RATE', 'RAC', 'RATE', 'Interchange rate correction', 10.00, 150.00, 0.08 UNION ALL
+        SELECT 'D', 'Equipment Lease Fee', 'FEE', 'EQP', 'EQMT', 'POS terminal lease agreement', 29.95, 99.95, 0.25 UNION ALL
+        SELECT 'D', 'Chargeback Fee', 'FEE', 'CBK', 'DISP', 'Dispute management processing fee', 15.00, 35.00, 0.15 UNION ALL
+        SELECT 'C', 'Early Settlement Bonus', 'PROMO', 'ESB', 'PRMO', 'Early settlement incentive program', 25.00, 200.00, 0.03 UNION ALL
+        SELECT 'D', 'Annual Account Fee', 'FEE', 'ANN', 'ANNL', 'Annual merchant account maintenance', 79.00, 199.00, 0.02 UNION ALL
+        SELECT 'D', 'Batch Processing Fee', 'FEE', 'BPF', 'BTCH', 'Daily batch settlement processing', 0.10, 5.00, 0.50 UNION ALL
+        SELECT 'D', 'Network Access Fee', 'FEE', 'NAF', 'NTWK', 'Card network access and routing', 4.95, 14.95, 0.20 UNION ALL
+        SELECT 'C', 'Referral Credit', 'PROMO', 'REF', 'RFER', 'Merchant referral bonus program', 50.00, 250.00, 0.02
     ),
     merchants AS (
         SELECT MRCH_KEY, CLNT_ID, PLTF_ID
@@ -594,8 +671,8 @@ BEGIN
         at.adj_cd AS ADJ_CD,
         at.desc_tx AS ADJ_DESC,
         at.category AS ADJ_CTGR,
-        at.adj_cd AS FEE_TYP_CD,
-        at.desc_tx AS FEE_DESC,
+        at.fee_cd AS FEE_TYP_CD,
+        at.fee_desc_tx AS FEE_DESC,
         NULL AS RLTD_TXN_ID,
         'Processed' AS ADJ_STAT,
         m.PLTF_ID,
@@ -604,9 +681,9 @@ BEGIN
     CROSS JOIN merchants m
     CROSS JOIN adj_types at
     WHERE UNIFORM(0, 1, RANDOM()) < at.frequency / 10.0;
-    
+
     SELECT COUNT(*) INTO :total_adj FROM CLX_ADJ;
-    
+
     RETURN 'Synthetic data generation complete. ' ||
            'Authorizations: ' || :total_auth || ', ' ||
            'Settlements: ' || :total_settle || ', ' ||
@@ -637,7 +714,7 @@ $$;
 -- =============================================================================
 SELECT 'Transaction generator created successfully' AS status;
 
-SELECT 
+SELECT
     'CLX_AUTH' AS table_name, COUNT(*) AS row_count FROM CLX_AUTH
 UNION ALL SELECT 'CLX_SETTLE', COUNT(*) FROM CLX_SETTLE
 UNION ALL SELECT 'CLX_FUND', COUNT(*) FROM CLX_FUND
