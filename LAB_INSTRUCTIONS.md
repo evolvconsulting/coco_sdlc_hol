@@ -361,7 +361,9 @@ Cortex Code will use the Jira MCP skill you configured in Section 3 to retrieve 
 
 Ask Cortex Code to create a feature branch:
 
-> Create a new git branch called feature/retry-success-rate and switch to it.
+```
+Create a new git branch called feature/retry-success-rate and switch to it.
+```
 
 This keeps your changes isolated from the main branch. You will push this branch after verifying the metric works.
 
@@ -375,7 +377,9 @@ In the Cortex Code terminal, enable plan mode so you can review the proposed cha
 
 Then describe the task to Cortex Code. Suggested prompt:
 
-> I need to add a retry success rate metric to the authorizations domain. Retry success rate = count of transactions where a customer was initially declined then approved on a subsequent attempt. Add this to the dbt mart, the semantic view, and update the Cortex Agent instructions. Start by reading the relevant files.
+```
+I need to add a retry success rate metric to the authorizations domain. Retry success rate = count of transactions where a customer was initially declined then approved on a subsequent attempt. Add this to the dbt mart, the semantic view, and update the Cortex Agent instructions. Start by reading the relevant files.
+```
 
 Cortex Code will generate a numbered plan showing each file it intends to modify. Review the plan and confirm it includes changes to:
 
@@ -386,13 +390,17 @@ Cortex Code will generate a numbered plan showing each file it intends to modify
 
 If the plan does not include all four files, ask Cortex Code to expand the scope:
 
-> Please also include changes to the intermediate model (int_authorizations__enriched.sql) for the retry detection logic and the Cortex Agent instructions (03_create_agent.sql).
+```
+Please also include changes to the intermediate model (int_authorizations__enriched.sql) for the retry detection logic and the Cortex Agent instructions (03_create_agent.sql).
+```
 
 ### Step 4.4: Confirm and Execute the Plan
 
 Once the plan looks complete, confirm execution:
 
-> The plan looks good. Execute it.
+```
+The plan looks good. Execute it.
+```
 
 Cortex Code will proceed through each file modification, asking for your approval at each step (since plan mode is active). Review each change carefully as it is applied.
 
@@ -409,7 +417,9 @@ Add window function logic to detect retries. A retry is when the same card (`car
 
 If Cortex Code's plan does not include the SQL logic for computing retries, prompt it:
 
-> Add the retry detection logic as a window function in int_authorizations__enriched.sql. A retry is when the same card_bin, card_last_four, and transaction_amount appear from the same merchant within 5 minutes of a declined transaction. Add retry_attempt_flag and retry_success_flag columns.
+```
+Add the retry detection logic as a window function in int_authorizations__enriched.sql. A retry is when the same card_bin, card_last_four, and transaction_amount appear from the same merchant within 5 minutes of a declined transaction. Add retry_attempt_flag and retry_success_flag columns.
+```
 
 **In `packages/dbt/models/marts/payments/authorizations.sql`:**
 
@@ -467,7 +477,9 @@ Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Ty
 
 **a) Apply DDL changes and refresh dynamic tables**
 
-> Deploy my dbt model changes to Snowflake and manually refresh the intermediate and marts dynamic tables so the new retry columns have data right away.
+```
+Deploy my dbt model changes to Snowflake and manually refresh the intermediate and marts dynamic tables so the new retry columns have data right away.
+```
 
 Cortex Code will apply the DDL and trigger a refresh on both tables. You should see confirmation that both were updated.
 
@@ -475,19 +487,25 @@ Cortex Code will apply the DDL and trigger a refresh on both tables. You should 
 
 **b) Rebuild the semantic view and verify**
 
-> Rebuild the semantic view from the updated DDL file and verify that RETRY_SUCCESS_RATE now appears as a metric.
+```
+Rebuild the semantic view from the updated DDL file and verify that RETRY_SUCCESS_RATE now appears as a metric.
+```
 
 Cortex Code will execute the semantic view DDL and show you the DESCRIBE output. Look for `RETRY_SUCCESS_RATE` in the results.
 
 **c) Verify the metric data**
 
-> Query the authorizations mart and show me the retry success rate for the last 30 days.
+```
+Query the authorizations mart and show me the retry success rate for the last 30 days.
+```
 
 Cortex Code will run a verification query and display the results. You should see a non-null retry success rate value -- a typical result is between 20% and 80%.
 
 **d) Test the Cortex Agent**
 
-> What is the retry success rate for the last 30 days?
+```
+What is the retry success rate for the last 30 days?
+```
 
 The Cortex Agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` metric and return a meaningful answer. This confirms the full chain works: dbt model → dynamic table → semantic view → Cortex Agent.
 
@@ -495,7 +513,9 @@ The Cortex Agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` 
 
 Once verification passes, ask Cortex Code to commit and push:
 
-> Commit all changes in packages/dbt/ and packages/database/ with the message "feat(dbt): add retry_success_rate to authorizations mart and semantic view". Then push to origin.
+```
+Commit all changes in packages/dbt/ and packages/database/ with the message "feat(dbt): add retry_success_rate to authorizations mart and semantic view". Then push to origin.
+```
 
 Cortex Code will stage the files, create the commit, and push to the remote. This commits all dbt model changes, the semantic view update, and the Cortex Agent instruction change together as a single logical unit.
 
@@ -503,7 +523,9 @@ Cortex Code will stage the files, create the commit, and push to the remote. Thi
 
 Before wrapping up this ticket, use Cortex Code to read the existing data dictionary from Confluence. This demonstrates how MCP integrations let you pull project documentation directly into your coding workflow for reference:
 
-> Read the Confluence data dictionary page at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. What metrics are currently documented? How should I document the new retry_success_rate metric to match the existing format?
+```
+Read the Confluence data dictionary page at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. What metrics are currently documented? How should I document the new retry_success_rate metric to match the existing format?
+```
 
 > **Note:** https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations is a placeholder -- your instructor will provide the actual Confluence page URL.
 
@@ -553,7 +575,9 @@ In this task, you will add a KPI card to the authorization dashboard that displa
 
 In Cortex Code, pull the ticket details for your second task:
 
-> Show me Jira ticket EPA-3. What does it ask me to implement?
+```
+Show me Jira ticket EPA-3. What does it ask me to implement?
+```
 
 > **Note:** EPA-3 is a placeholder -- your instructor will provide the actual Jira ticket ID.
 
@@ -563,7 +587,9 @@ Cortex Code will use the Jira MCP skill to retrieve the ticket. You should see a
 
 Ask Cortex Code to create a new feature branch:
 
-> Create a new git branch called feature/retry-success-kpi-card and switch to it.
+```
+Create a new git branch called feature/retry-success-kpi-card and switch to it.
+```
 
 This keeps the KPI card changes separate from the data model changes in Task 1.
 
@@ -577,7 +603,9 @@ In the Cortex Code terminal, enable plan mode:
 
 Then describe the task. Suggested prompt:
 
-> Read Jira ticket EPA-3. Look at apps/frontend/src/app/analytics/authorization/page.tsx, apps/frontend/src/components/ui/KPICard.tsx, and apps/frontend/src/types/domain.ts. Add a KPI card that shows the retry_success_rate from the authorization KPIs API. Follow the exact same pattern as the existing KPI cards.
+```
+Read Jira ticket EPA-3. Look at apps/frontend/src/app/analytics/authorization/page.tsx, apps/frontend/src/components/ui/KPICard.tsx, and apps/frontend/src/types/domain.ts. Add a KPI card that shows the retry_success_rate from the authorization KPIs API. Follow the exact same pattern as the existing KPI cards.
+```
 
 Review the plan. Confirm it includes changes to:
 
@@ -591,7 +619,9 @@ Review the plan. Confirm it includes changes to:
 
 Once the plan looks complete, confirm execution:
 
-> The plan looks good. Execute it.
+```
+The plan looks good. Execute it.
+```
 
 Cortex Code will make changes to three files. Review each change as it is applied:
 
@@ -651,25 +681,33 @@ This follows the exact same pattern as the existing KPI cards -- same `Col` grid
 
 Ask Cortex Code to start the dev server if it is not already running:
 
-> Start the frontend dev server from apps/frontend.
+```
+Start the frontend dev server from apps/frontend.
+```
 
 Open [http://localhost:3000/analytics/authorization](http://localhost:3000/analytics/authorization) in your browser. You should see a new "Retry Success Rate" KPI card alongside the existing authorization KPIs. The card displays a percentage value with a green color indicator.
 
 If the card shows 0 or undefined, ask Cortex Code to help debug:
 
-> The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs interface in domain.ts includes retrySuccessRate and that the API route in kpis/route.ts returns the field.
+```
+The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs interface in domain.ts includes retrySuccessRate and that the API route in kpis/route.ts returns the field.
+```
 
 ### Step 6.6: Commit and Push
 
 Once the KPI card displays correctly, ask Cortex Code to commit and push:
 
-> Commit all changes in apps/frontend/ with the message "feat(frontend): add retry success rate KPI card to authorization dashboard". Then push to origin.
+```
+Commit all changes in apps/frontend/ with the message "feat(frontend): add retry success rate KPI card to authorization dashboard". Then push to origin.
+```
 
 ### Step 6.7: Create a Pull Request
 
 Ask Cortex Code to create the pull request:
 
-> Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
+```
+Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
+```
 
 Cortex Code will create the PR and return the URL. This completes Ticket 2. You have added a frontend KPI card that visualizes the backend metric you built in Task 1, following the existing component patterns in the codebase.
 
