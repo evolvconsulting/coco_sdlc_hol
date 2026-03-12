@@ -135,6 +135,10 @@ Then run `setup.sql` (SPCS service spec) to create the service and get the publi
 The dbt models are already compiled into `hol_setup.sql` -- you do not need to run dbt to set up the lab environment. The dbt project is included for exploration:
 
 ```bash
+# Install dbt-snowflake first (if not already installed)
+uv tool install "dbt-snowflake>=1.9.0"
+# pip fallback: pip install "dbt-snowflake>=1.9.0"
+
 cd packages/dbt
 dbt deps
 dbt build

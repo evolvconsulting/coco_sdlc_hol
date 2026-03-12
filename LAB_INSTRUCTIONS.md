@@ -71,6 +71,40 @@ git --version
 
 Fork and clone the lab repository -- instructions are in Section 2, Step 0.
 
+### 6. uv (Python package manager)
+
+uv manages Python and packages without requiring a separate Python install or virtual environment setup. It is used to install dbt in the next step.
+
+**Install:**
+
+```bash
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
+
+# Windows (PowerShell)
+powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
+```
+
+```bash
+# Verify installation
+uv --version
+```
+
+> **Corporate machine note:** If `astral.sh` is blocked by your network, install Python 3.11+ from [python.org/downloads](https://python.org/downloads) (check "Add Python to PATH" on Windows) and use `pip install "dbt-snowflake>=1.9.0"` in the next step instead.
+
+### 7. dbt (dbt-snowflake)
+
+Cortex Code uses the local `dbt` CLI to apply model changes to Snowflake during the lab. Install the Snowflake adapter (which includes dbt-core):
+
+```bash
+uv tool install "dbt-snowflake>=1.9.0"
+
+# Verify installation
+dbt --version
+```
+
+> **pip fallback:** If you used the pip path above, run `pip install "dbt-snowflake>=1.9.0"` instead.
+
 ---
 
 ## Section 1: Architecture Overview (~10 min)
