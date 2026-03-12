@@ -29,7 +29,7 @@ coco_sdlc_hol/
 │
 ├── packages/
 │   ├── database/
-│   │   └── hol_setup.sql            # Single consolidated HOL setup script
+│   │   └── utilities/               # Database utility scripts
 │   │
 │   └── dbt/                         # dbt transformation project
 │       ├── models/
@@ -37,9 +37,16 @@ coco_sdlc_hol/
 │       │   ├── intermediate/        # Enriched dynamic tables
 │       │   └── marts/               # Business-ready dynamic tables
 │       └── analyses/
-│           └── payment_analytics_semantic_view_v2.sql
+│           └── payment_analytics_semantic_view.sql
 │
-├── LAB_INSTRUCTIONS.md                  # Lab instructions (start here)
+├── docs/
+│   ├── confluence/                  # Confluence wiki reference content
+│   └── jira/                        # Jira ticket reference content
+│
+├── hol_setup.sql                    # HOL environment setup script
+├── spcs_setup.sql                   # SPCS deployment setup script
+├── LAB_INSTRUCTIONS.md              # Lab instructions (start here)
+├── INSTRUCTOR_GUIDE.md              # Instructor reference and facilitation guide
 ├── INFRASTRUCTURE.md                # Environment provisioning & deployment
 └── Dockerfile                       # Container image for SPCS deployment
 ```
