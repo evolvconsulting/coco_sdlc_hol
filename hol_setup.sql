@@ -950,6 +950,83 @@ BEGIN
     QUALIFY ROW_NUMBER() OVER (PARTITION BY r.txn_date, r.MRCH_KEY, r.hour_of_day ORDER BY RANDOM()) <=
         CEIL(r.store_frequency * r.day_multiplier * r.month_multiplier);
 
+    -- ==========================================================================
+    -- Generate Retry Transactions (from declined authorizations)
+    -- Retries reuse the same card (BIN + last 4), merchant, and amount
+    -- so that the dbt retry detection window functions can match them.
+    -- ~8% of declines are retried; ~65% of retries succeed.
+    -- ==========================================================================
+    INSERT INTO CLX_AUTH (
+        AUTH_ID, CLNT_ID, MRCH_KEY, TXN_DT, TXN_TM, TXN_TS, TXN_AM, APRVL_CD,
+        DCLN_RSN_ID, DCLN_RSN_TX, BIN_ID, CARD_LST4, PYMT_MTHD, NTWRK,
+        ENTRY_MD, PLTF_ID, TRMNL_ID, AVS_RSLT, CVV_RSLT
+    )
+    WITH declined_txns AS (
+        SELECT
+            a.CLNT_ID, a.MRCH_KEY, a.TXN_DT, a.TXN_TS, a.TXN_AM,
+            a.BIN_ID, a.CARD_LST4, a.NTWRK, a.PLTF_ID, a.TRMNL_ID
+        FROM CLX_AUTH a
+        WHERE a.APRVL_CD = 2
+          AND UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()) < 0.08
+    ),
+    retry_candidates AS (
+        SELECT
+            *,
+            UNIFORM(1, 720, RANDOM()) AS retry_offset_minutes,
+            UNIFORM(0::FLOAT, 1::FLOAT, RANDOM()) AS success_rand,
+            UNIFORM(1, 100, RANDOM()) AS pymt_rand,
+            UNIFORM(1, 100, RANDOM()) AS entry_rand,
+            UNIFORM(1, 100, RANDOM()) AS avs_rand,
+            UNIFORM(1, 100, RANDOM()) AS cvv_rand
+        FROM declined_txns
+    )
+    SELECT
+        UUID_STRING() AS AUTH_ID,
+        rc.CLNT_ID,
+        rc.MRCH_KEY,
+        TIMESTAMPADD(MINUTE, rc.retry_offset_minutes, rc.TXN_TS)::DATE AS TXN_DT,
+        TIMESTAMPADD(MINUTE, rc.retry_offset_minutes, rc.TXN_TS)::TIME AS TXN_TM,
+        TIMESTAMPADD(MINUTE, rc.retry_offset_minutes, rc.TXN_TS) AS TXN_TS,
+        rc.TXN_AM,
+        CASE WHEN rc.success_rand < 0.65 THEN 1 ELSE 2 END AS APRVL_CD,
+        CASE WHEN rc.success_rand >= 0.65
+             THEN (SELECT DCLN_RSN_ID FROM DCLN_RSN_CD WHERE DCLN_RSN_ID != 'D042' ORDER BY RANDOM() LIMIT 1)
+             ELSE NULL END AS DCLN_RSN_ID,
+        CASE WHEN rc.success_rand >= 0.65
+             THEN (SELECT DCLN_RSN_DESC FROM DCLN_RSN_CD WHERE DCLN_RSN_ID != 'D042' ORDER BY RANDOM() LIMIT 1)
+             ELSE NULL END AS DCLN_RSN_TX,
+        rc.BIN_ID,
+        rc.CARD_LST4,
+        CASE
+            WHEN rc.pymt_rand <= 45 THEN 'Chip'
+            WHEN rc.pymt_rand <= 75 THEN 'Contactless'
+            WHEN rc.pymt_rand <= 88 THEN 'Swipe'
+            ELSE 'Keyed'
+        END AS PYMT_MTHD,
+        rc.NTWRK,
+        CASE
+            WHEN rc.entry_rand <= 50 THEN 'Chip'
+            WHEN rc.entry_rand <= 80 THEN 'Contactless'
+            ELSE 'Manual'
+        END AS ENTRY_MD,
+        rc.PLTF_ID,
+        rc.TRMNL_ID,
+        CASE
+            WHEN rc.avs_rand <= 70 THEN 'Y'
+            WHEN rc.avs_rand <= 82 THEN 'A'
+            WHEN rc.avs_rand <= 90 THEN 'Z'
+            WHEN rc.avs_rand <= 95 THEN 'N'
+            WHEN rc.avs_rand <= 98 THEN 'U'
+            ELSE 'S'
+        END AS AVS_RSLT,
+        CASE
+            WHEN rc.cvv_rand <= 88 THEN 'M'
+            WHEN rc.cvv_rand <= 93 THEN 'N'
+            WHEN rc.cvv_rand <= 97 THEN 'P'
+            ELSE 'U'
+        END AS CVV_RSLT
+    FROM retry_candidates rc;
+
     SELECT COUNT(*) INTO :total_auth FROM CLX_AUTH;
 
     -- ==========================================================================
