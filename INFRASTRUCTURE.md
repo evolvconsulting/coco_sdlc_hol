@@ -126,7 +126,7 @@ docker tag coco-portal:latest <REPO_URL>/coco-portal:latest
 docker push <REPO_URL>/coco-portal:latest
 ```
 
-Then run `setup.sql` (SPCS service spec) to create the service and get the public endpoint URL.
+Then run `spcs_setup.sql` (SPCS service spec) to create the service and get the public endpoint URL.
 
 ---
 

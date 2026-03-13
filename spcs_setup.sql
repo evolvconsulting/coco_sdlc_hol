@@ -1,7 +1,7 @@
 -- ============================================================
 -- COCO SDLC HOL — SPCS Deployment Setup Script
 -- Run this in a Snowflake worksheet (ACCOUNTADMIN role required for step 1)
--- All other steps use SYSADMIN
+-- All other steps use SYSADMIN (service runs as ATTENDEE_ROLE)
 -- ============================================================
 --
 -- FULL DEPLOYMENT WORKFLOW:
@@ -11,7 +11,7 @@
 -- 4. Tag image: docker tag coco-portal:latest <REPO_URL>/coco-portal:latest
 -- 5. Push image: docker push <REPO_URL>/coco-portal:latest
 -- 6. Run this script (steps 1-6 in order)
--- 7. Get endpoint URL from SHOW ENDPOINTS in step 6
+-- 7. Get endpoint URL from SHOW ENDPOINTS in step 7
 -- ============================================================
 
 USE ROLE ACCOUNTADMIN;
@@ -97,7 +97,7 @@ CREATE OR REPLACE SERVICE coco_sdlc_hol_service
         SNOWFLAKE_WAREHOUSE: "COMPUTE_WH"
         SNOWFLAKE_DATABASE: "COCO_SDLC_HOL"
         SNOWFLAKE_SCHEMA: "MARTS"
-        SNOWFLAKE_ROLE: "SYSADMIN"
+        SNOWFLAKE_ROLE: "ATTENDEE_ROLE"
         CORTEX_AGENT_NAME: "PAYMENT_ANALYTICS_AGENT"
         PORT: "3000"
         HOSTNAME: "0.0.0.0"
@@ -120,7 +120,15 @@ CREATE OR REPLACE SERVICE coco_sdlc_hol_service
 
 
 -- ============================================================
--- STEP 6: Retrieve public endpoint URL
+-- STEP 6: Grant endpoint access to all account users
+-- ============================================================
+-- Without this grant, only SYSADMIN can access the public endpoint.
+-- Granting to PUBLIC allows any authenticated Snowflake user to reach the app.
+GRANT SERVICE ROLE COCO_SDLC_HOL.PUBLIC.COCO_SDLC_HOL_SERVICE!ALL_ENDPOINTS_USAGE TO ROLE PUBLIC;
+
+
+-- ============================================================
+-- STEP 7: Retrieve public endpoint URL
 -- ============================================================
 -- Run after the service reaches RUNNING state (check with SHOW SERVICES).
 -- The ingress_url column contains the public HTTPS endpoint for the portal.
