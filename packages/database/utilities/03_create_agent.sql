@@ -53,7 +53,7 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
 -- =============================================================================
 -- Grant permissions on the agent
 -- =============================================================================
-GRANT USAGE ON AGENT COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE SYSADMIN;
+GRANT USAGE ON AGENT COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
 
 -- =============================================================================
 -- Sample questions the agent can answer:
