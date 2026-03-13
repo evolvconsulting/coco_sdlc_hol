@@ -38,6 +38,12 @@ models:
         description: "Card brand (Visa, Mastercard, etc.)"
       - name: card_category
         description: "Card category (Commercial/Consumer)"
+      - name: is_retry_attempt
+        description: "TRUE when this transaction is a retry after a prior decline (same card, amount, merchant within 24 hours)"
+      - name: is_retried_decline
+        description: "TRUE when this declined transaction was subsequently retried and approved within 24 hours"
+      - name: retry_recovered_count
+        description: "1 if this is a successful retry recovery (is_retry_attempt=TRUE and approved), 0 otherwise"
 
   - name: settlements
     description: |

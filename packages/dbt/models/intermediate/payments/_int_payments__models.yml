@@ -38,6 +38,10 @@ models:
         description: "Merchant location name (enriched from join)"
       - name: processor_name
         description: "Processor platform name (enriched from join)"
+      - name: is_retry_attempt
+        description: "TRUE when this transaction follows a declined attempt for the same card, amount, and merchant within 24 hours"
+      - name: is_retried_decline
+        description: "TRUE when this declined transaction was subsequently retried and approved within 24 hours"
 
   - name: int_settlements__enriched
     description: |
