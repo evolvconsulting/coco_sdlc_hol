@@ -241,6 +241,15 @@ export default function AuthorizationPage() {
                 loading={kpis.isLoading}
               />
             </Col>
+            <Col xs={24} sm={12} lg={6}>
+              <KPICard
+                title="Retry Success Rate"
+                value={kpiData?.retrySuccessRate ?? 0}
+                format="percent"
+                description="Percentage of retry attempts that were approved"
+                loading={kpis.isLoading}
+              />
+            </Col>
           </Row>
 
           {/* Charts Row */}

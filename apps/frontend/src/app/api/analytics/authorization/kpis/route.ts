@@ -39,7 +39,9 @@ export async function GET(request: NextRequest) {
         ROUND(SUM(CASE WHEN approval_status = 'Approved' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(*), 0), 2) as approval_rate,
         SUM(transaction_amount) as total_amount,
         SUM(CASE WHEN approval_status = 'Approved' THEN transaction_amount ELSE 0 END) as approved_amount,
-        ROUND(AVG(transaction_amount), 2) as avg_ticket_size
+        ROUND(AVG(transaction_amount), 2) as avg_ticket_size,
+        SUM(CASE WHEN is_retry_attempt THEN 1 ELSE 0 END) as retry_attempts,
+        ROUND(SUM(retry_recovered_count) * 100.0 / NULLIF(SUM(CASE WHEN is_retry_attempt THEN 1 ELSE 0 END), 0), 2) as retry_success_rate
       FROM ${FULL_TABLE_AUTHORIZATIONS}
       WHERE transaction_date BETWEEN ? AND ?
         ${cardBrandFilter}
@@ -64,6 +66,7 @@ export async function GET(request: NextRequest) {
       totalAmount: Number(row.TOTAL_AMOUNT) || 0,
       approvedAmount: Number(row.APPROVED_AMOUNT) || 0,
       avgTicketSize: Number(row.AVG_TICKET_SIZE) || 0,
+      retrySuccessRate: Number(row.RETRY_SUCCESS_RATE) || 0,
       trends: {
         transactions: 0,
         approvalRate: 0,
@@ -109,6 +112,7 @@ function getEmptyKPIs() {
     totalAmount: 0,
     approvedAmount: 0,
     avgTicketSize: 0,
+    retrySuccessRate: 0,
     trends: {
       transactions: 0,
       approvalRate: 0,
