@@ -177,6 +177,14 @@ tables:
         synonyms:
           - auth count
           - transaction count
+      - name: RETRY_RECOVERED_COUNT
+        description: Count of successful retry recoveries after a decline (1 if recovered, 0 otherwise). A retry is the same card, same amount, same merchant within 24 hours of a decline.
+        expr: RETRY_RECOVERED_COUNT
+        data_type: NUMBER
+        synonyms:
+          - recovered transactions
+          - retry count
+          - retried count
 
   # ============================================================================
   # SETTLEMENTS - Settlement batch records
@@ -689,6 +697,16 @@ metrics:
     data_type: NUMBER
     synonyms:
       - RR fulfillment rate
+
+  - name: RETRY_SUCCESS_RATE
+    description: Percentage of declined transactions that were subsequently retried and approved. A retry is defined as the same card (BIN + last 4), same amount, same merchant within 24 hours of a decline.
+    expr: SUM(AUTHORIZATIONS.RETRY_RECOVERED_COUNT) * 100.0 / NULLIF(SUM(CASE WHEN AUTHORIZATIONS.APPROVAL_STATUS = 'Declined' THEN 1 ELSE 0 END), 0)
+    data_type: NUMBER
+    synonyms:
+      - retry rate
+      - recovery rate
+      - decline recovery rate
+      - retry success rate
 $$,
   FALSE  -- Set to TRUE to validate only without creating
 );
