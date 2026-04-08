@@ -192,6 +192,16 @@ Then verify your connection is configured correctly:
 
 **Expected output:** You should see `ATTENDEE_ROLE` as the role, `COCO_SDLC_HOL` as the database, and `MARTS` as the schema.
 
+**2c. Configure local project files**
+
+Ask Cortex Code to update the local config files with your Snowflake account identifier:
+
+```
+Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local and the account field in packages/dbt/profiles.yml with my account identifier <orgname-accountname>.
+```
+
+Replace `<orgname-accountname>` with the account identifier your instructor provided in Step 2a.
+
 ### Step 3: Confirm Local App Runs
 
 Ask Cortex Code to install the frontend dependencies and start the dev server:
