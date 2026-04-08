@@ -76,7 +76,7 @@ npm --version
 git --version
 ```
 
-Fork and clone the lab repository -- instructions are in Section 1, Step 0.
+Get the lab repository (fork + clone, or download ZIP) -- instructions are in Section 1, Step 0.
 
 ### 6. uv (Python package manager)
 
@@ -124,7 +124,11 @@ dbt --version
 
 In this section you will fork the lab repository, connect to Snowflake using Cortex Code CLI, and confirm that the local development environment works.
 
-### Step 0: Fork and Clone the Lab Repository
+### Step 0: Get the Lab Repository
+
+Choose **one** of the two options below depending on whether you have a GitHub account.
+
+#### Option A: Fork and Clone (recommended -- requires GitHub account)
 
 1. Navigate to the lab repository on GitHub: `evolvconsulting/coco_sdlc_hol`
 2. Click **Fork** to create a copy under your own GitHub account
@@ -136,6 +140,29 @@ cd coco_sdlc_hol
 ```
 
 > **Important:** Clone your fork, not the upstream repository. You will push changes to your fork during the lab. If you clone the upstream URL by mistake, you can fix it later with `git remote set-url origin https://github.com/<your-username>/coco_sdlc_hol.git`.
+
+#### Option B: Download and Unzip (no GitHub account required)
+
+If you do not have a GitHub account, you can download the repository as a ZIP archive:
+
+1. Navigate to `https://github.com/evolvconsulting/coco_sdlc_hol`
+2. Click the green **Code** button, then select **Download ZIP**
+3. Extract the ZIP to a location of your choice
+4. Open a terminal and navigate into the extracted folder:
+
+```bash
+cd coco_sdlc_hol-main
+```
+
+5. Initialize a local Git repository so you can still commit during the lab:
+
+```bash
+git init
+git add .
+git commit -m "Initial commit from ZIP download"
+```
+
+> **Limitation:** With this option you will be able to make local commits, but you will **not** be able to push to a remote repository or create a pull request. Steps that reference `git push` or PR creation (Steps 4.11, 6.6, and 6.7) can be skipped.
 
 ### Step 1: Temporarily Bypass MFA
 

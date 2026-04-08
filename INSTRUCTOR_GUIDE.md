@@ -10,9 +10,13 @@
 
 ## Section 1: Environment Setup Verification (~5 min)
 
-**Step 0 — Fork and Clone the Lab Repository**
+**Step 0 — Get the Lab Repository**
 
-Participant action: Fork `evolvconsulting/coco_sdlc_hol` on GitHub, then clone their own fork:
+Participants choose one of two options:
+
+**Option A: Fork and Clone (recommended — requires GitHub account)**
+
+Fork `evolvconsulting/coco_sdlc_hol` on GitHub, then clone their own fork:
 
 ```bash
 git clone https://github.com/<their-username>/coco_sdlc_hol.git
@@ -22,6 +26,20 @@ cd coco_sdlc_hol
 > Watch for: Participants who skip this step will hit errors in Step 3 (missing `apps/frontend`) and Section 3 (Cortex Code won't find `AGENTS.md`).
 > Watch for: Participant cloned the upstream URL (`evolvconsulting/coco_sdlc_hol`) instead of their fork — push in Step 4.11 will fail with "permission denied" or "protected branch." Diagnose with `git remote -v`; origin must show their username. Fix: `git remote set-url origin https://github.com/<their-username>/coco_sdlc_hol.git`.
 > Watch for: Participant skipped forking entirely — same push-failure symptom. Have them fork first on GitHub, then re-clone or update their remote with the fix command above.
+
+**Option B: Download and Unzip (no GitHub account required)**
+
+Download the ZIP from `https://github.com/evolvconsulting/coco_sdlc_hol` (green **Code** button → **Download ZIP**), extract it, then initialize a local Git repo:
+
+```bash
+cd coco_sdlc_hol-main
+git init
+git add .
+git commit -m "Initial commit from ZIP download"
+```
+
+> Watch for: Participant using Option B will not have a remote configured. They can make local commits but **cannot push or create PRs**. Steps 4.11, 6.6, and 6.7 should be skipped (local commit only, no push/PR).
+> Watch for: Participant forgot `git init` — Cortex Code and git commands will fail with "not a git repository." Have them run the three commands above.
 
 ---
 
@@ -276,6 +294,8 @@ Expected behavior: Cortex Agent generates SQL using RETRY_SUCCESS_RATE metric an
 Commit and push the changes.
 ```
 
+> Watch for: Participants who used Option B (ZIP download) in Step 0 have no remote — they should commit locally only. The push will fail; this is expected. Have them skip the push.
+
 ---
 
 **Step 4.12 — Reference Confluence Data Dictionary**
@@ -366,6 +386,8 @@ The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs i
 Commit and push the changes.
 ```
 
+> Watch for: Participants who used Option B (ZIP download) in Step 0 should commit locally only and skip the push.
+
 ---
 
 **Step 6.7 — Create a Pull Request**
@@ -373,6 +395,8 @@ Commit and push the changes.
 ```
 Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
 ```
+
+> Watch for: Participants who used Option B (ZIP download) in Step 0 should skip this step entirely — they have no remote to push to and cannot create a PR.
 
 > Call out to group: Jira ticket read at the start, PR created at the end — full development loop without leaving the terminal.
 
