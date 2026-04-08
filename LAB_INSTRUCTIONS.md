@@ -28,7 +28,7 @@ Your instructor will provide a Snowflake account pre-configured for the lab. You
 
 ### 2. Snow CLI
 
-The Snowflake CLI (`snow`) is used to verify your Snowflake connection and run SQL from the terminal.
+The Snowflake CLI (`snow`) is a prerequisite for Cortex Code CLI.
 
 **Install:** https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation
 
@@ -217,49 +217,46 @@ All subsequent steps and tool invocations assume you are working from this direc
 
 ### Step 1: Configure and Confirm Snowflake Connection
 
-Each attendee connects to their own Snowflake account. You will create a named connection profile, then verify it works.
+Each attendee connects to their own Snowflake account using the Cortex Code CLI setup wizard.
 
-**1a. Add a named connection**
+**1a. Launch Cortex Code and create a connection**
 
-Run the following and respond to each prompt as shown:
+From the cloned repository root, launch Cortex Code:
 
 ```bash
-snow connection add
+cortex
 ```
+
+The first-run setup wizard will guide you through connecting to Snowflake. Select **"More options"** to create a new connection, then follow the prompts:
 
 | Prompt | What to enter |
 |--------|---------------|
-| Name for this connection | `coco-hol` (or any name you prefer) |
-| Snowflake account name | Provided by your instructor (format: `orgname-accountname`) |
-| Snowflake username | Provided by your instructor |
-| Password | Provided by your instructor |
-| Authenticator | `snowflake` |
-| Role | `ATTENDEE_ROLE` |
-| Warehouse | `COMPUTE_WH` |
-| Database | `COCO_SDLC_HOL` |
-| Schema | `MARTS` |
+| Connection name | `coco-hol` (or any name you prefer) |
+| Account identifier | Provided by your instructor (format: `orgname-accountname`) |
+| Username | Provided by your instructor |
+| Authentication method | Browser-based SSO (`externalbrowser`) or password (`snowflake`) — your instructor will advise |
 
-> **Note:** Role, warehouse, database, and schema are optional during setup but entering them now avoids needing to specify them on every command.
+Once authenticated, Cortex Code connects and drops you into an interactive session.
 
-**1b. Verify the connection**
+> **Note:** The connection is saved to `~/.snowflake/connections.toml` and can be reused by both Cortex Code CLI and Snow CLI.
 
-Replace `<your-connection>` with the name you chose above (e.g., `coco-hol`):
+**1b. Set your role, warehouse, database, and schema**
 
-```bash
-snow sql -c <your-connection> -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA();"
-```
-
-**Expected output:**
+In the Cortex Code session, run the following SQL to set your session context:
 
 ```
-+----------------+--------------------+------------------+
-| CURRENT_ROLE() | CURRENT_DATABASE() | CURRENT_SCHEMA() |
-+----------------+--------------------+------------------+
-| ATTENDEE_ROLE  | COCO_SDLC_HOL      | MARTS            |
-+----------------+--------------------+------------------+
+/sql USE ROLE ATTENDEE_ROLE; USE WAREHOUSE COMPUTE_WH; USE DATABASE COCO_SDLC_HOL; USE SCHEMA MARTS;
 ```
 
-This confirms your Snowflake CLI is configured with the correct connection profile, role, database, and schema. The `ATTENDEE_ROLE` has been granted the permissions needed for all lab tasks.
+Then verify your connection is configured correctly:
+
+```
+/status
+```
+
+**Expected output:** You should see `ATTENDEE_ROLE` as the role, `COCO_SDLC_HOL` as the database, and `MARTS` as the schema. The `ATTENDEE_ROLE` has been granted the permissions needed for all lab tasks.
+
+> **Tip:** To avoid setting role/warehouse/database/schema each time, you can edit `~/.snowflake/connections.toml` and add `role`, `warehouse`, `database`, and `schema` fields under your connection. See the [Cortex Code CLI reference](https://docs.snowflake.com/en/user-guide/cortex-code/cli-reference) for details.
 
 **1c. Set your account in the frontend environment file**
 
@@ -302,24 +299,6 @@ cd apps/frontend && npm install && npm run dev
 Open [http://localhost:3000](http://localhost:3000) in your browser. You should see the Payment Analytics dashboard populated with real transaction data -- charts, KPI cards, and a natural language query interface.
 
 If the dashboard loads with data, your local environment is correctly connected to the Snowflake backend. Leave this terminal running or stop the server with `Ctrl+C` (you will restart it during verification steps later).
-
-### Step 3: Confirm Cortex Code CLI Installed
-
-Verify that the Cortex Code CLI is available:
-
-```bash
-cortex --version
-```
-
-**Expected output:** A version string (e.g., `cortex 1.x.x`).
-
-If the command is not found, install Cortex Code CLI:
-
-```bash
-curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
-```
-
-After installation, restart your terminal and run `cortex --version` again to confirm. Cortex Code CLI is Snowflake's AI coding assistant -- you will use it extensively throughout both tickets in this lab.
 
 ---
 
@@ -364,13 +343,7 @@ cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorizat
 
 ### 3.4 Quick Test -- Verify Cortex Code Reads Repo Context
 
-From your cloned repository root (from Step 0), launch Cortex Code:
-
-```bash
-cortex
-```
-
-Once Cortex Code starts, ask it a question about the project:
+In your Cortex Code session (still running from Step 1), ask it a question about the project:
 
 ```
 What database and schema does this project use?

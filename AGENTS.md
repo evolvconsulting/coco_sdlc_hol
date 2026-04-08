@@ -3,7 +3,7 @@
 ## Snowflake Connection
 
 ```
-Connection: <attendee-specific> (configured via `snow connection add` in Section 2)
+Connection: <attendee-specific> (configured via Cortex Code setup wizard in Section 2)
 Database: COCO_SDLC_HOL
 Schemas:
   - RAW (source data)

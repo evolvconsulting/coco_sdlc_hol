@@ -58,7 +58,7 @@ coco_sdlc_hol/
 Install these tools before the lab. Full install instructions and verification steps are in [LAB_INSTRUCTIONS.md](LAB_INSTRUCTIONS.md#prerequisites).
 
 - **Snowflake account** -- provided by your instructor
-- **Snow CLI** -- [docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation](https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation)
+- **Snow CLI** (prerequisite for Cortex Code CLI) -- [docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation](https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation)
 - **Cortex Code CLI** -- [docs.snowflake.com/en/user-guide/cortex-code-cli](https://docs.snowflake.com/en/user-guide/cortex-code-cli)
 - **Node.js 20.x** -- [nodejs.org/en/download](https://nodejs.org/en/download)
 - **Git**
