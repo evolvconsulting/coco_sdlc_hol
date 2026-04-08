@@ -367,7 +367,7 @@ In the Cortex Code terminal, enable plan mode so you can review the proposed cha
 Then describe the task to Cortex Code. Suggested prompt:
 
 ```
-Add a retry success rate metric to the authorizations domain. A retry is when a declined transaction is re-attempted and approved. Update the dbt models, semantic view, and Cortex Agent instructions. Read the relevant files first.
+Plan the implementation for the Jira ticket.
 ```
 
 Cortex Code will generate a numbered plan showing each file it intends to modify. Review the plan and confirm it includes changes to:
@@ -385,11 +385,7 @@ Please also include changes to the intermediate model (int_authorizations__enric
 
 ### Step 4.4: Confirm and Execute the Plan
 
-Once the plan looks complete, confirm execution:
-
-```
-The plan looks good. Execute it.
-```
+Once the plan looks complete, Cortex Code will present a confirmation dialog. Select **Yes** to begin execution.
 
 Cortex Code will proceed through each file modification, asking for your approval at each step (since plan mode is active). Review each change carefully as it is applied.
 
@@ -503,7 +499,7 @@ The Cortex Agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` 
 Once verification passes, ask Cortex Code to commit and push:
 
 ```
-Commit all changes in packages/dbt/ and packages/database/ with message "feat(dbt): add retry_success_rate metric" and push to origin.
+Commit and push the changes.
 ```
 
 Cortex Code will stage the files, create the commit, and push to the remote. This commits all dbt model changes, the semantic view update, and the Cortex Agent instruction change together as a single logical unit.
@@ -593,7 +589,7 @@ In the Cortex Code terminal, enable plan mode:
 Then describe the task. Suggested prompt:
 
 ```
-Read Jira ticket EPA-3 and add a retry success rate KPI card to the authorization dashboard. Follow the same pattern as the existing KPI cards.
+Plan the implementation for the Jira ticket.
 ```
 
 Review the plan. Confirm it includes changes to:
@@ -606,11 +602,7 @@ Review the plan. Confirm it includes changes to:
 
 ### Step 6.4: Execute the Plan
 
-Once the plan looks complete, confirm execution:
-
-```
-The plan looks good. Execute it.
-```
+Once the plan looks complete, Cortex Code will present a confirmation dialog. Select **Yes** to begin execution.
 
 Cortex Code will make changes to three files. Review each change as it is applied:
 
@@ -687,7 +679,7 @@ The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs i
 Once the KPI card displays correctly, ask Cortex Code to commit and push:
 
 ```
-Commit all frontend changes with message "feat(frontend): add retry success rate KPI card" and push to origin.
+Commit and push the changes.
 ```
 
 ### Step 6.7: Create a Pull Request

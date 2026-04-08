@@ -163,7 +163,7 @@ Create a new git branch called feature/retry-success-rate and switch to it.
 
 Then:
 ```
-Add a retry success rate metric to the authorizations domain. A retry is when a declined transaction is re-attempted and approved. Update the dbt models, semantic view, and Cortex Agent instructions. Read the relevant files first.
+Plan the implementation for the Jira ticket.
 ```
 
 > Watch for: Plan shows only 2-3 files — prompt to expand scope.
@@ -179,9 +179,7 @@ Please also include changes to the intermediate model (int_authorizations__enric
 
 **Step 4.4 — Confirm and Execute Plan**
 
-```
-The plan looks good. Execute it.
-```
+Cortex Code presents a confirmation dialog — participant selects **Yes** to begin execution.
 
 ---
 
@@ -275,7 +273,7 @@ Expected behavior: Cortex Agent generates SQL using RETRY_SUCCESS_RATE metric an
 **Step 4.11 — Commit and Push**
 
 ```
-Commit all changes in packages/dbt/ and packages/database/ with message "feat(dbt): add retry_success_rate metric" and push to origin.
+Commit and push the changes.
 ```
 
 ---
@@ -328,7 +326,7 @@ Create a new git branch called feature/retry-success-kpi-card and switch to it.
 
 Then:
 ```
-Read Jira ticket EPA-3 and add a retry success rate KPI card to the authorization dashboard. Follow the same pattern as the existing KPI cards.
+Plan the implementation for the Jira ticket.
 ```
 
 > Watch for: Plan order wrong — TypeScript interface (domain.ts) must be updated BEFORE API route and page component. If page.tsx appears first, ask Cortex Code to reorder.
@@ -339,9 +337,7 @@ Read Jira ticket EPA-3 and add a retry success rate KPI card to the authorizatio
 
 **Step 6.4 — Execute the Plan**
 
-```
-The plan looks good. Execute it.
-```
+Cortex Code presents a confirmation dialog — participant selects **Yes** to begin execution.
 
 ---
 
@@ -367,7 +363,7 @@ The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs i
 **Step 6.6 — Commit and Push**
 
 ```
-Commit all frontend changes with message "feat(frontend): add retry success rate KPI card" and push to origin.
+Commit and push the changes.
 ```
 
 ---
