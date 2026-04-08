@@ -233,8 +233,8 @@ The first-run setup wizard will guide you through connecting to Snowflake. Selec
 |--------|---------------|
 | Connection name | `coco-hol` (or any name you prefer) |
 | Account identifier | Provided by your instructor (format: `orgname-accountname`) |
-| Username | Provided by your instructor |
-| Authentication method | Browser-based SSO (`externalbrowser`) or password (`snowflake`) — your instructor will advise |
+| Username | `USER` (unless your instructor specifies otherwise) |
+| Authentication method | Password (`snowflake`) |
 
 Once authenticated, Cortex Code connects and drops you into an interactive session.
 

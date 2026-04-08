@@ -46,8 +46,8 @@ The setup wizard presents connection options. Attendees select **"More options"*
 |--------|-------|
 | Connection name | `coco-hol` (attendee's choice) |
 | Account identifier | Provide per-attendee (format: `orgname-accountname`) |
-| Username | Provide per-attendee |
-| Authentication method | Browser-based SSO (`externalbrowser`) or password (`snowflake`) — advise which to use |
+| Username | `USER` (unless you specify otherwise) |
+| Authentication method | Password (`snowflake`) |
 
 Once connected, attendees set session context and verify:
 ```
@@ -63,7 +63,7 @@ Expected output: `ATTENDEE_ROLE` as role, `COCO_SDLC_HOL` as database, `MARTS` a
 
 > Watch for: Role shows as SYSADMIN or empty — attendee needs to run `USE ROLE ATTENDEE_ROLE;` via `/sql`.
 > Watch for: "Account not found" or "invalid account" in the wizard — check the account identifier format with the attendee (must be `orgname-accountname`, not a URL).
-> Watch for: Browser-based SSO (`externalbrowser`) may not work in locked-down corporate environments — fall back to password auth (`snowflake`).
+> Watch for: If password auth fails, confirm the username and password with the attendee.
 > Watch for: Connection saved to `~/.snowflake/connections.toml` — if attendee needs to redo, they can edit or delete that file and re-run `cortex`.
 
 ---
