@@ -59,7 +59,7 @@ The setup wizard presents connection options. Attendees select **"More options"*
 
 Once connected, attendees set session context and verify:
 ```
-/sql USE ROLE ATTENDEE_ROLE; USE WAREHOUSE COMPUTE_WH; USE DATABASE COCO_SDLC_HOL; USE SCHEMA MARTS;
+Set my role to ATTENDEE_ROLE, warehouse to COMPUTE_WH, and use database COCO_SDLC_HOL with schema MARTS.
 ```
 
 Then:
@@ -78,11 +78,12 @@ Expected output: `ATTENDEE_ROLE` as role, `COCO_SDLC_HOL` as database, `MARTS` a
 
 **Step 3 — Confirm Local App Runs**
 
-```bash
-cd apps/frontend && npm install && npm run dev
+Participant asks Cortex Code:
+```
+Install the frontend dependencies and start the dev server from apps/frontend.
 ```
 
-Expected output: `> Ready on http://localhost:3000`
+Expected output: Dashboard loads at http://localhost:3000 with real transaction data.
 
 > Watch for: Dashboard loads but shows no data — check `.env.local` SNOWFLAKE_ACCOUNT value.
 
@@ -94,12 +95,13 @@ Sections 2.1 and 2.2 are instructor-led explanations — no participant inputs.
 
 **Step 2.3 — Install Atlassian MCP**
 
-Single command covers both Jira and Confluence:
+Participants must exit Cortex Code first (`/exit`), then run the MCP registration command in the terminal:
 
 ```bash
 cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorization: Basic dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU="
 ```
 
+> Watch for: Participant runs `cortex mcp add` inside Cortex Code — it must be run in the terminal. Have them `/exit` first.
 > Watch for: "command not found" for `cortex mcp add` — Cortex Code CLI not installed. Have attendee install it (see Prerequisites in LAB_INSTRUCTIONS.md) and restart terminal.
 
 ---
@@ -110,21 +112,13 @@ Participants use Cortex Code interactively to explore the architecture — this 
 
 **Step 3.1 — Explore the Architecture with Cortex Code**
 
-Participants should still be in their Cortex Code session from Section 1.
+Participants relaunch Cortex Code from the repository root (`cortex`), then ask:
 
-In Cortex Code:
 ```
-Describe the data architecture for this project. What database, schemas, and layers are used? What domain tables exist in the marts layer?
-```
-
-Expected behavior: Response mentions `COCO_SDLC_HOL` and the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) with domain tables — all sourced from `AGENTS.md`.
-
-Follow-up prompt:
-```
-What Cortex Agent and semantic view are configured for this project? How many metrics does the semantic view define?
+Describe this project's data architecture and the Cortex Agent setup. What database, schemas, layers, domain tables, semantic view, and metrics are configured?
 ```
 
-Expected behavior: Response identifies `PAYMENT_ANALYTICS` semantic view and `PAYMENT_ANALYTICS_AGENT` with 10 metrics.
+Expected behavior: Response mentions `COCO_SDLC_HOL` and the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) with domain tables, plus the `PAYMENT_ANALYTICS` semantic view and `PAYMENT_ANALYTICS_AGENT` with 10 metrics — all sourced from `AGENTS.md`.
 
 > Watch for: Response is generic and doesn't mention COCO_SDLC_HOL — Cortex Code must be launched from repo root, not a subdirectory. If participants haven't cloned yet (missed Step 0), stop and have them do that first.
 > Call out to group: Cortex Code reads `AGENTS.md` automatically — this is how it knows the project architecture without being told.
@@ -133,13 +127,9 @@ Expected behavior: Response identifies `PAYMENT_ANALYTICS` semantic view and `PA
 
 ## Section 4: Task 1 — Add Retry Success Rate Metric (~30 min)
 
-**Step 4.1 — Launch Cortex Code and Read Ticket**
+**Step 4.1 — Read the Jira Ticket**
 
-```bash
-cortex
-```
-
-Then in Cortex Code:
+In Cortex Code (still running from Section 3):
 ```
 Show me Jira ticket EPA-2. What does it ask me to implement?
 ```
@@ -162,7 +152,7 @@ Create a new git branch called feature/retry-success-rate and switch to it.
 
 Then:
 ```
-I need to add a retry success rate metric to the authorizations domain. Retry success rate = count of transactions where a customer was initially declined then approved on a subsequent attempt. Add this to the dbt mart, the semantic view, and update the Cortex Agent instructions. Start by reading the relevant files.
+Add a retry success rate metric to the authorizations domain. A retry is when a declined transaction is re-attempted and approved. Update the dbt models, semantic view, and Cortex Agent instructions. Read the relevant files first.
 ```
 
 > Watch for: Plan shows only 2-3 files — prompt to expand scope.
@@ -188,7 +178,7 @@ The plan looks good. Execute it.
 
 [If Cortex Code's plan doesn't include retry detection SQL]:
 ```
-Add the retry detection logic as a window function in int_authorizations__enriched.sql. A retry is when the same card_bin, card_last_four, and transaction_amount appear from the same merchant within 5 minutes of a declined transaction. Add retry_attempt_flag and retry_success_flag columns.
+Add retry detection logic in int_authorizations__enriched.sql using a window function. Flag transactions where the same card and amount retry within 5 minutes of a decline. Add retry_attempt_flag and retry_success_flag columns.
 ```
 
 ---
@@ -221,7 +211,7 @@ _(Cortex Code updates 03_create_agent.sql automatically. Verify instruction text
 
 Participant prompt to Cortex Code:
 ```
-Deploy my dbt model changes to Snowflake and manually refresh the intermediate and marts dynamic tables so the new retry columns have data right away.
+Deploy my dbt changes to Snowflake and refresh the intermediate and marts dynamic tables.
 ```
 
 Expected behavior: Cortex Code runs the compiled DDL and executes `ALTER DYNAMIC TABLE ... REFRESH` on both `INT_AUTHORIZATIONS__ENRICHED` and `AUTHORIZATIONS`. Participant sees confirmation that both tables were updated.
@@ -274,7 +264,7 @@ Expected behavior: Cortex Agent generates SQL using RETRY_SUCCESS_RATE metric an
 **Step 4.11 — Commit and Push**
 
 ```
-Commit all changes in packages/dbt/ and packages/database/ with the message "feat(dbt): add retry_success_rate to authorizations mart and semantic view". Then push to origin.
+Commit all changes in packages/dbt/ and packages/database/ with message "feat(dbt): add retry_success_rate metric" and push to origin.
 ```
 
 ---
@@ -282,7 +272,7 @@ Commit all changes in packages/dbt/ and packages/database/ with the message "fea
 **Step 4.12 — Reference Confluence Data Dictionary**
 
 ```
-Read the Confluence data dictionary page at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. What metrics are currently documented? How should I document the new retry_success_rate metric to match the existing format?
+Read the Confluence data dictionary at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. How should I document retry_success_rate to match the existing format?
 ```
 
 ---
@@ -327,7 +317,7 @@ Create a new git branch called feature/retry-success-kpi-card and switch to it.
 
 Then:
 ```
-Read Jira ticket EPA-3. Look at apps/frontend/src/app/analytics/authorization/page.tsx, apps/frontend/src/components/ui/KPICard.tsx, and apps/frontend/src/types/domain.ts. Add a KPI card that shows the retry_success_rate from the authorization KPIs API. Follow the exact same pattern as the existing KPI cards.
+Read Jira ticket EPA-3 and add a retry success rate KPI card to the authorization dashboard. Follow the same pattern as the existing KPI cards.
 ```
 
 > Watch for: Plan order wrong — TypeScript interface (domain.ts) must be updated BEFORE API route and page component. If page.tsx appears first, ask Cortex Code to reorder.
@@ -366,7 +356,7 @@ The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs i
 **Step 6.6 — Commit and Push**
 
 ```
-Commit all changes in apps/frontend/ with the message "feat(frontend): add retry success rate KPI card to authorization dashboard". Then push to origin.
+Commit all frontend changes with message "feat(frontend): add retry success rate KPI card" and push to origin.
 ```
 
 ---

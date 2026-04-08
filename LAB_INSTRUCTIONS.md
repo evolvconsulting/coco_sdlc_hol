@@ -178,10 +178,10 @@ Once authenticated, Cortex Code connects and drops you into an interactive sessi
 
 **2b. Set your role, warehouse, database, and schema**
 
-In the Cortex Code session, run the following SQL to set your session context:
+In the Cortex Code session, set your session context:
 
 ```
-/sql USE ROLE ATTENDEE_ROLE; USE WAREHOUSE COMPUTE_WH; USE DATABASE COCO_SDLC_HOL; USE SCHEMA MARTS;
+Set my role to ATTENDEE_ROLE, warehouse to COMPUTE_WH, and use database COCO_SDLC_HOL with schema MARTS.
 ```
 
 Then verify your connection is configured correctly:
@@ -194,23 +194,15 @@ Then verify your connection is configured correctly:
 
 ### Step 3: Confirm Local App Runs
 
-In a **separate terminal** (keep Cortex Code running), start the frontend development server:
-
-```bash
-cd apps/frontend
-npm install
-npm run dev
-```
-
-Expected output:
+Ask Cortex Code to install the frontend dependencies and start the dev server:
 
 ```
-> Ready on http://localhost:3000
+Install the frontend dependencies and start the dev server from apps/frontend.
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser. You should see the Payment Analytics dashboard populated with real transaction data -- charts, KPI cards, and a natural language query interface.
 
-If the dashboard loads with data, your local environment is correctly connected to the Snowflake backend. Leave this terminal running or stop the server with `Ctrl+C` (you will restart it during verification steps later).
+If the dashboard loads with data, your local environment is correctly connected to the Snowflake backend. You will restart the dev server during verification steps later.
 
 ---
 
@@ -247,37 +239,43 @@ A single Atlassian MCP connection gives Cortex Code access to both Jira and Conf
 
 > **Beyond the lab:** With write access, Cortex Code can add comments to Jira tickets, transition ticket status, log time, and update Confluence pages -- completing the full development loop without leaving the terminal.
 
-Run the following command in your terminal:
+First, exit your Cortex Code session so you can run the MCP registration command in the terminal:
+
+```
+/exit
+```
+
+Then run the following command in your terminal:
 
 ```bash
 cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorization: Basic dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU="
 ```
 
+> **Note:** `cortex mcp add` is a terminal command, not a Cortex Code prompt. You must exit the Cortex Code session first. You will relaunch Cortex Code at the start of Section 3.
+
 ---
 
 ## Section 3: Architecture Overview (~10 min)
 
-Now that Cortex Code is connected and running, use it to explore the lab's data architecture interactively. Rather than reading documentation, ask Cortex Code to explain the project -- this demonstrates how it uses the `AGENTS.md` context file to understand your codebase.
+Now that the MCP integration is registered, relaunch Cortex Code and use it to explore the lab's data architecture interactively. Rather than reading documentation, ask Cortex Code to explain the project -- this demonstrates how it uses the `AGENTS.md` context file to understand your codebase.
 
 ### 3.1 Explore the Architecture with Cortex Code
 
-In your Cortex Code session (still running from Section 1), ask it to describe the project architecture:
+Relaunch Cortex Code from the repository root:
+
+```bash
+cortex
+```
+
+Once it starts, ask it to describe the project architecture:
 
 ```
-Describe the data architecture for this project. What database, schemas, and layers are used? What domain tables exist in the marts layer?
+Describe this project's data architecture and the Cortex Agent setup. What database, schemas, layers, domain tables, semantic view, and metrics are configured?
 ```
 
-**Expected behavior:** Cortex Code should reference `COCO_SDLC_HOL` as the database and describe the medallion architecture (RAW → STAGING → INTERMEDIATE → MARTS), the domain tables, and the materialization strategy -- all sourced from `AGENTS.md`. If it does, the repo context is loaded correctly.
+**Expected behavior:** Cortex Code should reference `COCO_SDLC_HOL` as the database and describe the medallion architecture (RAW → STAGING → INTERMEDIATE → MARTS), the domain tables, the materialization strategy, and the `PAYMENT_ANALYTICS` semantic view with its 10 metrics -- all sourced from `AGENTS.md`. If it does, the repo context is loaded correctly.
 
 > **Note:** Suggested prompts throughout this lab are starting points -- feel free to rephrase in your own words. Cortex Code understands natural language variations.
-
-Follow up to learn about the AI layer:
-
-```
-What Cortex Agent and semantic view are configured for this project? How many metrics does the semantic view define?
-```
-
-**Expected behavior:** Cortex Code should identify `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS` as the semantic view and `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT` as the Cortex Agent, with 10 pre-defined metrics.
 
 ### 3.2 Architecture Reference
 
@@ -328,13 +326,7 @@ In this task, you will add a new business metric -- retry success rate -- that m
 
 ### Step 4.1: Read the Jira Ticket
 
-Launch Cortex Code from the repository root:
-
-```bash
-cortex
-```
-
-Once Cortex Code starts, ask it to pull the ticket details:
+In your Cortex Code session (still running from Section 3), ask it to pull the ticket details:
 
 ```
 Show me Jira ticket EPA-2. What does it ask me to implement?
@@ -365,7 +357,7 @@ In the Cortex Code terminal, enable plan mode so you can review the proposed cha
 Then describe the task to Cortex Code. Suggested prompt:
 
 ```
-I need to add a retry success rate metric to the authorizations domain. Retry success rate = count of transactions where a customer was initially declined then approved on a subsequent attempt. Add this to the dbt mart, the semantic view, and update the Cortex Agent instructions. Start by reading the relevant files.
+Add a retry success rate metric to the authorizations domain. A retry is when a declined transaction is re-attempted and approved. Update the dbt models, semantic view, and Cortex Agent instructions. Read the relevant files first.
 ```
 
 Cortex Code will generate a numbered plan showing each file it intends to modify. Review the plan and confirm it includes changes to:
@@ -405,7 +397,7 @@ Add window function logic to detect retries. A retry is when the same card (`car
 If Cortex Code's plan does not include the SQL logic for computing retries, prompt it:
 
 ```
-Add the retry detection logic as a window function in int_authorizations__enriched.sql. A retry is when the same card_bin, card_last_four, and transaction_amount appear from the same merchant within 5 minutes of a declined transaction. Add retry_attempt_flag and retry_success_flag columns.
+Add retry detection logic in int_authorizations__enriched.sql using a window function. Flag transactions where the same card and amount retry within 5 minutes of a decline. Add retry_attempt_flag and retry_success_flag columns.
 ```
 
 **In `packages/dbt/models/marts/payments/authorizations.sql`:**
@@ -465,7 +457,7 @@ Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Ty
 **a) Apply DDL changes and refresh dynamic tables**
 
 ```
-Deploy my dbt model changes to Snowflake and manually refresh the intermediate and marts dynamic tables so the new retry columns have data right away.
+Deploy my dbt changes to Snowflake and refresh the intermediate and marts dynamic tables.
 ```
 
 Cortex Code will apply the DDL and trigger a refresh on both tables. You should see confirmation that both were updated.
@@ -501,7 +493,7 @@ The Cortex Agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` 
 Once verification passes, ask Cortex Code to commit and push:
 
 ```
-Commit all changes in packages/dbt/ and packages/database/ with the message "feat(dbt): add retry_success_rate to authorizations mart and semantic view". Then push to origin.
+Commit all changes in packages/dbt/ and packages/database/ with message "feat(dbt): add retry_success_rate metric" and push to origin.
 ```
 
 Cortex Code will stage the files, create the commit, and push to the remote. This commits all dbt model changes, the semantic view update, and the Cortex Agent instruction change together as a single logical unit.
@@ -511,7 +503,7 @@ Cortex Code will stage the files, create the commit, and push to the remote. Thi
 Before wrapping up this ticket, use Cortex Code to read the existing data dictionary from Confluence. This demonstrates how MCP integrations let you pull project documentation directly into your coding workflow for reference:
 
 ```
-Read the Confluence data dictionary page at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. What metrics are currently documented? How should I document the new retry_success_rate metric to match the existing format?
+Read the Confluence data dictionary at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. How should I document retry_success_rate to match the existing format?
 ```
 
 > **Note:** https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations is a placeholder -- your instructor will provide the actual Confluence page URL.
@@ -591,7 +583,7 @@ In the Cortex Code terminal, enable plan mode:
 Then describe the task. Suggested prompt:
 
 ```
-Read Jira ticket EPA-3. Look at apps/frontend/src/app/analytics/authorization/page.tsx, apps/frontend/src/components/ui/KPICard.tsx, and apps/frontend/src/types/domain.ts. Add a KPI card that shows the retry_success_rate from the authorization KPIs API. Follow the exact same pattern as the existing KPI cards.
+Read Jira ticket EPA-3 and add a retry success rate KPI card to the authorization dashboard. Follow the same pattern as the existing KPI cards.
 ```
 
 Review the plan. Confirm it includes changes to:
@@ -685,7 +677,7 @@ The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs i
 Once the KPI card displays correctly, ask Cortex Code to commit and push:
 
 ```
-Commit all changes in apps/frontend/ with the message "feat(frontend): add retry success rate KPI card to authorization dashboard". Then push to origin.
+Commit all frontend changes with message "feat(frontend): add retry success rate KPI card" and push to origin.
 ```
 
 ### Step 6.7: Create a Pull Request
