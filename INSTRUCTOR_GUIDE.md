@@ -19,13 +19,27 @@ git clone https://github.com/<their-username>/coco_sdlc_hol.git
 cd coco_sdlc_hol
 ```
 
-> Watch for: Participants who skip this step will hit errors in Step 2 (missing `apps/frontend`) and Section 3 (Cortex Code won't find `AGENTS.md`).
+> Watch for: Participants who skip this step will hit errors in Step 3 (missing `apps/frontend`) and Section 3 (Cortex Code won't find `AGENTS.md`).
 > Watch for: Participant cloned the upstream URL (`evolvconsulting/coco_sdlc_hol`) instead of their fork — push in Step 4.11 will fail with "permission denied" or "protected branch." Diagnose with `git remote -v`; origin must show their username. Fix: `git remote set-url origin https://github.com/<their-username>/coco_sdlc_hol.git`.
 > Watch for: Participant skipped forking entirely — same push-failure symptom. Have them fork first on GitHub, then re-clone or update their remote with the fix command above.
 
 ---
 
-**Step 1 — Configure and Confirm Snowflake Connection**
+**Step 1 — Temporarily Bypass MFA**
+
+Each participant logs in to Snowsight and runs:
+
+```sql
+ALTER USER USER SET MINS_TO_BYPASS_MFA = 720;
+```
+
+(Replace `USER` with their actual username if it differs.) This grants a 12-hour MFA bypass window so Cortex Code CLI connections don't trigger MFA prompts.
+
+> Watch for: Participant skips this step — the Cortex Code setup wizard may trigger an MFA prompt that blocks the connection flow. Have them go back and run the ALTER USER command in Snowsight.
+
+---
+
+**Step 2 — Configure and Confirm Snowflake Connection**
 
 Each attendee launches Cortex Code CLI, which triggers the first-run setup wizard to create a Snowflake connection.
 
@@ -62,7 +76,7 @@ Expected output: `ATTENDEE_ROLE` as role, `COCO_SDLC_HOL` as database, `MARTS` a
 
 ---
 
-**Step 2 — Confirm Local App Runs**
+**Step 3 — Confirm Local App Runs**
 
 ```bash
 cd apps/frontend && npm install && npm run dev

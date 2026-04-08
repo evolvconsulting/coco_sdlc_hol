@@ -137,11 +137,25 @@ cd coco_sdlc_hol
 
 > **Important:** Clone your fork, not the upstream repository. You will push changes to your fork during the lab. If you clone the upstream URL by mistake, you can fix it later with `git remote set-url origin https://github.com/<your-username>/coco_sdlc_hol.git`.
 
-### Step 1: Configure and Confirm Snowflake Connection
+### Step 1: Temporarily Bypass MFA
+
+Before launching Cortex Code, temporarily bypass MFA on your Snowflake user. This avoids MFA prompts during the lab's automated connections.
+
+Log in to the Snowflake web UI (Snowsight) and run the following in a SQL worksheet:
+
+```sql
+ALTER USER USER SET MINS_TO_BYPASS_MFA = 720;
+```
+
+This grants a 12-hour MFA bypass window. You can re-enable MFA after the lab by running `ALTER USER USER UNSET MINS_TO_BYPASS_MFA;`.
+
+> **Note:** Replace `USER` with your actual Snowflake username if it differs.
+
+### Step 2: Configure and Confirm Snowflake Connection
 
 Each attendee connects to their own Snowflake account using the Cortex Code CLI setup wizard.
 
-**1a. Launch Cortex Code and create a connection**
+**2a. Launch Cortex Code and create a connection**
 
 From the cloned repository root, launch Cortex Code:
 
@@ -162,7 +176,7 @@ Once authenticated, Cortex Code connects and drops you into an interactive sessi
 
 > **Note:** The connection is saved to `~/.snowflake/connections.toml` and can be reused by both Cortex Code CLI and Snow CLI.
 
-**1b. Set your role, warehouse, database, and schema**
+**2b. Set your role, warehouse, database, and schema**
 
 In the Cortex Code session, run the following SQL to set your session context:
 
@@ -178,7 +192,7 @@ Then verify your connection is configured correctly:
 
 **Expected output:** You should see `ATTENDEE_ROLE` as the role, `COCO_SDLC_HOL` as the database, and `MARTS` as the schema.
 
-### Step 2: Confirm Local App Runs
+### Step 3: Confirm Local App Runs
 
 In a **separate terminal** (keep Cortex Code running), start the frontend development server:
 
