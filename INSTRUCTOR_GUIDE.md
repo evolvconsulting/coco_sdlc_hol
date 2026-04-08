@@ -8,13 +8,7 @@
 
 ---
 
-## Section 1: Architecture Overview (~10 min)
-
-Instructor-led architecture walkthrough — no participant inputs.
-
----
-
-## Section 2: Environment Setup Verification (~5 min)
+## Section 1: Environment Setup Verification (~5 min)
 
 **Step 0 — Fork and Clone the Lab Repository**
 
@@ -25,7 +19,7 @@ git clone https://github.com/<their-username>/coco_sdlc_hol.git
 cd coco_sdlc_hol
 ```
 
-> Watch for: Participants who skip this step will hit errors in Step 2 (missing `apps/frontend`) and Step 3.4 (Cortex Code won't find `AGENTS.md`).
+> Watch for: Participants who skip this step will hit errors in Step 2 (missing `apps/frontend`) and Section 3 (Cortex Code won't find `AGENTS.md`).
 > Watch for: Participant cloned the upstream URL (`evolvconsulting/coco_sdlc_hol`) instead of their fork — push in Step 4.11 will fail with "permission denied" or "protected branch." Diagnose with `git remote -v`; origin must show their username. Fix: `git remote set-url origin https://github.com/<their-username>/coco_sdlc_hol.git`.
 > Watch for: Participant skipped forking entirely — same push-failure symptom. Have them fork first on GitHub, then re-clone or update their remote with the fix command above.
 
@@ -80,11 +74,11 @@ Expected output: `> Ready on http://localhost:3000`
 
 ---
 
-## Section 3: Cortex Code Primer (~10 min)
+## Section 2: Cortex Code Primer (~10 min)
 
-Sections 3.1 and 3.2 are instructor-led explanations — no participant inputs.
+Sections 2.1 and 2.2 are instructor-led explanations — no participant inputs.
 
-**Step 3.3 — Install Atlassian MCP**
+**Step 2.3 — Install Atlassian MCP**
 
 Single command covers both Jira and Confluence:
 
@@ -96,18 +90,30 @@ cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorizat
 
 ---
 
-**Step 3.4 — Quick Test — Verify Cortex Code Reads Repo Context**
+## Section 3: Architecture Overview (~10 min)
 
-Participants should still be in their Cortex Code session from Step 1.
+Participants use Cortex Code interactively to explore the architecture — this replaces a static instructor-led walkthrough.
+
+**Step 3.1 — Explore the Architecture with Cortex Code**
+
+Participants should still be in their Cortex Code session from Section 1.
 
 In Cortex Code:
 ```
-What database and schema does this project use?
+Describe the data architecture for this project. What database, schemas, and layers are used? What domain tables exist in the marts layer?
 ```
 
-Expected behavior: Response mentions `COCO_SDLC_HOL` and the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS).
+Expected behavior: Response mentions `COCO_SDLC_HOL` and the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) with domain tables — all sourced from `AGENTS.md`.
+
+Follow-up prompt:
+```
+What Cortex Agent and semantic view are configured for this project? How many metrics does the semantic view define?
+```
+
+Expected behavior: Response identifies `PAYMENT_ANALYTICS` semantic view and `PAYMENT_ANALYTICS_AGENT` with 10 metrics.
 
 > Watch for: Response is generic and doesn't mention COCO_SDLC_HOL — Cortex Code must be launched from repo root, not a subdirectory. If participants haven't cloned yet (missed Step 0), stop and have them do that first.
+> Call out to group: Cortex Code reads `AGENTS.md` automatically — this is how it knows the project architecture without being told.
 
 ---
 
