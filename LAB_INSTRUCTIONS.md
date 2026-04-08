@@ -76,7 +76,7 @@ npm --version
 git --version
 ```
 
-Fork and clone the lab repository -- instructions are in Section 2, Step 0.
+Fork and clone the lab repository -- instructions are in Section 1, Step 0.
 
 ### 6. uv (Python package manager)
 
@@ -120,100 +120,22 @@ dbt --version
 
 ---
 
-## Section 1: Architecture Overview (~10 min)
+## Section 1: Environment Setup Verification (~5 min)
 
-In this section, you will review the data architecture that has been pre-configured for the lab. Understanding these layers is essential because the development tasks require changes at multiple levels of the stack.
-
-### Medallion Data Architecture
-
-The project follows a medallion architecture with four layers. Data flows from raw source tables through progressively refined transformations:
-
-```
-+----------+     +----------------+     +------------------+     +-----------------+
-|   RAW    | --> |    STAGING     | --> |  INTERMEDIATE    | --> |     MARTS       |
-|          |     |   (views)      |     | (dynamic tables) |     | (dynamic tables)|
-+----------+     +----------------+     +------------------+     +-----------------+
-| Source   |     | Clean column   |     | Business logic,  |     | Final metrics   |
-| tables   |     | names, types   |     | enrichment,      |     | ready for       |
-| from     |     | cast, rename   |     | joins, lookups   |     | analytics       |
-| CLX_*    |     | stg_clx_*      |     | int_*__enriched  |     | AUTHORIZATIONS  |
-+----------+     +----------------+     +------------------+     +-----------------+
-```
-
-- **RAW:** Source data tables (`CLX_AUTH`, `CLX_SETTLE`, `CLX_FUND`, etc.) loaded by the setup script.
-- **STAGING:** Views over RAW that apply clean column names, type casting, and renaming. These are lightweight SQL views (`stg_clx_*`).
-- **INTERMEDIATE:** Dynamic tables that apply business logic, enrichment, and joins. These refresh automatically on a schedule (`int_*__enriched`).
-- **MARTS:** Final business-ready dynamic tables consumed by the semantic view and frontend. These are the tables you will query and extend in this lab.
-
-### MARTS Tables
-
-The MARTS schema contains seven tables covering all payment domains:
-
-| MARTS Table | RAW Source | Key Measures |
-|-------------|-----------|--------------|
-| `AUTHORIZATIONS` | `CLX_AUTH` | transaction_amount, approval_status, transactions_count |
-| `SETTLEMENTS` | `CLX_SETTLE` | net_amount, sales_count, refund_count, sales_amount |
-| `DEPOSITS` | `CLX_FUND` | deposit_amount, net_sales_amount, total_fees_amount |
-| `CHARGEBACKS` | `CLX_CBK` | dispute_amount, disputes_count, outcome |
-| `RETRIEVALS` | `CLX_RTRVL` | retrieval_amount, retrievals_count, retrieval_status |
-| `ADJUSTMENTS` | `CLX_ADJ` | adjustment_amount, adjustment_type |
-| `DIM_MERCHANTS` | `CLX_MRCH_MSTR` | merchant_name, city, state, mcc_code |
-
-All transaction queries in this lab filter by `clnt_id = 'dmcl'` for row-level security.
-
-### Cortex Agent and Semantic View Architecture
-
-The natural language query (NLQ) capability is powered by two Snowflake objects working together:
-
-- **Semantic View** (`COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS`): A YAML-defined layer over the MARTS tables that declares dimensions, facts, metrics, and relationships. It tells the Cortex Agent what data is available and how to query it. Currently defines 10 metrics (approval_rate, chargeback_win_rate, effective_fee_rate, etc.) across all 7 MARTS tables with 6 merchant relationships.
-- **Cortex Agent** (`COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT`): Uses the semantic view to translate natural language questions into SQL. Defined in `packages/database/utilities/03_create_agent.sql`.
-
-### End-to-End Data Flow
-
-The complete data flow from source to user looks like this:
-
-```
-dbt models          Dynamic Tables       Semantic View         Cortex Agent        Frontend
-+-----------+     +----------------+     +--------------+     +--------------+     +----------+
-| .sql      | --> | INTERMEDIATE   | --> | PAYMENT_     | --> | PAYMENT_     | --> | Next.js  |
-| files in  |     | & MARTS        |     | ANALYTICS    |     | ANALYTICS_   |     | app at   |
-| packages/ |     | schemas        |     | (YAML)       |     | AGENT        |     | :3000    |
-| dbt/      |     |                |     |              |     |              |     |          |
-+-----------+     +----------------+     +--------------+     +--------------+     +----------+
-```
-
-When you add a new metric in Ticket 1, the change flows through each of these layers. When you add a KPI card in Ticket 2, the frontend reads from the MARTS tables via its own API route.
-
-### AGENTS.md Context File
-
-The repository includes an `AGENTS.md` file at the root. Cortex Code reads this file automatically when launched from the repo directory. It contains the Snowflake connection details, data architecture reference, business rules (approval codes, chargeback cycles, etc.), and key file paths. You do not need to configure this -- it is already set up for the lab.
-
----
-
-## Section 2: Environment Setup Verification (~5 min)
-
-In this section, you will clone the lab repository and verify that your pre-configured environment is working correctly. Each step includes the expected output so you can confirm everything is ready before starting the development tasks.
+In this section you will fork the lab repository, connect to Snowflake using Cortex Code CLI, and confirm that the local development environment works.
 
 ### Step 0: Fork and Clone the Lab Repository
 
-**0a. Fork the repository**
-
-Navigate to [https://github.com/evolvconsulting/coco_sdlc_hol](https://github.com/evolvconsulting/coco_sdlc_hol) in your browser and click **Fork** (top-right). Accept the defaults and click **Create fork**.
-
-You now have your own copy of the repository at `https://github.com/<your-username>/coco_sdlc_hol`.
-
-**0b. Clone YOUR fork (not the upstream)**
+1. Navigate to the lab repository on GitHub: `evolvconsulting/coco_sdlc_hol`
+2. Click **Fork** to create a copy under your own GitHub account
+3. Clone your fork locally:
 
 ```bash
 git clone https://github.com/<your-username>/coco_sdlc_hol.git
 cd coco_sdlc_hol
 ```
 
-Replace `<your-username>` with your GitHub username.
-
-> **Why fork?** The upstream repository restricts direct pushes to main. By working in your own fork, you can push your branches freely and submit pull requests back to the upstream repository when ready.
-
-All subsequent steps and tool invocations assume you are working from this directory.
+> **Important:** Clone your fork, not the upstream repository. You will push changes to your fork during the lab. If you clone the upstream URL by mistake, you can fix it later with `git remote set-url origin https://github.com/<your-username>/coco_sdlc_hol.git`.
 
 ### Step 1: Configure and Confirm Snowflake Connection
 
@@ -254,46 +176,22 @@ Then verify your connection is configured correctly:
 /status
 ```
 
-**Expected output:** You should see `ATTENDEE_ROLE` as the role, `COCO_SDLC_HOL` as the database, and `MARTS` as the schema. The `ATTENDEE_ROLE` has been granted the permissions needed for all lab tasks.
-
-> **Tip:** To avoid setting role/warehouse/database/schema each time, you can edit `~/.snowflake/connections.toml` and add `role`, `warehouse`, `database`, and `schema` fields under your connection. See the [Cortex Code CLI reference](https://docs.snowflake.com/en/user-guide/cortex-code/cli-reference) for details.
-
-**1c. Set your account in the frontend environment file**
-
-The repository includes a pre-configured `apps/frontend/.env.local` with the service account credentials. You only need to fill in your account identifier.
-
-Open `apps/frontend/.env.local` and set `SNOWFLAKE_ACCOUNT` to the same account identifier you used in Step 1a (format: `orgname-accountname`):
-
-```
-SNOWFLAKE_ACCOUNT=orgname-accountname
-```
-
-All other values (service user, private key, database, schema, Cortex Agent name) are pre-populated and do not need to change.
-
-**1d. Set your account in the dbt profile**
-
-The repository includes a pre-configured `packages/dbt/profiles.yml` for running dbt models locally. You only need to fill in your account identifier — all other values are pre-set for lab participants.
-
-Open `packages/dbt/profiles.yml` and set `account` to the same account identifier you used in Step 1a (format: `orgname-accountname`):
-
-```yaml
-account: orgname-accountname
-```
-
-All other values (`user`, `authenticator`, `role`, `database`, `warehouse`, `schema`) are pre-populated and do not need to change.
+**Expected output:** You should see `ATTENDEE_ROLE` as the role, `COCO_SDLC_HOL` as the database, and `MARTS` as the schema.
 
 ### Step 2: Confirm Local App Runs
 
-Start the frontend application to verify it can connect to Snowflake and display real data:
+In a **separate terminal** (keep Cortex Code running), start the frontend development server:
 
 ```bash
-cd apps/frontend && npm install && npm run dev
+cd apps/frontend
+npm install
+npm run dev
 ```
 
-**Expected output:**
+Expected output:
 
 ```
-  > Ready on http://localhost:3000
+> Ready on http://localhost:3000
 ```
 
 Open [http://localhost:3000](http://localhost:3000) in your browser. You should see the Payment Analytics dashboard populated with real transaction data -- charts, KPI cards, and a natural language query interface.
@@ -302,11 +200,11 @@ If the dashboard loads with data, your local environment is correctly connected 
 
 ---
 
-## Section 3: Cortex Code Primer (~10 min)
+## Section 2: Cortex Code Primer (~10 min)
 
 In this section, you will learn the essential Cortex Code commands and set up the integrations needed for the lab tasks. By the end, you will be ready to use Cortex Code as your AI coding assistant throughout the development workflow.
 
-### 3.1 What is Cortex Code
+### 2.1 What is Cortex Code
 
 Cortex Code is Snowflake's AI coding assistant, generally available since February 2, 2026. Built on the Claude Code foundation, it runs directly in your terminal and provides AI-assisted development with Snowflake-native capabilities:
 
@@ -314,7 +212,7 @@ Cortex Code is Snowflake's AI coding assistant, generally available since Februa
 - **Snowflake-native features:** SQL execution, dbt skills, Snowflake object search, and RBAC awareness.
 - **MCP integrations:** Connect to Jira, Confluence, and other tools directly from the coding assistant.
 
-### 3.2 Key Slash Commands
+### 2.2 Key Slash Commands
 
 The following slash commands are used throughout this lab:
 
@@ -329,7 +227,7 @@ The following slash commands are used throughout this lab:
 
 > **Note:** Plan mode is session-scoped. After `/new`, you must re-enable `/plan` if you want plan mode in the new session.
 
-### 3.3 Install Atlassian MCP
+### 2.3 Install Atlassian MCP
 
 A single Atlassian MCP connection gives Cortex Code access to both Jira and Confluence. In this lab it is read-only -- you will use it to pull Jira ticket details and reference the Confluence data dictionary.
 
@@ -341,17 +239,72 @@ Run the following command in your terminal:
 cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorization: Basic dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU="
 ```
 
-### 3.4 Quick Test -- Verify Cortex Code Reads Repo Context
+---
 
-In your Cortex Code session (still running from Step 1), ask it a question about the project:
+## Section 3: Architecture Overview (~10 min)
+
+Now that Cortex Code is connected and running, use it to explore the lab's data architecture interactively. Rather than reading documentation, ask Cortex Code to explain the project -- this demonstrates how it uses the `AGENTS.md` context file to understand your codebase.
+
+### 3.1 Explore the Architecture with Cortex Code
+
+In your Cortex Code session (still running from Section 1), ask it to describe the project architecture:
 
 ```
-What database and schema does this project use?
+Describe the data architecture for this project. What database, schemas, and layers are used? What domain tables exist in the marts layer?
 ```
 
-**Expected behavior:** Cortex Code should reference `COCO_SDLC_HOL` as the database and describe the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) based on the information in `AGENTS.md`. If it does, the repo context is loaded correctly.
+**Expected behavior:** Cortex Code should reference `COCO_SDLC_HOL` as the database and describe the medallion architecture (RAW → STAGING → INTERMEDIATE → MARTS), the domain tables, and the materialization strategy -- all sourced from `AGENTS.md`. If it does, the repo context is loaded correctly.
 
 > **Note:** Suggested prompts throughout this lab are starting points -- feel free to rephrase in your own words. Cortex Code understands natural language variations.
+
+Follow up to learn about the AI layer:
+
+```
+What Cortex Agent and semantic view are configured for this project? How many metrics does the semantic view define?
+```
+
+**Expected behavior:** Cortex Code should identify `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS` as the semantic view and `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT` as the Cortex Agent, with 10 pre-defined metrics.
+
+### 3.2 Architecture Reference
+
+The information below is what Cortex Code should have described. Use it as a reference throughout the lab.
+
+**Medallion Pattern:**
+
+```
+RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tables)
+```
+
+| Layer | Schema | Materialization | Purpose |
+|-------|--------|-----------------|---------|
+| **RAW** | `RAW` | Tables (loaded by infrastructure) | Source data as-is from upstream systems |
+| **STAGING** | `STAGING` | Views | Light transformations: renaming, casting, basic filters |
+| **INTERMEDIATE** | `INTERMEDIATE` | Dynamic Tables | Business logic: joins, enrichment, derived columns |
+| **MARTS** | `MARTS` | Dynamic Tables | Final business-ready tables exposed to BI and AI |
+
+> **Why dynamic tables?** Changes to upstream models propagate automatically — no scheduled jobs required.
+
+**Domain Tables:**
+
+| Domain | RAW Table | MARTS Table | Key Measures |
+|--------|-----------|-------------|--------------|
+| Authorization | `CLX_AUTH` | `AUTHORIZATIONS` | transaction_amount, approval_status, transactions_count |
+| Settlement | `CLX_SETTLE` | `SETTLEMENTS` | net_amount, sales_count, refund_count |
+| Funding | `CLX_FUND` | `DEPOSITS` | deposit_amount, net_sales_amount, total_fees_amount |
+| Chargeback | `CLX_CBK` | `CHARGEBACKS` | dispute_amount, disputes_count, outcome |
+| Retrieval | `CLX_RTRVL` | `RETRIEVALS` | retrieval_amount, retrievals_count, retrieval_status |
+| Adjustment | `CLX_ADJ` | `ADJUSTMENTS` | adjustment_amount, adjustment_type |
+| Merchants | `CLX_MRCH_MSTR` | `DIM_MERCHANTS` | merchant_name, city, state, mcc_code |
+
+**Cortex Agent and Semantic View:**
+
+- **Semantic View:** `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS`
+- **Cortex Agent:** `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT`
+- **Tables:** All 7 marts tables
+- **Relationships:** 6 foreign-key joins (all transaction tables → MERCHANTS via MERCHANT_ID)
+- **Metrics:** 10 pre-defined calculations (approval_rate, chargeback_win_rate, effective_fee_rate, etc.)
+
+During the lab, you will add a new metric (retry success rate) to this semantic view and verify that the Cortex Agent can answer questions about it.
 
 ---
 
@@ -375,7 +328,7 @@ Show me Jira ticket EPA-2. What does it ask me to implement?
 
 > **Note:** EPA-2 is a placeholder -- your instructor will provide the actual Jira ticket ID (e.g., COCO-42).
 
-Cortex Code will use the Jira MCP skill you configured in Section 3 to retrieve the ticket. You should see a description asking you to add a retry success rate metric to the authorizations domain. Review the acceptance criteria before proceeding.
+Cortex Code will use the Jira MCP skill you configured in Section 2 to retrieve the ticket. You should see a description asking you to add a retry success rate metric to the authorizations domain. Review the acceptance criteria before proceeding.
 
 ### Step 4.2: Create a Git Branch
 
