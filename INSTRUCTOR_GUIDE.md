@@ -74,6 +74,17 @@ Expected output: `ATTENDEE_ROLE` as role, `COCO_SDLC_HOL` as database, `MARTS` a
 > Watch for: If password auth fails, confirm the username and password with the attendee.
 > Watch for: Connection saved to `~/.snowflake/connections.toml` — if attendee needs to redo, they can edit or delete that file and re-run `cortex`.
 
+**Step 2c — Configure Local Project Files**
+
+Participant asks Cortex Code:
+```
+Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local and the account field in packages/dbt/profiles.yml with my account identifier <orgname-accountname>.
+```
+
+Expected behavior: Cortex Code reads both files and replaces the placeholder values with the participant's account identifier.
+
+> Watch for: Participant uses a URL instead of `orgname-accountname` format — same format as the wizard in Step 2a.
+
 ---
 
 **Step 3 — Confirm Local App Runs**
