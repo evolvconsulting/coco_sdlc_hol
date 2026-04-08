@@ -33,39 +33,38 @@ cd coco_sdlc_hol
 
 **Step 1 — Configure and Confirm Snowflake Connection**
 
-Each attendee creates their own named connection with `snow connection add`, then verifies it.
+Each attendee launches Cortex Code CLI, which triggers the first-run setup wizard to create a Snowflake connection.
 
-Prompts and recommended values:
+From the cloned repository root:
+```bash
+cortex
+```
+
+The setup wizard presents connection options. Attendees select **"More options"** to create a new connection:
 
 | Prompt | Value |
 |--------|-------|
 | Connection name | `coco-hol` (attendee's choice) |
-| Account name | Provide per-attendee (format: `orgname-accountname`) |
+| Account identifier | Provide per-attendee (format: `orgname-accountname`) |
 | Username | Provide per-attendee |
-| Password | Provide per-attendee |
-| Authenticator | `snowflake` |
-| Role | `ATTENDEE_ROLE` |
-| Warehouse | `COMPUTE_WH` |
-| Database | `COCO_SDLC_HOL` |
-| Schema | `MARTS` |
+| Authentication method | Browser-based SSO (`externalbrowser`) or password (`snowflake`) — advise which to use |
 
-Verification command (attendee substitutes their chosen connection name):
-```bash
-snow sql -c <their-connection> -q "SELECT CURRENT_ROLE(), CURRENT_DATABASE(), CURRENT_SCHEMA();"
+Once connected, attendees set session context and verify:
+```
+/sql USE ROLE ATTENDEE_ROLE; USE WAREHOUSE COMPUTE_WH; USE DATABASE COCO_SDLC_HOL; USE SCHEMA MARTS;
 ```
 
-Expected output:
+Then:
 ```
-+----------------+--------------------+------------------+
-| CURRENT_ROLE() | CURRENT_DATABASE() | CURRENT_SCHEMA() |
-+----------------+--------------------+------------------+
-| ATTENDEE_ROLE  | COCO_SDLC_HOL      | MARTS            |
-+----------------+--------------------+------------------+
+/status
 ```
 
-> Watch for: Role must be ATTENDEE_ROLE — if SYSADMIN or empty, `snow connection add` skipped the Role field.
-> Watch for: "Incorrect username or password" — confirm credentials with the attendee and re-run `snow connection add`.
-> Watch for: "Account not found" or "invalid account" — check the account identifier format with the attendee (must be `orgname-accountname`, not a URL).
+Expected output: `ATTENDEE_ROLE` as role, `COCO_SDLC_HOL` as database, `MARTS` as schema.
+
+> Watch for: Role shows as SYSADMIN or empty — attendee needs to run `USE ROLE ATTENDEE_ROLE;` via `/sql`.
+> Watch for: "Account not found" or "invalid account" in the wizard — check the account identifier format with the attendee (must be `orgname-accountname`, not a URL).
+> Watch for: Browser-based SSO (`externalbrowser`) may not work in locked-down corporate environments — fall back to password auth (`snowflake`).
+> Watch for: Connection saved to `~/.snowflake/connections.toml` — if attendee needs to redo, they can edit or delete that file and re-run `cortex`.
 
 ---
 
@@ -81,23 +80,6 @@ Expected output: `> Ready on http://localhost:3000`
 
 ---
 
-**Step 3 — Confirm Cortex Code CLI Installed**
-
-```bash
-cortex --version
-```
-
-Expected output: version string (e.g., `cortex 1.x.x`)
-
-> Watch for: "command not found" after install — instruct to restart terminal.
-
-[If not installed — fallback]:
-```bash
-curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh | sh
-```
-
----
-
 ## Section 3: Cortex Code Primer (~10 min)
 
 Sections 3.1 and 3.2 are instructor-led explanations — no participant inputs.
@@ -110,19 +92,15 @@ Single command covers both Jira and Confluence:
 cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorization: Basic dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU="
 ```
 
-> Watch for: "command not found" for `cortex mcp add` — Cortex Code CLI not installed (back to Step 3).
+> Watch for: "command not found" for `cortex mcp add` — Cortex Code CLI not installed. Have attendee install it (see Prerequisites in LAB_INSTRUCTIONS.md) and restart terminal.
 
 ---
 
 **Step 3.4 — Quick Test — Verify Cortex Code Reads Repo Context**
 
-Participants should already be in the cloned repo root (from Step 0).
+Participants should still be in their Cortex Code session from Step 1.
 
-```bash
-cortex
-```
-
-Then in Cortex Code:
+In Cortex Code:
 ```
 What database and schema does this project use?
 ```
