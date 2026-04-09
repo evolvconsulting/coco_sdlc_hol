@@ -70,4 +70,4 @@ Plans:
 
 Plans:
 - [x] 07-01-PLAN.md — Fix profiles.yml for Snowflake-native dbt (Wave 1)
-- [ ] 07-02-PLAN.md — Create Snowflake objects and deploy dbt project from Git (Wave 2)
+- [x] 07-02-PLAN.md — Create Snowflake objects and deploy dbt project from Git (Wave 2)
