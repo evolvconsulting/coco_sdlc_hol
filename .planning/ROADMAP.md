@@ -60,3 +60,14 @@ Plans:
 
 Plans:
 - [x] 06-01-PLAN.md — Update LAB_INSTRUCTIONS.md, README.md, and INSTRUCTOR_GUIDE.md with fork-then-clone workflow
+
+### Phase 7: Deploy dbt project to Snowflake from Git repo
+
+**Goal:** Convert the dbt project to deploy into Snowflake as a native dbt project object, with Snowflake managing execution. Deploy from the GitHub repo via Git integration.
+**Requirements**: TBD
+**Depends on:** Phase 6
+**Plans:** 0/2 plans complete
+
+Plans:
+- [x] 07-01-PLAN.md — Fix profiles.yml for Snowflake-native dbt (Wave 1)
+- [ ] 07-02-PLAN.md — Create Snowflake objects and deploy dbt project from Git (Wave 2)
