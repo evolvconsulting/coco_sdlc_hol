@@ -49,10 +49,10 @@ CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION DBT_HUB_EAI
 USE ROLE SYSADMIN;
 
 CREATE OR REPLACE DBT PROJECT COCO_SDLC_HOL.MARTS.EVOLV_PAYMENT_ANALYTICS
-  FROM '@COCO_SDLC_HOL.PUBLIC.HOL_REPO/branches/main/packages/dbt'
+  FROM '@COCO_SDLC_HOL.PUBLIC.HOL_REPO/branches/"feature/dbt-in-snowflake"/packages/dbt'
   DEFAULT_TARGET = 'dev'
   EXTERNAL_ACCESS_INTEGRATIONS = (DBT_HUB_EAI)
-  COMMENT = 'evolv Payment Analytics - linked to GitHub main branch';
+  COMMENT = 'evolv Payment Analytics - linked to GitHub feature/dbt-in-snowflake branch';
 
 -- =============================================================================
 -- Step 5: Grant Access
