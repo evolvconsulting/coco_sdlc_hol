@@ -2,7 +2,7 @@
 # EVOLV PAYMENT ANALYTICS - Snowflake-Native dbt Profile
 # =============================================================================
 # This profile is used for Snowflake-native dbt execution via EXECUTE DBT PROJECT.
-# NOTE: No password or env_var() fields - auth is handled by Snowflake session.
+# NOTE: No account/user/password fields - auth is handled by Snowflake session.
 # =============================================================================
 
 dev:
@@ -10,11 +10,7 @@ dev:
   outputs:
     dev:
       type: snowflake
-      account: orgname-accountname
-      user: USER
-      password: "Sn0wf@ll"
-      role: ATTENDEE_ROLE
       database: COCO_SDLC_HOL
-      warehouse: COMPUTE_WH
+      role: ATTENDEE_ROLE
       schema: STAGING
-      threads: 4
+      warehouse: COMPUTE_WH

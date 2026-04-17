@@ -96,10 +96,10 @@ Expected output: `ATTENDEE_ROLE` as role, `COCO_SDLC_HOL` as database, `MARTS` a
 
 Participant asks Cortex Code:
 ```
-Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local and the account field in packages/dbt/profiles.yml with my account identifier <orgname-accountname>.
+Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local with my account identifier <orgname-accountname>.
 ```
 
-Expected behavior: Cortex Code reads both files and replaces the placeholder values with the participant's account identifier.
+Expected behavior: Cortex Code reads the `.env.local` file and replaces the placeholder value with the participant's account identifier. The dbt `profiles.yml` does not need updating -- authentication is handled by the Snowflake session context when running dbt inside Snowflake.
 
 > Watch for: Participant uses a URL instead of `orgname-accountname` format — same format as the wizard in Step 2a.
 
@@ -234,17 +234,23 @@ _(Cortex Code updates 03_create_agent.sql automatically. Verify instruction text
 
 ---
 
-**Step 4.10a — Apply DDL and Refresh Dynamic Tables**
+**Step 4.10a — Commit, Push, and Deploy via Snowflake-native dbt**
 
-Participant prompt to Cortex Code:
+Participant first commits and pushes dbt model changes:
 ```
-Deploy my dbt changes to Snowflake and refresh the intermediate and marts dynamic tables.
+Commit and push my dbt changes to the feature branch.
 ```
 
-Expected behavior: Cortex Code runs the compiled DDL and executes `ALTER DYNAMIC TABLE ... REFRESH` on both `INT_AUTHORIZATIONS__ENRICHED` and `AUTHORIZATIONS`. Participant sees confirmation that both tables were updated.
+Then refreshes the Snowflake Git repository and executes the dbt project:
+```
+Fetch the latest commits into the Snowflake Git repository and then execute the dbt project to deploy my model changes.
+```
 
-> Watch for: Cortex Code skips the refresh — remind participant to re-prompt asking it to also refresh the dynamic tables.
-> Watch for: DDL fails with "insufficient privileges" — attendee's connection is not using ATTENDEE_ROLE (re-check Step 1).
+Expected behavior: Cortex Code runs `ALTER GIT REPOSITORY ... FETCH` followed by `EXECUTE DBT PROJECT ... ARGS = 'run'`. The dbt project runs server-side inside Snowflake, reading models from the Git repository stage and applying DDL directly. Dynamic tables begin refreshing on their configured schedule.
+
+> Watch for: Participant forgets to push before fetching — the Git repository cache will not have the latest commits. Remind them to push first.
+> Watch for: `EXECUTE DBT PROJECT` fails with stale models — run `ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;` and retry.
+> Watch for: Permission errors on the dbt project — verify `ATTENDEE_ROLE` has USAGE on the dbt project object.
 
 ---
 
@@ -288,11 +294,13 @@ Expected behavior: Cortex Agent generates SQL using RETRY_SUCCESS_RATE metric an
 
 ---
 
-**Step 4.11 — Commit and Push**
+**Step 4.11 — Commit and Push Remaining Changes**
 
 ```
-Commit and push the changes.
+Commit and push the remaining changes.
 ```
+
+The dbt model changes were already committed and pushed in Step 4.10a. This step commits any remaining changes (semantic view updates, Cortex Agent instruction changes). If everything was already pushed, Cortex Code will report nothing to commit.
 
 > Watch for: Participants who used Option B (ZIP download) in Step 0 have no remote — they should commit locally only. The push will fail; this is expected. Have them skip the push.
 
@@ -409,9 +417,13 @@ _Lab complete._
 | Issue | Cause | Fix |
 |-------|-------|-----|
 | `cortex: command not found` | CLI not in PATH | `curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh` then restart terminal |
-| Dynamic table shows old data | Refreshes on schedule, not on DDL | Ask Cortex Code: `ALTER DYNAMIC TABLE ... REFRESH;` (Step 4.10a) |
+| Dynamic table shows old data | Refreshes on schedule, not immediately after `EXECUTE DBT PROJECT` | Ask Cortex Code: `ALTER DYNAMIC TABLE ... REFRESH;` to trigger immediate refresh |
 | Semantic view metric not found | YAML updated but view not rebuilt | Ask Cortex Code to rerun semantic view DDL (Step 4.10b) |
 | KPI card shows 0 or undefined | TypeScript interface not updated | Add `retrySuccessRate: number` to `AuthorizationKPIs` in `domain.ts` |
 | Cortex Agent gives generic answer | Agent instructions not updated | Rerun `03_create_agent.sql` with updated `instructions.response` |
 | `/plan` mode off after `/new` | Plan mode is session-scoped | Re-enable with `/plan` in each new session |
 | Verification query returns empty | Missing `clnt_id` filter | Add `WHERE clnt_id = 'dmcl'` to all verification queries |
+| `EXECUTE DBT PROJECT` shows stale models | Git repo cache not refreshed after push | Run `ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;` before executing |
+| `EXECUTE DBT PROJECT` fails with package error | dbt packages not accessible from Snowflake | Verify `DBT_HUB_EAI` external access integration is active and network rule allows `hub.getdbt.com` |
+| Branch path not found in Git stage | Branch name contains `/` and is not quoted | Use double quotes: `branches/"feature/dbt-in-snowflake"` |
+| `EXECUTE DBT PROJECT` permission denied | Missing grants on dbt project object | Verify `ATTENDEE_ROLE` has USAGE on the dbt project |

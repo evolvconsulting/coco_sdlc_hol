@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
+status: executing
 stopped_at: "Completed 06-01: fork-then-clone instructions updated in LAB_INSTRUCTIONS.md, README.md, INSTRUCTOR_GUIDE.md — human-approved"
-last_updated: "2026-03-11T15:28:24.252Z"
-last_activity: "2026-03-11 — Completed 06-01: fork-then-clone instructions updated across all three lab documents"
+last_updated: "2026-04-09T16:23:35.433Z"
+last_activity: 2026-04-09 -- Phase "07" execution started
 progress:
-  total_phases: 2
+  total_phases: 3
   completed_phases: 2
-  total_plans: 2
+  total_plans: 4
   completed_plans: 2
-  percent: 100
+  percent: 50
 ---
 
 # Project State
@@ -21,13 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-01 after v1.0 milestone)
 
 **Core value:** Merchants can independently answer questions about their transaction performance without calling support — seeing approvals, fees, chargebacks, and funding in one place with their own data.
-**Current focus:** Phase 3 - Generate reference content for Jira tickets and Confluence documentation
+**Current focus:** Phase "07" — "deploy-dbt-project-to-snowflake-from-git-repo"
 
 ## Current Position
 
-Phase: 06-update-instructions-to-include-step-to-fork-the-repository-per-option-a-standard-open-source-model — Plan 01 of 1 complete (ALL PLANS COMPLETE)
-Status: All plans complete. Fork-then-clone workflow introduced in LAB_INSTRUCTIONS.md, README.md, and INSTRUCTOR_GUIDE.md — human-approved and committed.
-Last activity: 2026-03-11 — Completed 06-01: fork-then-clone instructions updated across all three lab documents
+Phase: "07" ("deploy-dbt-project-to-snowflake-from-git-repo") — EXECUTING
+Plan: 1 of ?
+Status: Executing Phase "07"
+Last activity: 2026-04-09 -- Phase "07" execution started
 
 Progress: [██████████] 100% (11/11 plans complete) — 1/1 Phase 6 plans complete
 
@@ -42,6 +43,7 @@ Progress: [██████████] 100% (11/11 plans complete) — 1/1 P
 - Phase 5 added: Instructor Claude Skill
 - Phase 6 added: Update instructions to include step to fork the repository per Option A Standard open-source model
 - Phase 7 added: Separate out all SPCS components from the lab (leave SPCS setup in project, exclude from lab setup)
+- Phase 7 added: Deploy dbt project to Snowflake from Git repo
 
 ### Decisions
 
@@ -64,6 +66,7 @@ All milestone decisions logged in PROJECT.md Key Decisions table.
 **03-02 (2026-03-06):** Artifacts created directly via API rather than bash script; Confluence data dictionary split into 6 domain pages with index homepage; API tokens in HANDS_ON_LAB.md replaced with scoped read-only tokens.
 
 **04-01 (2026-03-07):** Section 7 (Wrap-up) omitted — no participant inputs; steps 4.6-4.9 retained as instructor tracking markers despite no participant-typed input; sub-steps 4.10a/b/c/d kept as separate entries to preserve per-verification tracking.
+
 - [Phase 05-instructor-claude-skill]: 05-01: Skill reads source files at runtime — not inlined — so it stays in sync as source files evolve; verification steps phrased as relay prompts only
 - [Phase 06-01]: Fork-then-clone adopted as sole onboarding path; no direct clone option retained; branch protection on main makes direct push impossible for non-admins; Steps 4.11, 6.6, 6.7 unchanged; no new prerequisite tools introduced
 
