@@ -1,7 +1,25 @@
 ﻿-- HOL Setup Script â€” COCO SDLC Hands-On Lab
--- This script provisions a complete Snowflake HOL environment.
--- Run all sections sequentially in a Snowflake worksheet.
+-- This script provisions a complete Snowflake HOL environment for multiple attendees.
+-- Run all sections sequentially in a Snowflake worksheet as ACCOUNTADMIN.
 -- The script is idempotent: safe to re-run without creating duplicate data or failing on existing objects.
+--
+-- WHAT THIS SCRIPT DOES:
+--   Section 0  : Set configuration (number of users, shared password)
+--   Section 1  : Account-level objects (role, warehouse, integrations) — runs ONCE
+--   Section 2  : Create HOL attendee users with MFA bypass — loops N times
+--   Sections 3-9: Full environment for User 01 (template database COCO_SDLC_HOL_01)
+--   Section 10 : Clone template + provision remaining user databases — loops N-1 times
+--
+-- ATTENDEE CREDENTIALS (hand out before the lab):
+--   Username : HOL_USER01 ... HOL_USER<NN>
+--   Password : <value of HOL_PASSWORD below>
+--   Database : COCO_SDLC_HOL_01 ... COCO_SDLC_HOL_<NN>
+
+-- ============================================================
+-- SECTION 0: Configuration — set these before running
+-- ============================================================
+SET NUM_USERS    = 20;           -- total number of attendees
+SET HOL_PASSWORD = 'Evolv2026!'; -- shared lab password for all HOL users
 
 -- ============================================================
 -- SECTION 1: ACCOUNTADMIN Bootstrap
@@ -30,14 +48,50 @@ CREATE WAREHOUSE IF NOT EXISTS COMPUTE_WH
 GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE ATTENDEE_ROLE;
 
 -- ============================================================
--- SECTION 2: Database, Warehouse, and Schema Setup
+-- SECTION 2: Create HOL Attendee Users
+-- ============================================================
+-- Creates HOL_USER01 … HOL_USER<NN> with:
+--   - shared lab password from Section 0
+--   - ATTENDEE_ROLE as default role
+--   - MFA bypass for 20 hours so attendees connect without prompts
+-- ============================================================
+EXECUTE IMMEDIATE $$
+DECLARE
+    num_users  INTEGER DEFAULT 20;   -- keep in sync with SET NUM_USERS above
+    hol_pass   VARCHAR DEFAULT 'Evolv2026!'; -- keep in sync with SET HOL_PASSWORD above
+BEGIN
+    FOR i IN 1 TO :num_users DO
+        LET suffix   VARCHAR := LPAD(i::VARCHAR, 2, '0');
+        LET username VARCHAR := 'HOL_USER' || :suffix;
+
+        EXECUTE IMMEDIATE
+            'CREATE USER IF NOT EXISTS ' || :username ||
+            ' PASSWORD = ''' || :hol_pass || '''' ||
+            ' DEFAULT_ROLE = ATTENDEE_ROLE' ||
+            ' DEFAULT_WAREHOUSE = COMPUTE_WH' ||
+            ' MUST_CHANGE_PASSWORD = FALSE' ||
+            ' COMMENT = ''HOL attendee user''';
+
+        EXECUTE IMMEDIATE
+            'ALTER USER ' || :username || ' SET MINS_TO_BYPASS_MFA = 1200';
+
+        EXECUTE IMMEDIATE
+            'GRANT ROLE ATTENDEE_ROLE TO USER ' || :username;
+    END FOR;
+    RETURN 'Created ' || :num_users || ' HOL users with MFA bypass';
+END;
+$$;
+
+-- ============================================================
+-- SECTION 3: Database, Warehouse, and Schema Setup
+-- (Template database for User 01 — cloned for all other users in Section 10)
 -- ============================================================
 USE ROLE ATTENDEE_ROLE;
 
-CREATE DATABASE IF NOT EXISTS COCO_SDLC_HOL
+CREATE DATABASE IF NOT EXISTS COCO_SDLC_HOL_01
     COMMENT = 'evolv Payment Analytics hands-on lab environment with sample payment data and reference tables';
 
-USE DATABASE COCO_SDLC_HOL;
+USE DATABASE COCO_SDLC_HOL_01;
 
 CREATE SCHEMA IF NOT EXISTS RAW
     COMMENT = 'Raw normalized OLTP-style tables with legacy naming conventions';
@@ -48,18 +102,18 @@ CREATE SCHEMA IF NOT EXISTS PUBLIC;
 
 -- Grant schema-level privileges to ATTENDEE_ROLE (requires ACCOUNTADMIN)
 USE ROLE ACCOUNTADMIN;
-GRANT ALL PRIVILEGES ON DATABASE COCO_SDLC_HOL TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.RAW TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.STAGING TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.MARTS TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL.PUBLIC TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON DATABASE COCO_SDLC_HOL_01 TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.RAW TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.STAGING TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.MARTS TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.PUBLIC TO ROLE ATTENDEE_ROLE;
 USE ROLE ATTENDEE_ROLE;
 
 -- ============================================================
 -- SECTION 3: RAW Schema Tables
 -- ============================================================
-USE SCHEMA COCO_SDLC_HOL.RAW;
+USE SCHEMA COCO_SDLC_HOL_01.RAW;
 
 -- -----------------------------------------------------------------------------
 -- DIMENSION TABLES (Reference Data)
@@ -1427,8 +1481,8 @@ $$;
 -- Only generate if tables are empty
 EXECUTE IMMEDIATE $$
 BEGIN
-    IF ((SELECT COUNT(*) FROM COCO_SDLC_HOL.RAW.CLX_AUTH) = 0) THEN
-        CALL COCO_SDLC_HOL.RAW.GENERATE_SYNTHETIC_DATA();
+    IF ((SELECT COUNT(*) FROM COCO_SDLC_HOL_01.RAW.CLX_AUTH) = 0) THEN
+        CALL COCO_SDLC_HOL_01.RAW.GENERATE_SYNTHETIC_DATA();
     END IF;
 END;
 $$;
@@ -1450,39 +1504,80 @@ CREATE OR REPLACE API INTEGRATION GITHUB_EVOLV_INTEGRATION
   ENABLED = TRUE;
 
 -- Step 6b: Git Repository Object
-CREATE OR REPLACE GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO
+CREATE OR REPLACE GIT REPOSITORY COCO_SDLC_HOL_01.PUBLIC.HOL_REPO
   API_INTEGRATION = GITHUB_EVOLV_INTEGRATION
   ORIGIN = 'https://github.com/evolvconsulting/coco_sdlc_hol.git';
 
-GRANT READ ON GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO
+GRANT READ ON GIT REPOSITORY COCO_SDLC_HOL_01.PUBLIC.HOL_REPO
   TO ROLE ATTENDEE_ROLE;
 
 -- Step 6c: External Access Integration for dbt packages (hub.getdbt.com)
-CREATE OR REPLACE NETWORK RULE COCO_SDLC_HOL.PUBLIC.DBT_NETWORK_RULE
+CREATE OR REPLACE NETWORK RULE COCO_SDLC_HOL_01.PUBLIC.DBT_NETWORK_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   VALUE_LIST = ('hub.getdbt.com', 'codeload.github.com');
 
 CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION DBT_HUB_EAI
-  ALLOWED_NETWORK_RULES = (COCO_SDLC_HOL.PUBLIC.DBT_NETWORK_RULE)
+  ALLOWED_NETWORK_RULES = (COCO_SDLC_HOL_01.PUBLIC.DBT_NETWORK_RULE)
   ENABLED = TRUE;
 
--- Step 6d: Deploy dbt Project from Git Repository
+-- Step 6d: Internal stage for per-user dbt file edits
+-- Each HOL user gets their own isolated copy of the dbt project files.
+-- Attendees upload changes via 'snow stage put' during the lab — no GitHub push required.
 USE ROLE SYSADMIN;
 
-CREATE OR REPLACE DBT PROJECT COCO_SDLC_HOL.MARTS.EVOLV_PAYMENT_ANALYTICS
-  FROM '@COCO_SDLC_HOL.PUBLIC.HOL_REPO/branches/main/packages/dbt'
+CREATE OR REPLACE STAGE COCO_SDLC_HOL_01.PUBLIC.DBT_FILES
+    DIRECTORY = (ENABLE = TRUE)
+    COMMENT = 'Template dbt project files — cloned into each user database by Section 10';
+
+COPY FILES
+    INTO @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/
+    FROM @COCO_SDLC_HOL_01.PUBLIC.HOL_REPO/branches/main/packages/dbt/;
+
+-- Remove stale package lock (pinned version from repo causes dbt Fusion validation error;
+-- dbt regenerates it automatically on first run)
+REMOVE @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/package-lock.yml;
+
+-- Overwrite profiles.yml with correct template database name
+-- (repo copy may have placeholder; COPY INTO writes clean YAML without compression)
+COPY INTO @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/profiles.yml
+FROM (
+    SELECT
+        'dev:' || CHR(10) ||
+        '  target: dev' || CHR(10) ||
+        '  outputs:' || CHR(10) ||
+        '    dev:' || CHR(10) ||
+        '      type: snowflake' || CHR(10) ||
+        '      database: COCO_SDLC_HOL_01' || CHR(10) ||
+        '      role: ATTENDEE_ROLE' || CHR(10) ||
+        '      schema: STAGING' || CHR(10) ||
+        '      warehouse: COMPUTE_WH' AS content
+)
+FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='NONE' RECORD_DELIMITER='NONE'
+               FIELD_OPTIONALLY_ENCLOSED_BY='NONE' COMPRESSION=NONE)
+OVERWRITE=TRUE SINGLE=TRUE HEADER=FALSE;
+
+ALTER STAGE COCO_SDLC_HOL_01.PUBLIC.DBT_FILES REFRESH;
+
+GRANT READ, WRITE ON STAGE COCO_SDLC_HOL_01.PUBLIC.DBT_FILES TO ROLE ATTENDEE_ROLE;
+
+-- Step 6e: Deploy dbt Project from internal stage
+-- DROP + CREATE (not CREATE OR REPLACE) ensures a fresh manifest compile
+-- so {{ target.database }} in sources.yml resolves correctly to COCO_SDLC_HOL_01
+DROP DBT PROJECT IF EXISTS COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS;
+CREATE DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS
+  FROM '@COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/'
   DEFAULT_TARGET = 'dev'
   EXTERNAL_ACCESS_INTEGRATIONS = (DBT_HUB_EAI)
-  COMMENT = 'evolv Payment Analytics - dbt project deployed from GitHub';
+  COMMENT = 'evolv Payment Analytics - dbt project from internal stage';
 
--- Step 6e: Grant Access
-GRANT USAGE ON DBT PROJECT COCO_SDLC_HOL.MARTS.EVOLV_PAYMENT_ANALYTICS
+-- Step 6f: Grant Access
+GRANT USAGE ON DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS
   TO ROLE ATTENDEE_ROLE;
 
--- Step 6f: Execute dbt project to create staging views, intermediate
+-- Step 6g: Execute dbt project to create staging views, intermediate
 -- dynamic tables, and marts dynamic tables
-EXECUTE DBT PROJECT COCO_SDLC_HOL.MARTS.EVOLV_PAYMENT_ANALYTICS
+EXECUTE DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS
   ARGS = 'run';
 
 USE ROLE ATTENDEE_ROLE;
@@ -1503,7 +1598,7 @@ GRANT ROLE ATTENDEE_ROLE TO USER COCO_SDLC_HOL_SERVICE_USER;
 USE ROLE ATTENDEE_ROLE;
 
 -- Private key stored as Secret for container injection
-CREATE OR REPLACE SECRET COCO_SDLC_HOL.PUBLIC.coco_sdlc_hol_private_key
+CREATE OR REPLACE SECRET COCO_SDLC_HOL_01.PUBLIC.coco_sdlc_hol_private_key
   TYPE = GENERIC_STRING
   SECRET_STRING = '-----BEGIN PRIVATE KEY-----
 <PASTE_YOUR_UNENCRYPTED_PRIVATE_KEY_HERE>
@@ -1513,11 +1608,11 @@ CREATE OR REPLACE SECRET COCO_SDLC_HOL.PUBLIC.coco_sdlc_hol_private_key
 -- ============================================================
 -- SECTION 8: Semantic View + Cortex Agent
 -- ============================================================
-USE DATABASE COCO_SDLC_HOL;
+USE DATABASE COCO_SDLC_HOL_01;
 USE SCHEMA MARTS;
 
 CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
-  'COCO_SDLC_HOL.MARTS',
+  'COCO_SDLC_HOL_01.MARTS',
   $$
 name: PAYMENT_ANALYTICS
 description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
@@ -1529,7 +1624,7 @@ tables:
   - name: MERCHANTS
     description: Merchant and store reference data for location-based analytics
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: DIM_MERCHANTS
     primary_key:
@@ -1608,7 +1703,7 @@ tables:
   - name: AUTHORIZATIONS
     description: Authorization transactions for payment processing
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: AUTHORIZATIONS
     primary_key:
@@ -1699,7 +1794,7 @@ tables:
   - name: SETTLEMENTS
     description: Settlement and clearing transactions
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: SETTLEMENTS
     primary_key:
@@ -1784,7 +1879,7 @@ tables:
   - name: DEPOSITS
     description: Funding and deposit records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: DEPOSITS
     primary_key:
@@ -1854,7 +1949,7 @@ tables:
   - name: CHARGEBACKS
     description: Chargeback and dispute records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: CHARGEBACKS
     primary_key:
@@ -1945,7 +2040,7 @@ tables:
   - name: RETRIEVALS
     description: Retrieval requests
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: RETRIEVALS
     primary_key:
@@ -2011,7 +2106,7 @@ tables:
   - name: ADJUSTMENTS
     description: Fee adjustments and corrections
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: ADJUSTMENTS
     primary_key:
@@ -2241,7 +2336,7 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
 
   tool_resources:
     PaymentAnalyst:
-      semantic_view: "COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS"
+      semantic_view: "COCO_SDLC_HOL_01.MARTS.PAYMENT_ANALYTICS"
       execution_environment:
         type: warehouse
         warehouse: COMPUTE_WH
@@ -2250,9 +2345,896 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
 -- ============================================================
 -- SECTION 9: Final Grants
 -- ============================================================
-GRANT USAGE ON AGENT COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
-GRANT USAGE ON DBT PROJECT COCO_SDLC_HOL.MARTS.EVOLV_PAYMENT_ANALYTICS TO ROLE ATTENDEE_ROLE;
-GRANT SELECT ON ALL TABLES IN SCHEMA COCO_SDLC_HOL.MARTS TO ROLE ATTENDEE_ROLE;
-GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL.MARTS TO ROLE ATTENDEE_ROLE;
-GRANT SELECT ON ALL VIEWS IN SCHEMA COCO_SDLC_HOL.STAGING TO ROLE ATTENDEE_ROLE;
-GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
+GRANT USAGE ON AGENT COCO_SDLC_HOL_01.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
+GRANT USAGE ON DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS TO ROLE ATTENDEE_ROLE;
+GRANT SELECT ON ALL TABLES IN SCHEMA COCO_SDLC_HOL_01.MARTS TO ROLE ATTENDEE_ROLE;
+GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL_01.MARTS TO ROLE ATTENDEE_ROLE;
+GRANT SELECT ON ALL VIEWS IN SCHEMA COCO_SDLC_HOL_01.STAGING TO ROLE ATTENDEE_ROLE;
+GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL_01.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
+
+
+-- ============================================================
+-- SECTION 9.5: Store YAML template for per-user provisioning
+-- ============================================================
+-- Used by Section 10 to recreate the semantic view for each
+-- cloned user database with the correct database name.
+-- ============================================================
+USE ROLE ATTENDEE_ROLE;
+USE DATABASE COCO_SDLC_HOL_01;
+
+CREATE OR REPLACE TABLE COCO_SDLC_HOL_01.PUBLIC.HOL_YAML_TEMPLATES (
+    template_name VARCHAR COMMENT 'Template identifier',
+    content       VARCHAR COMMENT 'Template content'
+);
+
+INSERT INTO COCO_SDLC_HOL_01.PUBLIC.HOL_YAML_TEMPLATES (template_name, content)
+VALUES (
+    'semantic_view',
+    $$
+name: PAYMENT_ANALYTICS
+description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
+
+tables:
+  # ============================================================================
+  # MERCHANTS - Store/Location reference table (enables relationships)
+  # ============================================================================
+  - name: MERCHANTS
+    description: Merchant and store reference data for location-based analytics
+    base_table:
+      database: COCO_SDLC_HOL_01
+      schema: MARTS
+      table: DIM_MERCHANTS
+    primary_key:
+      columns:
+        - MERCHANT_ID
+    synonyms:
+      - stores
+      - locations
+      - merchants
+      - store locations
+    dimensions:
+      - name: MERCHANT_ID
+        description: Unique merchant identifier
+        expr: MERCHANT_ID
+        data_type: VARCHAR
+        synonyms:
+          - MID
+          - store ID
+      - name: MERCHANT_NAME
+        description: Merchant DBA name
+        expr: MERCHANT_NAME
+        data_type: VARCHAR
+        synonyms:
+          - store name
+          - DBA name
+      - name: CORPORATE_NAME
+        description: Corporate parent name
+        expr: CORPORATE_NAME
+        data_type: VARCHAR
+        synonyms:
+          - corp name
+          - parent company
+      - name: CITY
+        description: Merchant city
+        expr: CITY
+        data_type: VARCHAR
+        synonyms:
+          - store city
+      - name: STATE
+        description: Merchant state
+        expr: STATE
+        data_type: VARCHAR
+        synonyms:
+          - store state
+      - name: ZIP_CODE
+        description: Merchant ZIP code
+        expr: ZIP_CODE
+        data_type: VARCHAR
+      - name: MCC_CODE
+        description: Merchant Category Code
+        expr: MCC_CODE
+        data_type: VARCHAR
+        synonyms:
+          - MCC
+          - merchant category
+      - name: MCC_DESCRIPTION
+        description: Merchant category description
+        expr: MCC_DESCRIPTION
+        data_type: VARCHAR
+      - name: BUSINESS_TYPE
+        description: Type of business
+        expr: BUSINESS_TYPE
+        data_type: VARCHAR
+      - name: STATUS
+        description: Merchant status (Active/Inactive)
+        expr: STATUS
+        data_type: VARCHAR
+      - name: ONBOARDING_DATE
+        description: Date merchant was onboarded
+        expr: ONBOARDING_DATE
+        data_type: DATE
+
+  # ============================================================================
+  # AUTHORIZATIONS - Authorization transaction records
+  # ============================================================================
+  - name: AUTHORIZATIONS
+    description: Authorization transactions for payment processing
+    base_table:
+      database: COCO_SDLC_HOL_01
+      schema: MARTS
+      table: AUTHORIZATIONS
+    primary_key:
+      columns:
+        - AUTHORIZATION_KEY
+    synonyms:
+      - authorizations
+      - auths
+      - auth transactions
+      - card transactions
+    dimensions:
+      - name: AUTHORIZATION_KEY
+        description: Unique identifier for authorization
+        expr: AUTHORIZATION_KEY
+        data_type: VARCHAR
+      - name: TRANSACTION_DATE
+        description: Date of the authorization transaction
+        expr: TRANSACTION_DATE
+        data_type: DATE
+        synonyms:
+          - auth date
+          - transaction date
+          - txn date
+      - name: MERCHANT_ID
+        description: Merchant identifier for relationship join
+        expr: MERCHANT_ID
+        data_type: VARCHAR
+      - name: CARD_BRAND
+        description: Card network brand (Visa, Mastercard, etc.)
+        expr: CARD_BRAND
+        data_type: VARCHAR
+        synonyms:
+          - brand
+          - card network
+      - name: CARD_TYPE
+        description: Type of card product
+        expr: CARD_TYPE
+        data_type: VARCHAR
+      - name: CARD_CATEGORY
+        description: Card category (consumer/commercial)
+        expr: CARD_CATEGORY
+        data_type: VARCHAR
+      - name: ENTRY_MODE
+        description: Point of sale entry mode (swipe, dip, tap)
+        expr: ENTRY_MODE
+        data_type: VARCHAR
+        synonyms:
+          - POS entry mode
+      - name: APPROVAL_STATUS
+        description: Authorization approval status (Approved/Declined)
+        expr: APPROVAL_STATUS
+        data_type: VARCHAR
+        synonyms:
+          - auth status
+          - status
+      - name: DECLINE_REASON
+        description: Reason for declined authorization
+        expr: DECLINE_REASON
+        data_type: VARCHAR
+      - name: PROCESSOR_NAME
+        description: Payment processor name
+        expr: PROCESSOR_NAME
+        data_type: VARCHAR
+        synonyms:
+          - processor
+          - acquirer
+    facts:
+      - name: TRANSACTION_AMOUNT
+        description: Transaction amount in USD
+        expr: TRANSACTION_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - transaction amount
+          - auth amount
+          - dollar amount
+          - amount
+      - name: TRANSACTIONS_COUNT
+        description: Count of transactions (1 per row)
+        expr: TRANSACTIONS_COUNT
+        data_type: NUMBER
+        synonyms:
+          - auth count
+          - transaction count
+
+  # ============================================================================
+  # SETTLEMENTS - Settlement batch records
+  # ============================================================================
+  - name: SETTLEMENTS
+    description: Settlement and clearing transactions
+    base_table:
+      database: COCO_SDLC_HOL_01
+      schema: MARTS
+      table: SETTLEMENTS
+    primary_key:
+      columns:
+        - SETTLEMENT_KEY
+    synonyms:
+      - settlements
+      - settlement transactions
+      - batches
+      - clearing
+    dimensions:
+      - name: SETTLEMENT_KEY
+        description: Unique identifier for settlement
+        expr: SETTLEMENT_KEY
+        data_type: VARCHAR
+      - name: SETTLEMENT_DATE
+        description: Date of settlement
+        expr: SETTLEMENT_DATE
+        data_type: DATE
+        synonyms:
+          - settle date
+          - batch date
+      - name: MERCHANT_ID
+        description: Merchant identifier for relationship join
+        expr: MERCHANT_ID
+        data_type: VARCHAR
+      - name: CARD_BRAND
+        description: Card brand
+        expr: CARD_BRAND
+        data_type: VARCHAR
+      - name: CARD_TYPE
+        description: Card type
+        expr: CARD_TYPE
+        data_type: VARCHAR
+    facts:
+      - name: SALES_COUNT
+        description: Number of sales transactions
+        expr: SALES_COUNT
+        data_type: NUMBER
+        synonyms:
+          - sales count
+          - transaction count
+      - name: SALES_AMOUNT
+        description: Total sales amount
+        expr: SALES_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - sales amount
+          - gross sales
+      - name: REFUND_COUNT
+        description: Number of refunds
+        expr: REFUND_COUNT
+        data_type: NUMBER
+        synonyms:
+          - refund count
+          - refunds
+      - name: REFUND_AMOUNT
+        description: Total refund amount
+        expr: REFUND_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - refund amount
+      - name: NET_AMOUNT
+        description: Net processed amount
+        expr: NET_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - net amount
+          - net sales
+          - net volume
+      - name: INTERCHANGE_AMOUNT
+        description: Interchange fees
+        expr: INTERCHANGE_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - interchange
+          - interchange fees
+
+  # ============================================================================
+  # DEPOSITS - Funding and deposit records
+  # ============================================================================
+  - name: DEPOSITS
+    description: Funding and deposit records
+    base_table:
+      database: COCO_SDLC_HOL_01
+      schema: MARTS
+      table: DEPOSITS
+    primary_key:
+      columns:
+        - DEPOSIT_KEY
+    synonyms:
+      - funding
+      - deposits
+      - payments
+      - disbursements
+    dimensions:
+      - name: DEPOSIT_KEY
+        description: Unique identifier for deposit
+        expr: DEPOSIT_KEY
+        data_type: VARCHAR
+      - name: DEPOSIT_DATE
+        description: Date of deposit
+        expr: DEPOSIT_DATE
+        data_type: DATE
+        synonyms:
+          - funding date
+          - bank date
+      - name: MERCHANT_ID
+        description: Merchant identifier for relationship join
+        expr: MERCHANT_ID
+        data_type: VARCHAR
+      - name: PAYMENT_STATUS
+        description: Status of payment
+        expr: PAYMENT_STATUS
+        data_type: VARCHAR
+      - name: PAYMENT_METHOD
+        description: Method of payment
+        expr: PAYMENT_METHOD
+        data_type: VARCHAR
+    facts:
+      - name: DEPOSIT_AMOUNT
+        description: Deposit amount
+        expr: DEPOSIT_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - deposit
+          - deposit amount
+          - funded amount
+      - name: NET_SALES_AMOUNT
+        description: Net sales amount
+        expr: NET_SALES_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - net sales
+      - name: TOTAL_FEES_AMOUNT
+        description: Total fees
+        expr: TOTAL_FEES_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - fees
+          - fee amount
+      - name: CHARGEBACK_AMOUNT
+        description: Chargeback deductions
+        expr: CHARGEBACK_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - chargebacks
+
+  # ============================================================================
+  # CHARGEBACKS - Chargeback and dispute records
+  # ============================================================================
+  - name: CHARGEBACKS
+    description: Chargeback and dispute records
+    base_table:
+      database: COCO_SDLC_HOL_01
+      schema: MARTS
+      table: CHARGEBACKS
+    primary_key:
+      columns:
+        - CHARGEBACK_KEY
+    synonyms:
+      - chargebacks
+      - disputes
+      - cbk
+      - chargeback transactions
+    dimensions:
+      - name: CHARGEBACK_KEY
+        description: Unique identifier for chargeback
+        expr: CHARGEBACK_KEY
+        data_type: VARCHAR
+      - name: DISPUTE_RECEIVED_DATE
+        description: Date dispute was received
+        expr: DISPUTE_RECEIVED_DATE
+        data_type: DATE
+        synonyms:
+          - chargeback date
+          - dispute date
+      - name: RESPONSE_DUE_DATE
+        description: Due date for response
+        expr: RESPONSE_DUE_DATE
+        data_type: DATE
+      - name: ORIGINAL_TRANSACTION_DATE
+        description: Date of original transaction
+        expr: ORIGINAL_TRANSACTION_DATE
+        data_type: DATE
+      - name: MERCHANT_ID
+        description: Merchant identifier for relationship join
+        expr: MERCHANT_ID
+        data_type: VARCHAR
+      - name: CHARGEBACK_STATUS
+        description: Current status of chargeback
+        expr: CHARGEBACK_STATUS
+        data_type: VARCHAR
+        synonyms:
+          - CBK status
+          - dispute status
+      - name: OUTCOME
+        description: Chargeback outcome (Won/Lost/Pending)
+        expr: OUTCOME
+        data_type: VARCHAR
+      - name: LIFECYCLE_STAGE
+        description: Current stage in dispute lifecycle
+        expr: LIFECYCLE_STAGE
+        data_type: VARCHAR
+      - name: REASON_CODE
+        description: Chargeback reason code
+        expr: REASON_CODE
+        data_type: VARCHAR
+      - name: REASON_DESCRIPTION
+        description: Description of chargeback reason
+        expr: REASON_DESCRIPTION
+        data_type: VARCHAR
+      - name: CARD_BRAND
+        description: Card brand
+        expr: CARD_BRAND
+        data_type: VARCHAR
+    facts:
+      - name: DISPUTE_AMOUNT
+        description: Dispute amount
+        expr: DISPUTE_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - dispute amount
+          - chargeback amount
+          - amount
+      - name: TRANSACTION_AMOUNT
+        description: Original transaction amount
+        expr: TRANSACTION_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - original amount
+      - name: DISPUTES_COUNT
+        description: Count of disputes (1 per row)
+        expr: DISPUTES_COUNT
+        data_type: NUMBER
+        synonyms:
+          - chargeback count
+          - dispute count
+
+  # ============================================================================
+  # RETRIEVALS - Retrieval request records
+  # ============================================================================
+  - name: RETRIEVALS
+    description: Retrieval requests
+    base_table:
+      database: COCO_SDLC_HOL_01
+      schema: MARTS
+      table: RETRIEVALS
+    primary_key:
+      columns:
+        - RETRIEVAL_KEY
+    synonyms:
+      - retrievals
+      - retrieval requests
+      - copy requests
+    dimensions:
+      - name: RETRIEVAL_KEY
+        description: Unique identifier for retrieval
+        expr: RETRIEVAL_KEY
+        data_type: VARCHAR
+      - name: RETRIEVAL_RECEIVED_DATE
+        description: Date the retrieval request was received
+        expr: RETRIEVAL_RECEIVED_DATE
+        data_type: DATE
+      - name: ORIGINAL_SALE_DATE
+        description: Date of original sale
+        expr: ORIGINAL_SALE_DATE
+        data_type: DATE
+      - name: RESPONSE_DUE_DATE
+        description: Due date for response
+        expr: RESPONSE_DUE_DATE
+        data_type: DATE
+      - name: MERCHANT_ID
+        description: Merchant identifier for relationship join
+        expr: MERCHANT_ID
+        data_type: VARCHAR
+      - name: RETRIEVAL_STATUS
+        description: Current retrieval status (Open/Closed/Expired)
+        expr: RETRIEVAL_STATUS
+        data_type: VARCHAR
+        synonyms:
+          - RR status
+      - name: REASON_CODE
+        description: Retrieval reason code
+        expr: REASON_CODE
+        data_type: VARCHAR
+      - name: CARD_BRAND
+        description: Card brand
+        expr: CARD_BRAND
+        data_type: VARCHAR
+    facts:
+      - name: RETRIEVAL_AMOUNT
+        description: Retrieval dollar amount
+        expr: RETRIEVAL_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - amount
+          - retrieval amount
+      - name: RETRIEVALS_COUNT
+        description: Count of retrievals (1 per row)
+        expr: RETRIEVALS_COUNT
+        data_type: NUMBER
+        synonyms:
+          - retrieval count
+
+  # ============================================================================
+  # ADJUSTMENTS - Fee adjustments and corrections
+  # ============================================================================
+  - name: ADJUSTMENTS
+    description: Fee adjustments and corrections
+    base_table:
+      database: COCO_SDLC_HOL_01
+      schema: MARTS
+      table: ADJUSTMENTS
+    primary_key:
+      columns:
+        - ADJUSTMENT_KEY
+    synonyms:
+      - adjustments
+      - fee adjustments
+      - corrections
+    dimensions:
+      - name: ADJUSTMENT_KEY
+        description: Unique identifier for adjustment
+        expr: ADJUSTMENT_KEY
+        data_type: VARCHAR
+      - name: ADJUSTMENT_DATE
+        description: Date of adjustment
+        expr: ADJUSTMENT_DATE
+        data_type: DATE
+      - name: MERCHANT_ID
+        description: Merchant identifier for relationship join
+        expr: MERCHANT_ID
+        data_type: VARCHAR
+      - name: ADJUSTMENT_TYPE
+        description: Type of adjustment (Credit/Debit)
+        expr: ADJUSTMENT_TYPE
+        data_type: VARCHAR
+        synonyms:
+          - credit/debit
+      - name: ADJUSTMENT_CODE
+        description: Adjustment reason code
+        expr: ADJUSTMENT_CODE
+        data_type: VARCHAR
+      - name: ADJUSTMENT_CATEGORY
+        description: Category of adjustment
+        expr: ADJUSTMENT_CATEGORY
+        data_type: VARCHAR
+    facts:
+      - name: ADJUSTMENT_AMOUNT
+        description: Adjustment amount
+        expr: ADJUSTMENT_AMOUNT
+        data_type: NUMBER
+        synonyms:
+          - amount
+          - adjustment amount
+
+# ==============================================================================
+# RELATIONSHIPS - Enable cross-table joins via merchant
+# ==============================================================================
+relationships:
+  - name: AUTH_TO_MERCHANT
+    left_table: AUTHORIZATIONS
+    right_table: MERCHANTS
+    relationship_columns:
+      - left_column: MERCHANT_ID
+        right_column: MERCHANT_ID
+    join_type: left_outer
+    relationship_type: many_to_one
+
+  - name: SETTLEMENT_TO_MERCHANT
+    left_table: SETTLEMENTS
+    right_table: MERCHANTS
+    relationship_columns:
+      - left_column: MERCHANT_ID
+        right_column: MERCHANT_ID
+    join_type: left_outer
+    relationship_type: many_to_one
+
+  - name: DEPOSIT_TO_MERCHANT
+    left_table: DEPOSITS
+    right_table: MERCHANTS
+    relationship_columns:
+      - left_column: MERCHANT_ID
+        right_column: MERCHANT_ID
+    join_type: left_outer
+    relationship_type: many_to_one
+
+  - name: CHARGEBACK_TO_MERCHANT
+    left_table: CHARGEBACKS
+    right_table: MERCHANTS
+    relationship_columns:
+      - left_column: MERCHANT_ID
+        right_column: MERCHANT_ID
+    join_type: left_outer
+    relationship_type: many_to_one
+
+  - name: RETRIEVAL_TO_MERCHANT
+    left_table: RETRIEVALS
+    right_table: MERCHANTS
+    relationship_columns:
+      - left_column: MERCHANT_ID
+        right_column: MERCHANT_ID
+    join_type: left_outer
+    relationship_type: many_to_one
+
+  - name: ADJUSTMENT_TO_MERCHANT
+    left_table: ADJUSTMENTS
+    right_table: MERCHANTS
+    relationship_columns:
+      - left_column: MERCHANT_ID
+        right_column: MERCHANT_ID
+    join_type: left_outer
+    relationship_type: many_to_one
+
+# ==============================================================================
+# METRICS - Pre-defined business calculations
+# ==============================================================================
+metrics:
+  - name: APPROVAL_RATE
+    description: Percentage of authorizations approved
+    expr: SUM(CASE WHEN AUTHORIZATIONS.APPROVAL_STATUS = 'Approved' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(AUTHORIZATIONS.AUTHORIZATION_KEY), 0)
+    data_type: NUMBER
+    synonyms:
+      - auth approval rate
+      - approval percentage
+
+  - name: TOTAL_AUTHORIZATION_VOLUME
+    description: Total authorization amount
+    expr: SUM(AUTHORIZATIONS.TRANSACTION_AMOUNT)
+    data_type: NUMBER
+    synonyms:
+      - total auth volume
+      - total authorizations
+
+  - name: AVERAGE_TRANSACTION_AMOUNT
+    description: Average transaction amount
+    expr: AVG(AUTHORIZATIONS.TRANSACTION_AMOUNT)
+    data_type: NUMBER
+    synonyms:
+      - avg txn amount
+      - ATV
+
+  - name: NET_SETTLEMENT_VOLUME
+    description: Total net settlement amount
+    expr: SUM(SETTLEMENTS.NET_AMOUNT)
+    data_type: NUMBER
+    synonyms:
+      - total settlements
+      - net settlements
+
+  - name: TOTAL_DEPOSITS
+    description: Total deposit amount
+    expr: SUM(DEPOSITS.DEPOSIT_AMOUNT)
+    data_type: NUMBER
+    synonyms:
+      - total funding
+      - total funded
+
+  - name: EFFECTIVE_FEE_RATE
+    description: Processing fees as percentage of sales
+    expr: SUM(DEPOSITS.TOTAL_FEES_AMOUNT) * 100.0 / NULLIF(SUM(DEPOSITS.NET_SALES_AMOUNT), 0)
+    data_type: NUMBER
+    synonyms:
+      - fee percentage
+      - fee rate
+
+  - name: CHARGEBACK_VOLUME
+    description: Total chargeback amount
+    expr: SUM(CHARGEBACKS.DISPUTE_AMOUNT)
+    data_type: NUMBER
+    synonyms:
+      - total chargebacks
+      - dispute volume
+
+  - name: CHARGEBACK_WIN_RATE
+    description: Percentage of chargebacks won
+    expr: SUM(CASE WHEN CHARGEBACKS.OUTCOME = 'Won' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(CHARGEBACKS.CHARGEBACK_KEY), 0)
+    data_type: NUMBER
+    synonyms:
+      - dispute win rate
+      - CBK win rate
+
+  - name: CHARGEBACK_RATE
+    description: Chargeback count as percentage of total transactions
+    expr: COUNT(CHARGEBACKS.CHARGEBACK_KEY) * 100.0 / NULLIF(SUM(AUTHORIZATIONS.TRANSACTIONS_COUNT), 0)
+    data_type: NUMBER
+    synonyms:
+      - CBK rate
+      - dispute rate
+
+  - name: NET_ADJUSTMENTS
+    description: Net adjustment amount
+    expr: SUM(ADJUSTMENTS.ADJUSTMENT_AMOUNT)
+    data_type: NUMBER
+    synonyms:
+      - total adjustments
+
+  - name: RETRIEVAL_FULFILLMENT_RATE
+    description: Percentage of retrievals fulfilled (closed)
+    expr: SUM(CASE WHEN RETRIEVALS.RETRIEVAL_STATUS = 'CLOSED' THEN 1 ELSE 0 END) * 100.0 / NULLIF(COUNT(RETRIEVALS.RETRIEVAL_KEY), 0)
+    data_type: NUMBER
+    synonyms:
+      - RR fulfillment rate
+$$
+);
+
+-- ============================================================
+-- SECTION 9.6: Per-user provisioning stored procedure
+-- ============================================================
+-- Handles everything that requires $$ inside a $$ block (which
+-- causes Snowflake parser conflicts). Python SPs avoid this
+-- because the $$ in agent SPECIFICATION is runtime string content,
+-- not a lexical delimiter in the source.
+-- Called by Section 10 for each cloned user database.
+-- ============================================================
+USE ROLE SYSADMIN;
+
+CREATE OR REPLACE PROCEDURE COCO_SDLC_HOL_01.PUBLIC.PROVISION_HOL_USER(
+    DB_NAME  VARCHAR,
+    USERNAME VARCHAR
+)
+RETURNS VARCHAR
+LANGUAGE PYTHON
+RUNTIME_VERSION = '3.11'
+PACKAGES = ('snowflake-snowpark-python')
+HANDLER = 'provision_hol_user'
+EXECUTE AS CALLER
+AS
+$$
+def provision_hol_user(session, db_name: str, username: str) -> str:
+    # Build dollar-dollar delimiter at runtime (avoids the two-dollar literal in this source)
+    dd = '$' + '$'
+
+    # 1. Zero-copy clone of template database
+    session.sql(f"USE ROLE ACCOUNTADMIN").collect()
+    session.sql(
+        f"CREATE DATABASE IF NOT EXISTS {db_name} CLONE COCO_SDLC_HOL_01"
+        f" COMMENT = 'evolv HOL environment for {username}'"
+    ).collect()
+    session.sql(f"GRANT ALL PRIVILEGES ON DATABASE {db_name} TO ROLE ATTENDEE_ROLE").collect()
+    session.sql(f"GRANT ALL PRIVILEGES ON ALL SCHEMAS IN DATABASE {db_name} TO ROLE ATTENDEE_ROLE").collect()
+
+    # 2. Per-user DBT_FILES stage
+    session.sql("USE ROLE SYSADMIN").collect()
+    session.sql(
+        f"CREATE OR REPLACE STAGE {db_name}.PUBLIC.DBT_FILES"
+        f" DIRECTORY = (ENABLE = TRUE)"
+        f" COMMENT = 'dbt project files for {username} — upload changes here via snow stage put'"
+    ).collect()
+    session.sql(f"COPY FILES INTO @{db_name}.PUBLIC.DBT_FILES/ FROM @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/").collect()
+    session.sql(f"REMOVE @{db_name}.PUBLIC.DBT_FILES/package-lock.yml").collect()
+
+    # Write per-user profiles.yml via COPY INTO FROM SELECT
+    # (CHR(10) produces newlines; no single quotes appear in profiles.yml content)
+    profile_lines = [
+        "dev:",
+        "  target: dev",
+        "  outputs:",
+        "    dev:",
+        "      type: snowflake",
+        f"      database: {db_name}",
+        "      role: ATTENDEE_ROLE",
+        "      schema: STAGING",
+        "      warehouse: COMPUTE_WH",
+    ]
+    sql_expr = " || CHR(10) || ".join(f"'{ln}'" for ln in profile_lines)
+    session.sql(
+        f"COPY INTO @{db_name}.PUBLIC.DBT_FILES/profiles.yml"
+        f" FROM (SELECT {sql_expr} AS content)"
+        f" FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='NONE' RECORD_DELIMITER='NONE'"
+        f"                FIELD_OPTIONALLY_ENCLOSED_BY='NONE' COMPRESSION=NONE)"
+        f" OVERWRITE=TRUE SINGLE=TRUE HEADER=FALSE"
+    ).collect()
+    session.sql(f"ALTER STAGE {db_name}.PUBLIC.DBT_FILES REFRESH").collect()
+    session.sql(f"GRANT READ, WRITE ON STAGE {db_name}.PUBLIC.DBT_FILES TO ROLE ATTENDEE_ROLE").collect()
+
+    # 3. dbt project — DROP + CREATE forces fresh manifest compile
+    #    so {{ target.database }} in sources.yml resolves to db_name
+    session.sql(f"DROP DBT PROJECT IF EXISTS {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS").collect()
+    session.sql(
+        f"CREATE DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS"
+        f" FROM '@{db_name}.PUBLIC.DBT_FILES/'"
+        f" DEFAULT_TARGET = 'dev'"
+        f" EXTERNAL_ACCESS_INTEGRATIONS = (DBT_HUB_EAI)"
+        f" COMMENT = 'evolv Payment Analytics dbt project for {username}'"
+    ).collect()
+    session.sql("USE ROLE ACCOUNTADMIN").collect()
+    session.sql(f"GRANT USAGE ON DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS TO ROLE ATTENDEE_ROLE").collect()
+    session.sql(f"EXECUTE DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = 'run'").collect()
+
+    # 4. Semantic view — drop clone (wrong DB refs), recreate with correct refs
+    session.sql("USE ROLE ATTENDEE_ROLE").collect()
+    session.sql(f"DROP SEMANTIC VIEW IF EXISTS {db_name}.MARTS.PAYMENT_ANALYTICS").collect()
+    rows = session.sql(
+        "SELECT content FROM COCO_SDLC_HOL_01.PUBLIC.HOL_YAML_TEMPLATES"
+        " WHERE template_name = 'semantic_view'"
+    ).collect()
+    sv_yaml = rows[0][0].replace('COCO_SDLC_HOL_01', db_name)
+    session.sql(
+        f"CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML('{db_name}.MARTS', {dd}{sv_yaml}{dd}, FALSE)"
+    ).collect()
+
+    # 5. Agent — drop clone, recreate pointing to per-user semantic view
+    #    dd substituted at runtime so two dollar-signs never appear consecutively in source
+    session.sql(f"DROP AGENT IF EXISTS {db_name}.MARTS.PAYMENT_ANALYTICS_AGENT").collect()
+    agent_spec = f"""
+models:
+  orchestration: claude-sonnet-4-5
+orchestration:
+  budget:
+    seconds: 60
+    tokens: 16000
+instructions:
+  response: "You are a helpful payment analytics assistant. Provide clear, concise answers about payment transactions, settlements, funding, chargebacks, and merchant performance. Format numerical data appropriately with dollar signs and percentages where relevant."
+  orchestration: "Use the PaymentAnalyst tool for all questions related to payment transactions, authorization volumes, settlement data, funding status, chargebacks, retrievals, adjustments, and merchant/store performance metrics."
+  system: "You are a payment analytics expert helping users understand their transaction data, identify trends, and analyze merchant performance."
+  sample_questions:
+    - question: "What was our total authorization volume last month?"
+      answer: "I will analyze the authorization data to calculate the total volume for last month."
+    - question: "Which merchants have the highest chargeback rates?"
+      answer: "Let me query the chargeback data to identify merchants with elevated dispute rates."
+    - question: "Show me the funding status breakdown"
+      answer: "I will retrieve the funding transaction data grouped by payment status."
+tools:
+  - tool_spec:
+      type: "cortex_analyst_text_to_sql"
+      name: "PaymentAnalyst"
+      description: "Analyzes payment transaction data including authorizations, settlements, funding, chargebacks, retrievals, and adjustments across merchants and stores"
+tool_resources:
+  PaymentAnalyst:
+    semantic_view: "{db_name}.MARTS.PAYMENT_ANALYTICS"
+    execution_environment:
+      type: warehouse
+      warehouse: COMPUTE_WH
+"""
+    session.sql(
+        f"CREATE OR REPLACE AGENT {db_name}.MARTS.PAYMENT_ANALYTICS_AGENT"
+        f" COMMENT = 'Cortex Agent for natural language queries on evolv Payment Analytics data'"
+        f" PROFILE = '{{\"display_name\": \"Payment Analytics Assistant\", \"color\": \"blue\"}}'"
+        f" FROM SPECIFICATION {dd}{agent_spec}{dd}"
+    ).collect()
+
+    # 6. Final grants
+    for sql in [
+        f"GRANT USAGE ON AGENT {db_name}.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE",
+        f"GRANT USAGE ON DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS TO ROLE ATTENDEE_ROLE",
+        f"GRANT SELECT ON ALL TABLES IN SCHEMA {db_name}.MARTS TO ROLE ATTENDEE_ROLE",
+        f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.MARTS TO ROLE ATTENDEE_ROLE",
+        f"GRANT SELECT ON ALL VIEWS IN SCHEMA {db_name}.STAGING TO ROLE ATTENDEE_ROLE",
+        f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.INTERMEDIATE TO ROLE ATTENDEE_ROLE",
+    ]:
+        session.sql(sql).collect()
+
+    return f"{db_name} provisioned for {username}"
+$$;
+
+GRANT USAGE ON PROCEDURE COCO_SDLC_HOL_01.PUBLIC.PROVISION_HOL_USER(VARCHAR, VARCHAR)
+    TO ROLE ATTENDEE_ROLE;
+
+-- ============================================================
+-- SECTION 10: Clone Template Database for Remaining HOL Users
+-- ============================================================
+-- Clones COCO_SDLC_HOL_01 for users 02..NN and calls
+-- PROVISION_HOL_USER for each — a Python SP that handles
+-- complex provisioning without $$ delimiter conflicts.
+-- NUM_USERS must match the value set in Section 0.
+-- ============================================================
+USE ROLE ACCOUNTADMIN;
+
+EXECUTE IMMEDIATE $$
+DECLARE
+    num_users INTEGER DEFAULT 20;   -- keep in sync with SET NUM_USERS in Section 0
+BEGIN
+    FOR i IN 2 TO :num_users DO
+        LET suffix   VARCHAR := LPAD(i::VARCHAR, 2, '0');
+        LET db_name  VARCHAR := 'COCO_SDLC_HOL_' || :suffix;
+        LET username VARCHAR := 'HOL_USER' || :suffix;
+
+        CALL COCO_SDLC_HOL_01.PUBLIC.PROVISION_HOL_USER(:db_name, :username);
+
+    END FOR;
+    RETURN 'Provisioned ' || (:num_users - 1) || ' cloned HOL databases'
+        || ' (COCO_SDLC_HOL_02 ... COCO_SDLC_HOL_' || LPAD(:num_users::VARCHAR, 2, '0') || ')';
+END;
+$$;

@@ -10,7 +10,7 @@ version: 2
 sources:
   - name: raw
     description: "Raw normalized OLTP-style tables with legacy naming conventions"
-    database: COCO_SDLC_HOL
+    database: "{{ target.database }}"
     schema: RAW
 
     tables:
