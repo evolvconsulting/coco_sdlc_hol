@@ -37,3 +37,6 @@ coverage/
 **/dbt_packages/
 **/dbt_internal_packages/
 **/logs/
+
+# Cortex Code internal planning files (not for public repo)
+.planning/

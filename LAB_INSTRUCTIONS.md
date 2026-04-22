@@ -86,24 +86,14 @@ In this section you will fork the lab repository, connect to Snowflake using Cor
 
 ### Step 0: Get the Lab Repository
 
-Choose **one** of the two options below depending on whether you have a GitHub account.
-
-#### Option A: Fork and Clone (recommended -- requires GitHub account)
-
-1. Navigate to the lab repository on GitHub: `evolvconsulting/coco_sdlc_hol`
-2. Click **Fork** to create a copy under your own GitHub account
-3. Clone your fork locally:
+Clone the repository directly -- no fork required:
 
 ```bash
-git clone https://github.com/<your-username>/coco_sdlc_hol.git
+git clone https://github.com/evolvconsulting/coco_sdlc_hol.git
 cd coco_sdlc_hol
 ```
 
-> **Important:** Clone your fork, not the upstream repository. You will push changes to your fork during the lab. If you clone the upstream URL by mistake, you can fix it later with `git remote set-url origin https://github.com/<your-username>/coco_sdlc_hol.git`.
-
-#### Option B: Download and Unzip (no GitHub account required)
-
-If you do not have a GitHub account, you can download the repository as a ZIP archive:
+**Fallback -- if Git is not installed:** Download the repository as a ZIP archive:
 
 1. Navigate to `https://github.com/evolvconsulting/coco_sdlc_hol`
 2. Click the green **Code** button, then select **Download ZIP**
@@ -122,27 +112,13 @@ git add .
 git commit -m "Initial commit from ZIP download"
 ```
 
-> **Limitation:** With this option you will be able to make local commits, but you will **not** be able to push to a remote repository or create a pull request. Steps that reference `git push` or PR creation (Steps 4.11, 6.6, and 6.7) can be skipped.
+### Step 1: Configure and Confirm Snowflake Connection
 
-### Step 1: Temporarily Bypass MFA
+Your instructor has pre-provisioned a dedicated Snowflake environment for you, including a personal database and MFA bypass for the duration of the lab. You only need to connect.
 
-Before launching Cortex Code, temporarily bypass MFA on your Snowflake user. This avoids MFA prompts during the lab's automated connections.
+> **MFA note:** MFA is pre-bypassed for 20 hours. You will not be prompted during Cortex Code sessions or automated SQL calls.
 
-Log in to the Snowflake web UI (Snowsight) and run the following in a SQL worksheet:
-
-```sql
-ALTER USER USER SET MINS_TO_BYPASS_MFA = 720;
-```
-
-This grants a 12-hour MFA bypass window. You can re-enable MFA after the lab by running `ALTER USER USER UNSET MINS_TO_BYPASS_MFA;`.
-
-> **Note:** Replace `USER` with your actual Snowflake username if it differs.
-
-### Step 2: Configure and Confirm Snowflake Connection
-
-Each attendee connects to their own Snowflake account using the Cortex Code CLI setup wizard.
-
-**2a. Launch Cortex Code and create a connection**
+**1a. Launch Cortex Code and create a connection**
 
 From the cloned repository root, launch Cortex Code:
 
@@ -156,19 +132,20 @@ The first-run setup wizard will guide you through connecting to Snowflake. Selec
 |--------|---------------|
 | Connection name | `coco-hol` (or any name you prefer) |
 | Account identifier | Provided by your instructor (format: `orgname-accountname`) |
-| Username | `USER` (unless your instructor specifies otherwise) |
+| Username | Your assigned user — e.g. `HOL_USER01` |
+| Password | `<SET_HOL_PASSWORD>` (provided by your instructor) |
 | Authentication method | Password (`snowflake`) |
 
 Once authenticated, Cortex Code connects and drops you into an interactive session.
 
 > **Note:** The connection is saved to `~/.snowflake/connections.toml` and can be reused by both Cortex Code CLI and Snow CLI.
 
-**2b. Set your role, warehouse, database, and schema**
+**1b. Set your role, warehouse, database, and schema**
 
-In the Cortex Code session, set your session context:
+In the Cortex Code session, set your session context. Replace `COCO_SDLC_HOL_01` with your assigned database (e.g. `COCO_SDLC_HOL_02` for `HOL_USER02`):
 
 ```
-Set my role to ATTENDEE_ROLE, warehouse to COMPUTE_WH, and use database COCO_SDLC_HOL with schema MARTS.
+Set my role to ATTENDEE_ROLE, warehouse to COMPUTE_WH, and use database COCO_SDLC_HOL_01 with schema MARTS.
 ```
 
 Then verify your connection is configured correctly:
@@ -177,9 +154,9 @@ Then verify your connection is configured correctly:
 /status
 ```
 
-**Expected output:** You should see `ATTENDEE_ROLE` as the role, `COCO_SDLC_HOL` as the database, and `MARTS` as the schema.
+**Expected output:** You should see `ATTENDEE_ROLE` as the role, your assigned database (e.g. `COCO_SDLC_HOL_01`) as the database, and `MARTS` as the schema.
 
-**2c. Configure local project files**
+**1c. Configure local project files**
 
 Ask Cortex Code to update the frontend config file with your Snowflake account identifier:
 
@@ -187,11 +164,11 @@ Ask Cortex Code to update the frontend config file with your Snowflake account i
 Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local with my account identifier <orgname-accountname>.
 ```
 
-Replace `<orgname-accountname>` with the account identifier your instructor provided in Step 2a.
+Replace `<orgname-accountname>` with the account identifier your instructor provided in Step 1a.
 
 > **Note:** The dbt `profiles.yml` does not need updating. The dbt project runs inside Snowflake where authentication is handled by the session context -- no account credentials are stored in the profile.
 
-### Step 3: Confirm Local App Runs
+### Step 2: Confirm Local App Runs
 
 Ask Cortex Code to install the frontend dependencies and start the dev server:
 
@@ -272,7 +249,7 @@ Once it starts, ask it to describe the project architecture:
 Describe this project's data architecture and the Cortex Agent setup. What database, schemas, layers, domain tables, semantic view, and metrics are configured?
 ```
 
-**Expected behavior:** Cortex Code should reference `COCO_SDLC_HOL` as the database and describe the medallion architecture (RAW → STAGING → INTERMEDIATE → MARTS), the domain tables, the materialization strategy, and the `PAYMENT_ANALYTICS` semantic view with its 10 metrics -- all sourced from `AGENTS.md`. If it does, the repo context is loaded correctly.
+**Expected behavior:** Cortex Code should reference your assigned database (e.g. `COCO_SDLC_HOL_01`) and describe the medallion architecture (RAW → STAGING → INTERMEDIATE → MARTS), the domain tables, the materialization strategy, and the `PAYMENT_ANALYTICS` semantic view with its 10 metrics -- all sourced from `AGENTS.md`. If it does, the repo context is loaded correctly.
 
 > **Note:** Suggested prompts throughout this lab are starting points -- feel free to rephrase in your own words. Cortex Code understands natural language variations.
 
@@ -309,8 +286,8 @@ RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tab
 
 **Cortex Agent and Semantic View:**
 
-- **Semantic View:** `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS`
-- **Cortex Agent:** `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT`
+- **Semantic View:** `<your-database>.MARTS.PAYMENT_ANALYTICS`
+- **Cortex Agent:** `<your-database>.MARTS.PAYMENT_ANALYTICS_AGENT`
 - **Tables:** All 7 marts tables
 - **Relationships:** 6 foreign-key joins (all transaction tables → MERCHANTS via MERCHANT_ID)
 - **Metrics:** 10 pre-defined calculations (approval_rate, chargeback_win_rate, effective_fee_rate, etc.)
@@ -449,30 +426,30 @@ Verify the instruction text mentions retry success rate. For example, the `respo
 
 Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Type each prompt below directly into Cortex Code -- it will write and execute the necessary SQL for you.
 
-**a) Commit, push, and deploy via Snowflake-native dbt**
+**a) Upload changed dbt files to Snowflake stage and execute**
 
-First, commit and push your dbt model changes so Snowflake can see them:
-
-```
-Commit and push my dbt changes to the feature branch.
-```
-
-Once the push succeeds, tell Cortex Code to refresh the Git repository cache and execute the dbt project inside Snowflake:
+Ask Cortex Code to upload your changed dbt files and run the project:
 
 ```
-Fetch the latest commits into the Snowflake Git repository and then execute the dbt project to deploy my model changes.
+Upload my changed dbt files to the Snowflake stage and execute the dbt project.
 ```
 
-Cortex Code will run SQL similar to:
+Cortex Code identifies the changed files and runs `snow stage put` to upload them directly to the internal stage, then executes the dbt project. No GitHub push is required -- files go straight to the Snowflake stage:
+
+```bash
+snow stage put packages/dbt/models/intermediate/payments/int_authorizations__enriched.sql \
+  @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/models/intermediate/payments/ --overwrite
+snow stage put packages/dbt/models/marts/payments/authorizations.sql \
+  @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/models/marts/payments/ --overwrite
+```
 
 ```sql
-ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;
-EXECUTE DBT PROJECT COCO_SDLC_HOL.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = 'run';
+EXECUTE DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = 'run';
 ```
 
-The `EXECUTE DBT PROJECT ... ARGS = 'run'` command runs dbt server-side inside Snowflake. It reads your models from the Git repository stage and applies the DDL directly. Dynamic tables will begin refreshing automatically on their configured schedule.
+The `EXECUTE DBT PROJECT ... ARGS = 'run'` command runs dbt server-side inside Snowflake. It reads your models from the stage and applies the DDL directly. Dynamic tables will begin refreshing automatically on their configured schedule.
 
-> **Why fetch first?** Snowflake caches the Git repository state. After pushing new commits, you must `FETCH` to update the cache before the dbt project can see your changes.
+> **Note:** No GitHub push is needed. Your changed files are uploaded directly to the Snowflake internal stage, so Snowflake can read the latest version immediately.
 
 **b) Rebuild the semantic view and verify**
 
@@ -500,15 +477,15 @@ What is the retry success rate for the last 30 days?
 
 The Cortex Agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` metric and return a meaningful answer. This confirms the full chain works: dbt model → dynamic table → semantic view → Cortex Agent.
 
-### Step 4.11: Commit and Push Remaining Changes
+### Step 4.11: Git Commit (Informational)
 
-The dbt model changes were already committed and pushed in Step 4.10a. If you made additional changes after that (e.g., semantic view updates, Cortex Agent instruction changes), commit and push those now:
+In a real workflow, changes would be committed and pushed to a Git repository for code review and CI/CD. For this lab, commit locally to preserve the history:
 
+```bash
+git commit -am "feat: add retry success rate metric"
 ```
-Commit and push the remaining changes.
-```
 
-Cortex Code will stage any uncommitted files, create the commit, and push to the remote. If there are no uncommitted changes, Cortex Code will let you know everything is already up to date.
+No remote push is required. The stage upload in Step 4.10a already delivered your changes to Snowflake.
 
 ### Step 4.12: Reference the Confluence Data Dictionary
 
@@ -680,23 +657,21 @@ If the card shows 0 or undefined, ask Cortex Code to help debug:
 The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs interface in domain.ts includes retrySuccessRate and that the API route in kpis/route.ts returns the field.
 ```
 
-### Step 6.6: Commit and Push
+### Step 6.6: Git Commit (Informational)
 
-Once the KPI card displays correctly, ask Cortex Code to commit and push:
+Once the KPI card displays correctly, commit the changes locally to preserve the history:
 
-```
-Commit and push the changes.
-```
-
-### Step 6.7: Create a Pull Request
-
-Ask Cortex Code to create the pull request:
-
-```
-Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
+```bash
+git commit -am "feat: add retry success rate KPI card"
 ```
 
-Cortex Code will create the PR and return the URL. This completes Ticket 2. You have added a frontend KPI card that visualizes the backend metric you built in Task 1, following the existing component patterns in the codebase.
+In a real workflow, these changes would be pushed to a Git repository for code review. For this lab, a local commit is sufficient.
+
+### Step 6.7: Pull Request (Informational)
+
+In a real workflow, you would open a pull request at this point to have the changes reviewed before merging. For this lab, there is no remote push, so this step is skipped.
+
+This completes Ticket 2. You have added a frontend KPI card that visualizes the backend metric you built in Task 1, following the existing component patterns in the codebase.
 
 ---
 

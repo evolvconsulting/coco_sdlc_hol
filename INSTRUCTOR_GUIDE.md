@@ -24,8 +24,7 @@ cd coco_sdlc_hol
 ```
 
 > Watch for: Participants who skip this step will hit errors in Step 3 (missing `apps/frontend`) and Section 3 (Cortex Code won't find `AGENTS.md`).
-> Watch for: Participant cloned the upstream URL (`evolvconsulting/coco_sdlc_hol`) instead of their fork — push in Step 4.11 will fail with "permission denied" or "protected branch." Diagnose with `git remote -v`; origin must show their username. Fix: `git remote set-url origin https://github.com/<their-username>/coco_sdlc_hol.git`.
-> Watch for: Participant skipped forking entirely — same push-failure symptom. Have them fork first on GitHub, then re-clone or update their remote with the fix command above.
+> Watch for: Participant cloned the upstream URL but that's fine — read-only clone is all that's needed. No fork or push access required.
 
 **Option B: Download and Unzip (no GitHub account required)**
 
@@ -43,21 +42,9 @@ git commit -m "Initial commit from ZIP download"
 
 ---
 
-**Step 1 — Temporarily Bypass MFA**
+**Step 1 — Configure and Confirm Snowflake Connection**
 
-Each participant logs in to Snowsight and runs:
-
-```sql
-ALTER USER USER SET MINS_TO_BYPASS_MFA = 720;
-```
-
-(Replace `USER` with their actual username if it differs.) This grants a 12-hour MFA bypass window so Cortex Code CLI connections don't trigger MFA prompts.
-
-> Watch for: Participant skips this step — the Cortex Code setup wizard may trigger an MFA prompt that blocks the connection flow. Have them go back and run the ALTER USER command in Snowsight.
-
----
-
-**Step 2 — Configure and Confirm Snowflake Connection**
+> **Pre-lab:** MFA bypass is pre-configured for all HOL users by `hol_setup.sql` (`MINS_TO_BYPASS_MFA = 1200`, 20 hours). No action needed from participants.
 
 Each attendee launches Cortex Code CLI, which triggers the first-run setup wizard to create a Snowflake connection.
 
@@ -71,13 +58,14 @@ The setup wizard presents connection options. Attendees select **"More options"*
 | Prompt | Value |
 |--------|-------|
 | Connection name | `coco-hol` (attendee's choice) |
-| Account identifier | Provide per-attendee (format: `orgname-accountname`) |
-| Username | `USER` (unless you specify otherwise) |
+| Account identifier | Provide to all attendees (format: `orgname-accountname`) |
+| Username | Assigned user — e.g. `HOL_USER01` (instructor distributes assignments) |
+| Password | `<SET_HOL_PASSWORD>` (set in `hol_setup.sql` Section 0) |
 | Authentication method | Password (`snowflake`) |
 
-Once connected, attendees set session context and verify:
+Once connected, attendees set session context (replace `COCO_SDLC_HOL_01` with their assigned database):
 ```
-Set my role to ATTENDEE_ROLE, warehouse to COMPUTE_WH, and use database COCO_SDLC_HOL with schema MARTS.
+Set my role to ATTENDEE_ROLE, warehouse to COMPUTE_WH, and use database COCO_SDLC_HOL_01 with schema MARTS.
 ```
 
 Then:
@@ -85,14 +73,14 @@ Then:
 /status
 ```
 
-Expected output: `ATTENDEE_ROLE` as role, `COCO_SDLC_HOL` as database, `MARTS` as schema.
+Expected output: `ATTENDEE_ROLE` as role, attendee's assigned database (e.g. `COCO_SDLC_HOL_01`) as database, `MARTS` as schema.
 
 > Watch for: Role shows as SYSADMIN or empty — attendee needs to run `USE ROLE ATTENDEE_ROLE;` via `/sql`.
 > Watch for: "Account not found" or "invalid account" in the wizard — check the account identifier format with the attendee (must be `orgname-accountname`, not a URL).
-> Watch for: If password auth fails, confirm the username and password with the attendee.
+> Watch for: Password auth fails — confirm username/password. All HOL users share the password set in `hol_setup.sql` Section 0 (`<SET_HOL_PASSWORD>`).
 > Watch for: Connection saved to `~/.snowflake/connections.toml` — if attendee needs to redo, they can edit or delete that file and re-run `cortex`.
 
-**Step 2c — Configure Local Project Files**
+**Step 1c — Configure Local Project Files**
 
 Participant asks Cortex Code:
 ```
@@ -101,11 +89,11 @@ Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local with my account identifier 
 
 Expected behavior: Cortex Code reads the `.env.local` file and replaces the placeholder value with the participant's account identifier. The dbt `profiles.yml` does not need updating -- authentication is handled by the Snowflake session context when running dbt inside Snowflake.
 
-> Watch for: Participant uses a URL instead of `orgname-accountname` format — same format as the wizard in Step 2a.
+> Watch for: Participant uses a URL instead of `orgname-accountname` format — same format as the wizard in Step 1a.
 
 ---
 
-**Step 3 — Confirm Local App Runs**
+**Step 2 — Confirm Local App Runs**
 
 Participant asks Cortex Code:
 ```
@@ -147,9 +135,9 @@ Participants relaunch Cortex Code from the repository root (`cortex`), then ask:
 Describe this project's data architecture and the Cortex Agent setup. What database, schemas, layers, domain tables, semantic view, and metrics are configured?
 ```
 
-Expected behavior: Response mentions `COCO_SDLC_HOL` and the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) with domain tables, plus the `PAYMENT_ANALYTICS` semantic view and `PAYMENT_ANALYTICS_AGENT` with 10 metrics — all sourced from `AGENTS.md`.
+Expected behavior: Response mentions the attendee's assigned database (e.g. `COCO_SDLC_HOL_01`) and the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) with domain tables, plus the `PAYMENT_ANALYTICS` semantic view and `PAYMENT_ANALYTICS_AGENT` with 10 metrics — all sourced from `AGENTS.md`.
 
-> Watch for: Response is generic and doesn't mention COCO_SDLC_HOL — Cortex Code must be launched from repo root, not a subdirectory. If participants haven't cloned yet (missed Step 0), stop and have them do that first.
+> Watch for: Response is generic and doesn't mention a `COCO_SDLC_HOL_` database — Cortex Code must be launched from repo root, not a subdirectory. If participants haven't cloned yet (missed Step 0), stop and have them do that first.
 > Call out to group: Cortex Code reads `AGENTS.md` automatically — this is how it knows the project architecture without being told.
 
 ---
@@ -246,10 +234,9 @@ Then refreshes the Snowflake Git repository and executes the dbt project:
 Fetch the latest commits into the Snowflake Git repository and then execute the dbt project to deploy my model changes.
 ```
 
-Expected behavior: Cortex Code runs `ALTER GIT REPOSITORY ... FETCH` followed by `EXECUTE DBT PROJECT ... ARGS = 'run'`. The dbt project runs server-side inside Snowflake, reading models from the Git repository stage and applying DDL directly. Dynamic tables begin refreshing on their configured schedule.
+Expected behavior: Cortex Code runs `snow stage put` to upload changed files to `@<db>.PUBLIC.DBT_FILES/` then runs `EXECUTE DBT PROJECT ... ARGS = 'run'`.
 
-> Watch for: Participant forgets to push before fetching — the Git repository cache will not have the latest commits. Remind them to push first.
-> Watch for: `EXECUTE DBT PROJECT` fails with stale models — run `ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;` and retry.
+> Watch for: snow stage put fails with "stage not found" — verify the per-user DBT_FILES stage was created by hol_setup.sql Section 10. Check with SHOW STAGES IN DATABASE <db>.
 > Watch for: Permission errors on the dbt project — verify `ATTENDEE_ROLE` has USAGE on the dbt project object.
 
 ---
@@ -278,8 +265,6 @@ Query the authorizations mart and show me the retry success rate for the last 30
 
 Expected behavior: Non-null retry_success_rate_pct value (typically 20-80%).
 
-> Watch for: Zero rows or null values — Cortex Code may have omitted the `clnt_id = 'dmcl'` filter. Ask participant to re-prompt with "for clnt_id dmcl".
-
 ---
 
 **Step 4.10d — Test Cortex Agent**
@@ -301,8 +286,6 @@ Commit and push the remaining changes.
 ```
 
 The dbt model changes were already committed and pushed in Step 4.10a. This step commits any remaining changes (semantic view updates, Cortex Agent instruction changes). If everything was already pushed, Cortex Code will report nothing to commit.
-
-> Watch for: Participants who used Option B (ZIP download) in Step 0 have no remote — they should commit locally only. The push will fail; this is expected. Have them skip the push.
 
 ---
 
@@ -394,8 +377,6 @@ The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs i
 Commit and push the changes.
 ```
 
-> Watch for: Participants who used Option B (ZIP download) in Step 0 should commit locally only and skip the push.
-
 ---
 
 **Step 6.7 — Create a Pull Request**
@@ -403,8 +384,6 @@ Commit and push the changes.
 ```
 Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
 ```
-
-> Watch for: Participants who used Option B (ZIP download) in Step 0 should skip this step entirely — they have no remote to push to and cannot create a PR.
 
 > Call out to group: Jira ticket read at the start, PR created at the end — full development loop without leaving the terminal.
 
@@ -422,8 +401,6 @@ _Lab complete._
 | KPI card shows 0 or undefined | TypeScript interface not updated | Add `retrySuccessRate: number` to `AuthorizationKPIs` in `domain.ts` |
 | Cortex Agent gives generic answer | Agent instructions not updated | Rerun `03_create_agent.sql` with updated `instructions.response` |
 | `/plan` mode off after `/new` | Plan mode is session-scoped | Re-enable with `/plan` in each new session |
-| Verification query returns empty | Missing `clnt_id` filter | Add `WHERE clnt_id = 'dmcl'` to all verification queries |
-| `EXECUTE DBT PROJECT` shows stale models | Git repo cache not refreshed after push | Run `ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;` before executing |
+| `EXECUTE DBT PROJECT` shows stale models | Files not uploaded to per-user stage | `snow stage put` files to `@<db>.PUBLIC.DBT_FILES/<path>/` `--overwrite` then re-execute |
 | `EXECUTE DBT PROJECT` fails with package error | dbt packages not accessible from Snowflake | Verify `DBT_HUB_EAI` external access integration is active and network rule allows `hub.getdbt.com` |
-| Branch path not found in Git stage | Branch name contains `/` and is not quoted | Use double quotes: `branches/"feature/dbt-in-snowflake"` |
 | `EXECUTE DBT PROJECT` permission denied | Missing grants on dbt project object | Verify `ATTENDEE_ROLE` has USAGE on the dbt project |

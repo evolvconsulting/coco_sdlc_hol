@@ -18,8 +18,8 @@
 -- ============================================================
 -- SECTION 0: Configuration — set these before running
 -- ============================================================
-SET NUM_USERS    = 20;           -- total number of attendees
-SET HOL_PASSWORD = 'Evolv2026!'; -- shared lab password for all HOL users
+SET NUM_USERS    = 20;                    -- total number of attendees
+SET HOL_PASSWORD = '<SET_HOL_PASSWORD>'; -- INSTRUCTOR: set your lab password before running
 
 -- ============================================================
 -- SECTION 1: ACCOUNTADMIN Bootstrap
@@ -57,8 +57,8 @@ GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE ATTENDEE_ROLE;
 -- ============================================================
 EXECUTE IMMEDIATE $$
 DECLARE
-    num_users  INTEGER DEFAULT 20;   -- keep in sync with SET NUM_USERS above
-    hol_pass   VARCHAR DEFAULT 'Evolv2026!'; -- keep in sync with SET HOL_PASSWORD above
+    num_users  INTEGER DEFAULT 20;          -- keep in sync with SET NUM_USERS above
+    hol_pass   VARCHAR DEFAULT '<SET_HOL_PASSWORD>'; -- keep in sync with SET HOL_PASSWORD above
 BEGIN
     FOR i IN 1 TO :num_users DO
         LET suffix   VARCHAR := LPAD(i::VARCHAR, 2, '0');
@@ -1587,9 +1587,10 @@ USE ROLE ATTENDEE_ROLE;
 -- ============================================================
 USE ROLE ACCOUNTADMIN;
 
--- Service user for SPCS JWT key-pair auth
+-- Service user for SPCS JWT key-pair auth.
+-- INSTRUCTOR: replace RSA_PUBLIC_KEY with the public key from your generated key pair.
 CREATE USER IF NOT EXISTS COCO_SDLC_HOL_SERVICE_USER
-  RSA_PUBLIC_KEY = 'MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA4u69NDLk4RWzinMDkhY22V+RgJW2rDlsJHZqYelzzXOWuYIEOsgweNjaE2iipEm6ehTwy+LOisrJlX1CPzfMoCo61e5y7UuZJggA6HxZyv3QjnU5WkyCO10QFJnL2ZIfzOuC3HxlmOICpapsGec4dcL1n4KqoSt6o+dRErfWs9JV/TLxoSGkh4twRqBfSSAN3V1FaunRi3/MU5AquYWLDCvlZKfjZ/GtqB4WbMXhtxx8JNJPkUfDW0zB+vvho0moJQ4iS84Ft/OznkWUtWATP7qZ35N1HIrS8cjIiwaHsJYkwk1xorlEVpPRDvjnEaCAxWjUG3jWqu1ZMds5tPHGBQIDAQAB'
+  RSA_PUBLIC_KEY = '<PASTE_YOUR_RSA_PUBLIC_KEY_HERE>'
   DEFAULT_ROLE = ATTENDEE_ROLE
   COMMENT = 'Service user for SPCS container key-pair auth';
 
@@ -1597,7 +1598,13 @@ GRANT ROLE ATTENDEE_ROLE TO USER COCO_SDLC_HOL_SERVICE_USER;
 
 USE ROLE ATTENDEE_ROLE;
 
--- Private key stored as Secret for container injection
+-- Private key stored as Secret for container injection.
+-- INSTRUCTOR: paste the unencrypted PEM content for COCO_SDLC_HOL_SERVICE_USER
+-- between the single quotes below before running this section.
+-- Generate a key pair with:
+--   openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out rsa_key.p8 -nocrypt
+-- Then register the public key on the service user:
+--   ALTER USER COCO_SDLC_HOL_SERVICE_USER SET RSA_PUBLIC_KEY='<public_key_content>';
 CREATE OR REPLACE SECRET COCO_SDLC_HOL_01.PUBLIC.coco_sdlc_hol_private_key
   TYPE = GENERIC_STRING
   SECRET_STRING = '-----BEGIN PRIVATE KEY-----

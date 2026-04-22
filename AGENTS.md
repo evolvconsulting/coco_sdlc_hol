@@ -4,13 +4,12 @@
 
 ```
 Connection: <attendee-specific> (configured via Cortex Code setup wizard in Section 1)
-Database: COCO_SDLC_HOL
+Database: <attendee-specific> (e.g. COCO_SDLC_HOL_01 for user HOL_USER01)
 Schemas:
   - RAW (source data)
   - STAGING (views over RAW)
   - INTERMEDIATE (enriched dynamic tables)
   - MARTS (business-ready dynamic tables)
-Client Filter: CLNT_ID = 'dmcl'
 ```
 
 ## Atlassian
@@ -52,8 +51,8 @@ RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tab
 
 ## Cortex Agent
 
-- **Semantic View**: `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS`
-- **Agent**: `COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT`
+- **Semantic View**: `<your-database>.MARTS.PAYMENT_ANALYTICS`
+- **Agent**: `<your-database>.MARTS.PAYMENT_ANALYTICS_AGENT`
 - **Definition**: `packages/database/utilities/03_create_agent.sql`
 
 ### Semantic View Features
@@ -87,7 +86,6 @@ RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tab
 
 ## Security
 
-- **Row-Level Security**: All queries filter by `CLNT_ID = 'dmcl'`
 - **PAN Masking**: Card numbers masked (first 6 + last 4 only)
 
 ## Key Paths
@@ -96,6 +94,7 @@ RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tab
 |------|---------|
 | `packages/database/utilities/` | SQL deployment scripts |
 | `packages/dbt/` | dbt transformation project |
+| `<your-database>.PUBLIC.DBT_FILES` | Per-user internal stage — attendees upload edited dbt files here via `snow stage put` |
 | `packages/dbt/models/staging/` | Staging views (RAW → clean names) |
 | `packages/dbt/models/intermediate/` | Enriched dynamic tables |
 | `packages/dbt/models/marts/` | Business-ready dynamic tables |

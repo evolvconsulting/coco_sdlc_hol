@@ -3,15 +3,21 @@
 -- =============================================================================
 -- This script creates the Cortex Agent for natural language query processing
 -- using the Payment Analytics semantic view.
+--
+-- Usage (run as ATTENDEE_ROLE or SYSADMIN):
+--   SET DB_NAME = 'COCO_SDLC_HOL_01';  -- change to your database name
+--   <run the rest of this script>
 -- =============================================================================
 
-USE SCHEMA COCO_SDLC_HOL.MARTS;
+SET DB_NAME = 'COCO_SDLC_HOL_01'; -- set to your HOL database (e.g. COCO_SDLC_HOL_01)
+
+USE SCHEMA IDENTIFIER($DB_NAME || '.MARTS');
 
 -- =============================================================================
 -- Create the Cortex Agent
 -- =============================================================================
 
-CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
+CREATE OR REPLACE AGENT $DB_NAME.MARTS.PAYMENT_ANALYTICS_AGENT
   COMMENT = 'Cortex Agent for natural language queries on evolv Payment Analytics data'
   PROFILE = '{"display_name": "Payment Analytics Assistant", "color": "blue"}'
   FROM SPECIFICATION
@@ -44,7 +50,7 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
 
   tool_resources:
     PaymentAnalyst:
-      semantic_view: "COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS"
+      semantic_view: "$DB_NAME.MARTS.PAYMENT_ANALYTICS"
       execution_environment:
         type: warehouse
         warehouse: COMPUTE_WH
@@ -53,7 +59,7 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
 -- =============================================================================
 -- Grant permissions on the agent
 -- =============================================================================
-GRANT USAGE ON AGENT COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
+GRANT USAGE ON AGENT $DB_NAME.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
 
 -- =============================================================================
 -- Sample questions the agent can answer:
@@ -105,7 +111,7 @@ SELECT
     SUM(CASE WHEN approval_status = 'Approved' THEN 1 ELSE 0 END) AS approved,
     SUM(CASE WHEN approval_status = 'Declined' THEN 1 ELSE 0 END) AS declined,
     ROUND(AVG(CASE WHEN approval_status = 'Approved' THEN 100.0 ELSE 0 END), 2) AS approval_rate
-FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS;
+FROM $DB_NAME.MARTS.AUTHORIZATIONS;
 
 -- Test 2: Card brand breakdown (using MARTS tables)
 SELECT 
@@ -113,7 +119,7 @@ SELECT
     COUNT(*) AS transactions,
     SUM(transaction_amount) AS total_volume,
     ROUND(AVG(CASE WHEN approval_status = 'Approved' THEN 100.0 ELSE 0 END), 2) AS approval_rate
-FROM COCO_SDLC_HOL.MARTS.AUTHORIZATIONS
+FROM $DB_NAME.MARTS.AUTHORIZATIONS
 GROUP BY card_brand
 ORDER BY transactions DESC;
 
@@ -122,5 +128,5 @@ SELECT
     chargeback_status,
     COUNT(*) AS count,
     SUM(dispute_amount) AS dispute_amount
-FROM COCO_SDLC_HOL.MARTS.CHARGEBACKS
+FROM $DB_NAME.MARTS.CHARGEBACKS
 GROUP BY chargeback_status;
