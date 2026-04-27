@@ -28,7 +28,7 @@ By the end, you will have experienced AI-assisted development across every layer
 
 Your instructor will provide a Snowflake account pre-configured for the lab. You need credentials to connect to it.
 
-> **Note:** The lab environment has been pre-configured using `hol_setup.sql`. You do not need to run this script. Your instructor has already provisioned the Snowflake database, schemas, roles, sample data, and all supporting objects.
+> **Note:** The lab environment has been pre-configured using `scripts/hol_setup.sql`. You do not need to run this script. Your instructor has already provisioned the Snowflake database, schemas, roles, sample data, and all supporting objects.
 
 ### 2. Snow CLI
 
@@ -330,107 +330,24 @@ Create a new git branch called feature/retry-success-rate and switch to it.
 
 This keeps your changes isolated from the main branch. You will push this branch after verifying the metric works.
 
-### Step 4.3: Enable Plan Mode
+### Step 4.3: Implement the Retry Success Rate Metric
 
-In the Cortex Code terminal, enable plan mode so you can review the proposed changes before execution:
-
-```
-/plan
-```
-
-Then describe the task to Cortex Code. Suggested prompt:
+Ask Cortex Code to make all four file changes at once:
 
 ```
-Plan the implementation for the Jira ticket.
+Based on the EPA-2 Jira ticket requirements, implement the retry success rate metric: add retry_attempt_flag and retry_success_flag columns to int_authorizations__enriched.sql using a window function (same card/amount/merchant within 5 minutes of a prior decline), pass both flags through in authorizations.sql, add the RETRY_SUCCESS_RATE metric to payment_analytics_semantic_view.sql, and update the Cortex Agent instructions in 03_create_agent.sql. Do not run dbt compile, dbt deps, or any dbt CLI commands after making the changes.
 ```
 
-Cortex Code will generate a numbered plan showing each file it intends to modify. Review the plan and confirm it includes changes to:
+Cortex Code will edit 4 files:
 
-- `packages/dbt/models/intermediate/payments/int_authorizations__enriched.sql`
-- `packages/dbt/models/marts/payments/authorizations.sql`
-- `packages/dbt/analyses/payment_analytics_semantic_view.sql`
-- `packages/database/utilities/03_create_agent.sql`
+- `int_authorizations__enriched.sql` — adds `retry_attempt_flag` and `retry_success_flag` via window function
+- `authorizations.sql` — passes the two flags through to the marts layer
+- `payment_analytics_semantic_view.sql` — adds `RETRY_SUCCESS_RATE` metric
+- `03_create_agent.sql` — updates agent instructions to include retry success rate
 
-If the plan does not include all four files, ask Cortex Code to expand the scope:
+Confirm each file change as Cortex Code presents them.
 
-```
-Please also include changes to the intermediate model (int_authorizations__enriched.sql) for the retry detection logic and the Cortex Agent instructions (03_create_agent.sql).
-```
-
-### Step 4.4: Confirm and Execute the Plan
-
-Once the plan looks complete, Cortex Code will present a confirmation dialog. Select **Yes** to begin execution.
-
-Cortex Code will proceed through each file modification, asking for your approval at each step (since plan mode is active). Review each change carefully as it is applied.
-
-### Step 4.5: dbt Model Update -- Add Retry Detection Logic
-
-This is the core data modeling change. Cortex Code should make the following updates:
-
-**In `packages/dbt/models/intermediate/payments/int_authorizations__enriched.sql`:**
-
-Add window function logic to detect retries. A retry is when the same card (`card_bin` + `card_last_four`) and the same `transaction_amount` appear from the same merchant within 5 minutes of a declined transaction. The intermediate model should add two new columns:
-
-- `retry_attempt_flag` -- 1 if this transaction is a retry attempt (same card/amount/merchant within 5 minutes of a prior decline), 0 otherwise
-- `retry_success_flag` -- 1 if this retry attempt was approved, 0 otherwise
-
-If Cortex Code's plan does not include the SQL logic for computing retries, prompt it:
-
-```
-Add retry detection logic in int_authorizations__enriched.sql using a window function. Flag transactions where the same card and amount retry within 5 minutes of a decline. Add retry_attempt_flag and retry_success_flag columns.
-```
-
-**In `packages/dbt/models/marts/payments/authorizations.sql`:**
-
-Pass through the two new columns from the enriched intermediate model:
-
-```sql
--- Retry metrics
-retry_attempt_flag,
-retry_success_flag
-```
-
-These columns are added to the `select` list so they flow through to the MARTS table where they can be queried directly and referenced by the semantic view.
-
-### Step 4.6: dbt Materialization Check
-
-The intermediate model (`int_authorizations__enriched`) is already configured as a dynamic table, and the mart (`authorizations`) is also a dynamic table. If Cortex Code suggests changing any materialization, review carefully -- the existing materializations (staging = view, intermediate = dynamic table, marts = dynamic table) should be preserved.
-
-### Step 4.7: Update and Run Unit Tests
-
-If the project has dbt tests, Cortex Code may update them to cover the new columns. Review any test changes for correctness.
-
-> **Note:** In this lab environment, dbt tests are not run directly. The dbt project runs inside Snowflake (via `EXECUTE DBT PROJECT`), so there is no local `dbt test` step. You will push your changes and execute the dbt project in the verification step.
-
-### Step 4.8: Review Semantic View Update
-
-Cortex Code should add a `RETRY_SUCCESS_RATE` metric to the semantic view YAML in `packages/dbt/analyses/payment_analytics_semantic_view.sql`. The metric follows the same pattern as existing metrics like `APPROVAL_RATE` and `CHARGEBACK_WIN_RATE`.
-
-Verify the metric structure looks like this:
-
-```yaml
-metrics:
-  - name: RETRY_SUCCESS_RATE
-    description: Percentage of initially declined transactions successfully retried
-    expr: SUM(CASE WHEN AUTHORIZATIONS.RETRY_SUCCESS_FLAG = 1 THEN 1 ELSE 0 END) * 100.0 / NULLIF(SUM(CASE WHEN AUTHORIZATIONS.RETRY_ATTEMPT_FLAG = 1 THEN 1 ELSE 0 END), 0)
-    data_type: NUMBER
-    synonyms:
-      - retry success rate
-      - retry rate
-      - declined retry success
-```
-
-This metric divides successful retries by total retry attempts, producing a percentage. The `NULLIF` prevents division by zero when there are no retry attempts.
-
-### Step 4.9: Review Cortex Agent Instruction Change
-
-Cortex Code should update `packages/database/utilities/03_create_agent.sql` to mention retry success rate in the `instructions.response` text. This tells the agent that retry success rate is a queryable metric so it can provide relevant answers.
-
-Verify the instruction text mentions retry success rate. For example, the `response` instruction might now read:
-
-> "You are a helpful payment analytics assistant. Provide clear, concise answers about payment transactions, settlements, funding, chargebacks, retry success rates, and merchant performance. Format numerical data appropriately with dollar signs and percentages where relevant."
-
-### Step 4.10: Deploy and Verify in Snowflake
+### Step 4.4: Deploy and Verify in Snowflake
 
 Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Type each prompt below directly into Cortex Code -- it will write and execute the necessary SQL for you.
 
@@ -459,33 +376,27 @@ The `EXECUTE DBT PROJECT ... ARGS = 'run'` command runs dbt server-side inside S
 
 > **Note:** No GitHub push is needed. Your changed files are uploaded directly to the Snowflake internal stage, so Snowflake can read the latest version immediately.
 
-**b) Rebuild the semantic view and verify**
+**b) Rebuild the semantic view and Cortex Agent**
 
 ```
-Rebuild the semantic view from the updated DDL file and verify that RETRY_SUCCESS_RATE now appears as a metric.
+Execute the semantic view DDL from packages/dbt/analyses/payment_analytics_semantic_view.sql and the Cortex Agent DDL from packages/database/utilities/03_create_agent.sql against my database.
 ```
 
-Cortex Code will execute the semantic view DDL and show you the DESCRIBE output. Look for `RETRY_SUCCESS_RATE` in the results.
+Cortex Code will execute both DDL files. Look for `RETRY_SUCCESS_RATE` in the semantic view output to confirm it rebuilt correctly.
 
-> **Note:** The semantic view is defined as a dbt `analysis` file, not a model. It is not executed by `EXECUTE DBT PROJECT` -- it must be applied separately via its DDL.
+> **Note:** These files are not executed by `EXECUTE DBT PROJECT` — they must be applied separately as DDL statements.
 
-**c) Verify the metric data**
-
-```
-Query the authorizations mart and show me the retry success rate for the last 30 days.
-```
-
-Cortex Code will run a verification query and display the results. You should see a non-null retry success rate value -- a typical result is between 20% and 80%.
-
-**d) Test the Cortex Agent**
+**c) Verify end-to-end**
 
 ```
-What is the retry success rate for the last 30 days?
+Verify the retry success rate metric end-to-end: query MARTS.AUTHORIZATIONS directly for the retry success rate over the last 30 days using retry_attempt_flag and retry_success_flag, then ask the PAYMENT_ANALYTICS_AGENT the same question and confirm both return a consistent non-null percentage.
 ```
 
-The Cortex Agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` metric and return a meaningful answer. This confirms the full chain works: dbt model → dynamic table → semantic view → Cortex Agent.
+**Expected:** A percentage between 20% and 80%. If the direct query returns null, the dynamic table is still refreshing — wait 2–3 minutes and retry. The agent result confirms the full chain works: dbt model → dynamic table → semantic view → Cortex Agent.
 
-### Step 4.11: Git Commit (Informational)
+> **Note:** Cortex Code validates the agent by querying the `PAYMENT_ANALYTICS` semantic view via Cortex Analyst — the same underlying engine the agent uses. You will see "Cortex Analyst" in the output rather than a literal agent call; both paths exercise the same metric.
+
+### Step 4.5: Git Commit (Informational)
 
 In a real workflow, changes would be committed and pushed to a Git repository for code review and CI/CD. For this lab, commit locally to preserve the history:
 
@@ -493,9 +404,9 @@ In a real workflow, changes would be committed and pushed to a Git repository fo
 git commit -am "feat: add retry success rate metric"
 ```
 
-No remote push is required. The stage upload in Step 4.10a already delivered your changes to Snowflake.
+No remote push is required. The stage upload in Step 4.4a already delivered your changes to Snowflake.
 
-### Step 4.12: Reference the Confluence Data Dictionary
+### Step 4.6: Reference the Confluence Data Dictionary
 
 Before wrapping up this ticket, use Cortex Code to read the existing data dictionary from Confluence. This demonstrates how MCP integrations let you pull project documentation directly into your coding workflow for reference:
 
@@ -582,7 +493,7 @@ In the Cortex Code terminal, enable plan mode:
 Then describe the task. Suggested prompt:
 
 ```
-Plan the implementation for the Jira ticket.
+Plan the code file changes for this Jira ticket. Show only the file modifications — do not deploy.
 ```
 
 Review the plan. Confirm it includes changes to:
@@ -705,6 +616,38 @@ Congratulations! In this lab, you completed two full development cycles using Co
 
 ---
 
+## Section 8: Bonus — Semantic View as a dbt Model
+
+> **Optional.** Complete Sections 1–7 first. This step works best if you have extra time.
+
+The semantic view in `packages/dbt/analyses/payment_analytics_semantic_view.sql` is currently a standalone DDL file executed manually as a one-off SQL statement. The [`dbt_semantic_view`](https://www.snowflake.com/en/engineering-blog/dbt-semantic-view-package/) package from Snowflake Labs promotes it to a first-class dbt model — managed as code, tracked in the dbt DAG with full upstream lineage, and deployed via `EXECUTE DBT PROJECT` alongside your other models.
+
+### Step 8.1: Implement
+
+Use this prompt — include the blog link so Cortex Code can research the package:
+
+```
+Can you implement the semantic view using dbt_semantic_view? https://www.snowflake.com/en/engineering-blog/dbt-semantic-view-package/
+```
+
+Cortex Code will:
+
+1. Add `Snowflake-Labs/dbt_semantic_view` to `packages/dbt/packages.yml`
+2. Install the package with `dbt deps`
+3. Create `packages/dbt/models/marts/payments/payment_analytics.sql` — a dbt model using `materialized='semantic_view'` with `{{ ref() }}` references to all 7 mart tables
+
+The new model generates native `CREATE OR REPLACE SEMANTIC VIEW` DDL and replaces the manual `analyses/` file as the source of truth for the semantic layer.
+
+### Step 8.2: Deploy and Verify
+
+```
+Upload the updated dbt project files to the DBT_FILES stage, add a new version, execute the dbt project with --select payment_analytics, and ask the PAYMENT_ANALYTICS_AGENT for the retry success rate to confirm the semantic view still works correctly.
+```
+
+> The semantic view now has full dbt lineage — all 7 mart tables appear as upstream dependencies in the dbt DAG alongside the models that build them.
+
+---
+
 ## Appendix
 
 ### A. Troubleshooting
@@ -713,9 +656,9 @@ Congratulations! In this lab, you completed two full development cycles using Co
 |-------|-------|----------|
 | `cortex: command not found` | CLI not installed or not in PATH | Run install script: `curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh` then restart terminal |
 | Dynamic table shows old data | Dynamic tables refresh on schedule, not immediately after `EXECUTE DBT PROJECT` | Ask Cortex Code to run `ALTER DYNAMIC TABLE ... REFRESH;` to trigger an immediate refresh |
-| Semantic view metric not found | YAML updated but view not rebuilt | Ask Cortex Code to rerun the semantic view DDL from `payment_analytics_semantic_view.sql` (see Step 4.10b) |
+| Semantic view metric not found | YAML updated but view not rebuilt | Ask Cortex Code to rerun: `Execute the semantic view DDL from packages/dbt/analyses/payment_analytics_semantic_view.sql against my database` |
 | KPI card shows 0 or undefined | TypeScript interface not updated | Add `retrySuccessRate: number` to `AuthorizationKPIs` in `apps/frontend/src/types/domain.ts` |
-| Cortex Agent gives generic answer | Agent instructions not updated | Rerun `03_create_agent.sql` with the updated `instructions.response` mentioning retry success rate |
+| Cortex Agent gives generic answer | Agent instructions not updated | Ask Cortex Code to rerun: `Execute the Cortex Agent DDL from packages/database/utilities/03_create_agent.sql against my database` |
 | `/plan` mode off after `/new` | Plan mode is session-scoped | Re-enable with `/plan` in each new session after using `/new` |
 | Verification query returns empty | Missing `clnt_id` filter | Add `WHERE clnt_id = 'dmcl'` to all verification queries |
 | `EXECUTE DBT PROJECT` shows stale models | Git repository cache not refreshed after push | Run `ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;` before executing the dbt project |

@@ -5,11 +5,11 @@
 -- using the Payment Analytics semantic view.
 --
 -- Usage (run as ATTENDEE_ROLE or SYSADMIN):
---   SET DB_NAME = 'COCO_SDLC_HOL_01';  -- change to your database name
+--   SET DB_NAME = 'COCO_SDLC_HOL_99';  -- change to your database name
 --   <run the rest of this script>
 -- =============================================================================
 
-SET DB_NAME = 'COCO_SDLC_HOL_01'; -- set to your HOL database (e.g. COCO_SDLC_HOL_01)
+SET DB_NAME = 'COCO_SDLC_HOL_99'; -- set to your HOL database (e.g. COCO_SDLC_HOL_99)
 
 USE SCHEMA IDENTIFIER($DB_NAME || '.MARTS');
 

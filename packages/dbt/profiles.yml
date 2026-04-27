@@ -10,7 +10,7 @@ dev:
   outputs:
     dev:
       type: snowflake
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       role: ATTENDEE_ROLE
       schema: STAGING
       warehouse: COMPUTE_WH

@@ -5,7 +5,7 @@
 -- project from an internal Snowflake stage (no GitHub push required).
 --
 -- Usage:
---   1. Set DB_NAME to your HOL database before running (default: COCO_SDLC_HOL_01).
+--   1. Set DB_NAME to your HOL database before running (default: COCO_SDLC_HOL_99).
 --   2. Run as ACCOUNTADMIN for Steps 1–3; SYSADMIN for Steps 4–7.
 --
 -- Prerequisites:
@@ -14,7 +14,7 @@
 --   - Stage $DB_NAME.PUBLIC.DBT_FILES populated by hol_setup.sql Section 6d
 -- =============================================================================
 
-SET DB_NAME = 'COCO_SDLC_HOL_01'; -- set to your HOL database (e.g. COCO_SDLC_HOL_01)
+SET DB_NAME = 'COCO_SDLC_HOL_99'; -- set to your HOL database (e.g. COCO_SDLC_HOL_99)
 
 -- =============================================================================
 -- Step 1: GitHub API Integration (requires ACCOUNTADMIN)

@@ -1,0 +1,35 @@
+# HOL provisioning configuration.
+#
+# Non-sensitive defaults only — safe to commit.
+# Instructor-specific values go in config.local.yml (gitignored).
+# Environment variables take the highest priority (see config_loader.py).
+#
+# Resolution order (highest → lowest):
+#   1. Environment variable  (SCREAMING_SNAKE_CASE)
+#   2. config.local.yml      (gitignored — safe for real values)
+#   3. config.yml            (this file — placeholder defaults only)
+
+snowflake:
+  # Connection credentials — set in config.local.yml, never here.
+  account:          ""   # e.g. hdb72179.us-east-1
+  user:             ""   # e.g. VDASILVA (instructor/admin account)
+
+  # Authentication — use ONE of: password OR private_key_path (key pair preferred).
+  password:         ""   # instructor's Snowflake login password
+  private_key_path: ""   # path to unencrypted RSA private key, e.g. ~/.snowflake/keys/rsa_key.p8
+
+  role:      "ACCOUNTADMIN"
+  warehouse: "COMPUTE_WH"
+
+  # RSA key pair for COCO_SDLC_HOL_SERVICE_USER (Section 7 — SPCS only, optional).
+  # Leave blank to skip Section 7. Set in config.local.yml if needed.
+  rsa_public_key:  ""
+  rsa_private_key: ""
+
+hol:
+  template_db: "COCO_SDLC_HOL_99"  # template database — never provisioned as an attendee
+  db_prefix:   "COCO_SDLC_HOL"     # COCO_SDLC_HOL_NN
+  user_prefix: "HOL_USER"          # HOL_USER_NN
+  user_count:  3                   # default: provision users 01 through this number
+  workers:     5                   # parallel provisioning threads
+  password:    ""                  # attendee password — set in config.local.yml, NEVER here

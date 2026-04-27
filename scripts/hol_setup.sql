@@ -1,22 +1,32 @@
 ﻿-- HOL Setup Script â€” COCO SDLC Hands-On Lab
 -- This script provisions a complete Snowflake HOL environment for multiple attendees.
 -- Run all sections sequentially in a Snowflake worksheet as ACCOUNTADMIN.
--- The script is idempotent: safe to re-run without creating duplicate data or failing on existing objects.
+-- Designed to run on a FRESH account — all objects are created from scratch.
 --
 -- WHAT THIS SCRIPT DOES:
---   Section 0  : Set configuration (number of users, shared password)
---   Section 1  : Account-level objects (role, warehouse, integrations) — runs ONCE
---   Section 2  : Create HOL attendee users with MFA bypass — loops N times
---   Sections 3-9: Full environment for User 01 (template database COCO_SDLC_HOL_01)
---   Section 10 : Clone template + provision remaining user databases — loops N-1 times
+--   Section 0   : Set configuration (number of users, shared password)
+--   Section 1   : Account-level objects (role, warehouse, integrations) — runs ONCE
+--   Section 2   : Create HOL attendee users with MFA bypass — loops N times
+--   Sections 3-9: Build template database COCO_SDLC_HOL_99
+--   Section 10  : Clone template + provision all attendee databases — loops N times
 --
 -- ATTENDEE CREDENTIALS (hand out before the lab):
---   Username : HOL_USER01 ... HOL_USER<NN>
+--   Username : HOL_USER_01 ... HOL_USER_<NN>
 --   Password : <value of HOL_PASSWORD below>
 --   Database : COCO_SDLC_HOL_01 ... COCO_SDLC_HOL_<NN>
+--   Template : COCO_SDLC_HOL_99  (instructor only — never hand this out)
 
 -- ============================================================
 -- SECTION 0: Configuration — set these before running
+-- ============================================================
+-- This script is designed to run end-to-end on a FRESH Snowflake account.
+-- Run ALL sections in order (0 → 10). Nothing is assumed to pre-exist:
+--   - Account-level objects (roles, warehouses, integrations) are created
+--   - GitHub API integration is created in Section 6a
+--   - HOL_SHARED database and Atlassian objects are created in Section 6c-ii
+--   - All attendee users are created in Section 2
+--   - Template DB (COCO_SDLC_HOL_99) is built in Sections 3–9.6
+--   - All attendees are provisioned in Section 10
 -- ============================================================
 SET NUM_USERS    = 20;                    -- total number of attendees
 SET HOL_PASSWORD = '<SET_HOL_PASSWORD>'; -- INSTRUCTOR: set your lab password before running
@@ -50,7 +60,7 @@ GRANT USAGE ON WAREHOUSE COMPUTE_WH TO ROLE ATTENDEE_ROLE;
 -- ============================================================
 -- SECTION 2: Create HOL Attendee Users
 -- ============================================================
--- Creates HOL_USER01 … HOL_USER<NN> with:
+-- Creates HOL_USER_01 … HOL_USER_<NN> with:
 --   - shared lab password from Section 0
 --   - ATTENDEE_ROLE as default role
 --   - MFA bypass for 20 hours so attendees connect without prompts
@@ -62,7 +72,7 @@ DECLARE
 BEGIN
     FOR i IN 1 TO :num_users DO
         LET suffix   VARCHAR := LPAD(i::VARCHAR, 2, '0');
-        LET username VARCHAR := 'HOL_USER' || :suffix;
+        LET username VARCHAR := 'HOL_USER_' || :suffix;
 
         EXECUTE IMMEDIATE
             'CREATE USER IF NOT EXISTS ' || :username ||
@@ -84,14 +94,14 @@ $$;
 
 -- ============================================================
 -- SECTION 3: Database, Warehouse, and Schema Setup
--- (Template database for User 01 — cloned for all other users in Section 10)
+-- (Template database COCO_SDLC_HOL_99 — cloned for all attendees in Section 10)
 -- ============================================================
 USE ROLE ATTENDEE_ROLE;
 
-CREATE DATABASE IF NOT EXISTS COCO_SDLC_HOL_01
+CREATE DATABASE IF NOT EXISTS COCO_SDLC_HOL_99
     COMMENT = 'evolv Payment Analytics hands-on lab environment with sample payment data and reference tables';
 
-USE DATABASE COCO_SDLC_HOL_01;
+USE DATABASE COCO_SDLC_HOL_99;
 
 CREATE SCHEMA IF NOT EXISTS RAW
     COMMENT = 'Raw normalized OLTP-style tables with legacy naming conventions';
@@ -102,18 +112,18 @@ CREATE SCHEMA IF NOT EXISTS PUBLIC;
 
 -- Grant schema-level privileges to ATTENDEE_ROLE (requires ACCOUNTADMIN)
 USE ROLE ACCOUNTADMIN;
-GRANT ALL PRIVILEGES ON DATABASE COCO_SDLC_HOL_01 TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.RAW TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.STAGING TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.MARTS TO ROLE ATTENDEE_ROLE;
-GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_01.PUBLIC TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON DATABASE COCO_SDLC_HOL_99 TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_99.RAW TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_99.STAGING TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_99.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_99.MARTS TO ROLE ATTENDEE_ROLE;
+GRANT ALL PRIVILEGES ON SCHEMA COCO_SDLC_HOL_99.PUBLIC TO ROLE ATTENDEE_ROLE;
 USE ROLE ATTENDEE_ROLE;
 
 -- ============================================================
 -- SECTION 3: RAW Schema Tables
 -- ============================================================
-USE SCHEMA COCO_SDLC_HOL_01.RAW;
+USE SCHEMA COCO_SDLC_HOL_99.RAW;
 
 -- -----------------------------------------------------------------------------
 -- DIMENSION TABLES (Reference Data)
@@ -1481,8 +1491,8 @@ $$;
 -- Only generate if tables are empty
 EXECUTE IMMEDIATE $$
 BEGIN
-    IF ((SELECT COUNT(*) FROM COCO_SDLC_HOL_01.RAW.CLX_AUTH) = 0) THEN
-        CALL COCO_SDLC_HOL_01.RAW.GENERATE_SYNTHETIC_DATA();
+    IF ((SELECT COUNT(*) FROM COCO_SDLC_HOL_99.RAW.CLX_AUTH) = 0) THEN
+        CALL COCO_SDLC_HOL_99.RAW.GENERATE_SYNTHETIC_DATA();
     END IF;
 END;
 $$;
@@ -1504,43 +1514,90 @@ CREATE OR REPLACE API INTEGRATION GITHUB_EVOLV_INTEGRATION
   ENABLED = TRUE;
 
 -- Step 6b: Git Repository Object
-CREATE OR REPLACE GIT REPOSITORY COCO_SDLC_HOL_01.PUBLIC.HOL_REPO
+CREATE OR REPLACE GIT REPOSITORY COCO_SDLC_HOL_99.PUBLIC.HOL_REPO
   API_INTEGRATION = GITHUB_EVOLV_INTEGRATION
   ORIGIN = 'https://github.com/evolvconsulting/coco_sdlc_hol.git';
 
-GRANT READ ON GIT REPOSITORY COCO_SDLC_HOL_01.PUBLIC.HOL_REPO
+GRANT READ ON GIT REPOSITORY COCO_SDLC_HOL_99.PUBLIC.HOL_REPO
   TO ROLE ATTENDEE_ROLE;
 
 -- Step 6c: External Access Integration for dbt packages (hub.getdbt.com)
-CREATE OR REPLACE NETWORK RULE COCO_SDLC_HOL_01.PUBLIC.DBT_NETWORK_RULE
+CREATE OR REPLACE NETWORK RULE COCO_SDLC_HOL_99.PUBLIC.DBT_NETWORK_RULE
   MODE = EGRESS
   TYPE = HOST_PORT
   VALUE_LIST = ('hub.getdbt.com', 'codeload.github.com');
 
 CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION DBT_HUB_EAI
-  ALLOWED_NETWORK_RULES = (COCO_SDLC_HOL_01.PUBLIC.DBT_NETWORK_RULE)
+  ALLOWED_NETWORK_RULES = (COCO_SDLC_HOL_99.PUBLIC.DBT_NETWORK_RULE)
   ENABLED = TRUE;
+
+-- Step 6c-ii: HOL_SHARED database — shared infrastructure accessible to all attendees
+-- Network rules, secrets, and EAIs live here so every HOL_ROLE_NN can reference them
+-- without needing access to another attendee's database.
+USE ROLE ACCOUNTADMIN;
+
+CREATE DATABASE IF NOT EXISTS HOL_SHARED
+  COMMENT = 'Shared HOL infrastructure — secrets, network rules, EAIs accessible to all attendees';
+
+CREATE SCHEMA IF NOT EXISTS HOL_SHARED.PUBLIC;
+
+-- Grant ATTENDEE_ROLE access to HOL_SHARED so:
+--   (a) the initial template setup (which runs as ATTENDEE_ROLE) can reference these objects
+--   (b) COCO_SDLC_HOL_SERVICE_USER (which uses ATTENDEE_ROLE) can resolve the objects
+-- Note: HOL_ROLE_NN does NOT inherit from ATTENDEE_ROLE — each attendee role gets explicit
+--       grants via the provisioning stored procedure loop (see Section 10).
+GRANT USAGE ON DATABASE HOL_SHARED TO ROLE ATTENDEE_ROLE;
+GRANT USAGE ON SCHEMA HOL_SHARED.PUBLIC TO ROLE ATTENDEE_ROLE;
+
+-- Network rule and secret for Atlassian REST API
+CREATE OR REPLACE NETWORK RULE HOL_SHARED.PUBLIC.ATLASSIAN_NETWORK_RULE
+  MODE = EGRESS
+  TYPE = HOST_PORT
+  VALUE_LIST = ('api.atlassian.com', 'evolv-coco-sdlc-hol.atlassian.net');
+
+CREATE OR REPLACE SECRET HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET
+  TYPE = GENERIC_STRING
+  SECRET_STRING = 'dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU='
+  COMMENT = 'Base64-encoded email:api_token for Atlassian Basic auth';
+
+-- Grant attendees READ + USAGE so they can create UDFs referencing this secret
+GRANT READ ON SECRET HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET TO ROLE ATTENDEE_ROLE;
+GRANT USAGE ON SECRET HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET TO ROLE ATTENDEE_ROLE;
+
+CREATE OR REPLACE EXTERNAL ACCESS INTEGRATION ATLASSIAN_EAI
+  ALLOWED_NETWORK_RULES = (HOL_SHARED.PUBLIC.ATLASSIAN_NETWORK_RULE)
+  ALLOWED_AUTHENTICATION_SECRETS = (HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET)
+  ENABLED = TRUE
+  COMMENT = 'Atlassian REST API access for Jira ticket lookup — shared across all HOL attendees';
+
+-- ATTENDEE_ROLE needs USAGE on the EAI for initial template setup and service user;
+-- HOL_ROLE_NN gets this grant explicitly in the provisioning SP loop
+GRANT USAGE ON INTEGRATION ATLASSIAN_EAI TO ROLE ATTENDEE_ROLE;
+
+-- GET_JIRA_TICKET is not pre-built centrally.
+-- UI path attendees create it in their own PUBLIC schema as a lab exercise via Cortex Code.
+-- CLI path attendees use the Atlassian MCP directly.
 
 -- Step 6d: Internal stage for per-user dbt file edits
 -- Each HOL user gets their own isolated copy of the dbt project files.
 -- Attendees upload changes via 'snow stage put' during the lab — no GitHub push required.
 USE ROLE SYSADMIN;
 
-CREATE OR REPLACE STAGE COCO_SDLC_HOL_01.PUBLIC.DBT_FILES
+CREATE OR REPLACE STAGE COCO_SDLC_HOL_99.PUBLIC.DBT_FILES
     DIRECTORY = (ENABLE = TRUE)
     COMMENT = 'Template dbt project files — cloned into each user database by Section 10';
 
 COPY FILES
-    INTO @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/
-    FROM @COCO_SDLC_HOL_01.PUBLIC.HOL_REPO/branches/main/packages/dbt/;
+    INTO @COCO_SDLC_HOL_99.PUBLIC.DBT_FILES/
+    FROM @COCO_SDLC_HOL_99.PUBLIC.HOL_REPO/branches/main/packages/dbt/;
 
 -- Remove stale package lock (pinned version from repo causes dbt Fusion validation error;
 -- dbt regenerates it automatically on first run)
-REMOVE @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/package-lock.yml;
+REMOVE @COCO_SDLC_HOL_99.PUBLIC.DBT_FILES/package-lock.yml;
 
 -- Overwrite profiles.yml with correct template database name
 -- (repo copy may have placeholder; COPY INTO writes clean YAML without compression)
-COPY INTO @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/profiles.yml
+COPY INTO @COCO_SDLC_HOL_99.PUBLIC.DBT_FILES/profiles.yml
 FROM (
     SELECT
         'dev:' || CHR(10) ||
@@ -1548,7 +1605,7 @@ FROM (
         '  outputs:' || CHR(10) ||
         '    dev:' || CHR(10) ||
         '      type: snowflake' || CHR(10) ||
-        '      database: COCO_SDLC_HOL_01' || CHR(10) ||
+        '      database: COCO_SDLC_HOL_99' || CHR(10) ||
         '      role: ATTENDEE_ROLE' || CHR(10) ||
         '      schema: STAGING' || CHR(10) ||
         '      warehouse: COMPUTE_WH' AS content
@@ -1557,27 +1614,71 @@ FILE_FORMAT = (TYPE=CSV FIELD_DELIMITER='NONE' RECORD_DELIMITER='NONE'
                FIELD_OPTIONALLY_ENCLOSED_BY='NONE' COMPRESSION=NONE)
 OVERWRITE=TRUE SINGLE=TRUE HEADER=FALSE;
 
-ALTER STAGE COCO_SDLC_HOL_01.PUBLIC.DBT_FILES REFRESH;
+-- Add AGENTS.md from repo root (Cortex Code reads this for deployment rules)
+COPY FILES
+    INTO @COCO_SDLC_HOL_99.PUBLIC.DBT_FILES/
+    FROM @COCO_SDLC_HOL_99.PUBLIC.HOL_REPO/branches/main/
+    FILES = ('AGENTS.md');
 
-GRANT READ, WRITE ON STAGE COCO_SDLC_HOL_01.PUBLIC.DBT_FILES TO ROLE ATTENDEE_ROLE;
+-- Add Cortex Agent DDL (database/utilities/03_create_agent.sql) so Cortex Code
+-- can find and edit it in the workspace during Task 1, Step 4.1 Prompt 2.
+COPY FILES
+    INTO @COCO_SDLC_HOL_99.PUBLIC.DBT_FILES/database/utilities/
+    FROM @COCO_SDLC_HOL_99.PUBLIC.HOL_REPO/branches/main/packages/database/utilities/
+    FILES = ('03_create_agent.sql');
+
+-- Remove deploy_and_run_dbt.sql — attendees deploy via Cortex Code prompt, not this script.
+-- Removing it keeps the workspace uncluttered and prevents attendees from accidentally running it.
+REMOVE @COCO_SDLC_HOL_99.PUBLIC.DBT_FILES/deploy_and_run_dbt.sql;
+
+ALTER STAGE COCO_SDLC_HOL_99.PUBLIC.DBT_FILES REFRESH;
+
+GRANT READ, WRITE ON STAGE COCO_SDLC_HOL_99.PUBLIC.DBT_FILES TO ROLE ATTENDEE_ROLE;
+
+-- Step 6d-ii: Streamlit app — template files stage + HOL_01 app
+-- apps/streamlit/app.py and environment.yml live in the repo under apps/streamlit/
+-- If running before those files are committed to the repo branch, upload manually first:
+--   snow stage put apps/streamlit/app.py @COCO_SDLC_HOL_99.PUBLIC.STREAMLIT_FILES/ --overwrite
+--   snow stage put apps/streamlit/environment.yml @COCO_SDLC_HOL_99.PUBLIC.STREAMLIT_FILES/ --overwrite
+USE ROLE SYSADMIN;
+
+CREATE OR REPLACE STAGE COCO_SDLC_HOL_99.PUBLIC.STREAMLIT_FILES
+    DIRECTORY = (ENABLE = TRUE)
+    COMMENT = 'Streamlit app files — cloned into each user database by Section 10';
+
+COPY FILES
+    INTO @COCO_SDLC_HOL_99.PUBLIC.STREAMLIT_FILES/
+    FROM @COCO_SDLC_HOL_99.PUBLIC.HOL_REPO/branches/main/apps/streamlit/;
+
+ALTER STAGE COCO_SDLC_HOL_99.PUBLIC.STREAMLIT_FILES REFRESH;
+
+GRANT READ ON STAGE COCO_SDLC_HOL_99.PUBLIC.STREAMLIT_FILES TO ROLE ATTENDEE_ROLE;
+
+CREATE OR REPLACE STREAMLIT COCO_SDLC_HOL_99.PUBLIC.PAYMENT_ANALYTICS_DASHBOARD
+    ROOT_LOCATION = '@COCO_SDLC_HOL_99.PUBLIC.STREAMLIT_FILES'
+    MAIN_FILE = 'app.py'
+    QUERY_WAREHOUSE = COMPUTE_WH
+    COMMENT = 'Payment Analytics Dashboard — Authorization overview (Streamlit in Snowflake)';
+
+GRANT USAGE ON STREAMLIT COCO_SDLC_HOL_99.PUBLIC.PAYMENT_ANALYTICS_DASHBOARD TO ROLE ATTENDEE_ROLE;
 
 -- Step 6e: Deploy dbt Project from internal stage
 -- DROP + CREATE (not CREATE OR REPLACE) ensures a fresh manifest compile
--- so {{ target.database }} in sources.yml resolves correctly to COCO_SDLC_HOL_01
-DROP DBT PROJECT IF EXISTS COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS;
-CREATE DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS
-  FROM '@COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/'
+-- so {{ target.database }} in sources.yml resolves correctly to COCO_SDLC_HOL_99
+DROP DBT PROJECT IF EXISTS COCO_SDLC_HOL_99.MARTS.EVOLV_PAYMENT_ANALYTICS;
+CREATE DBT PROJECT COCO_SDLC_HOL_99.MARTS.EVOLV_PAYMENT_ANALYTICS
+  FROM '@COCO_SDLC_HOL_99.PUBLIC.DBT_FILES/'
   DEFAULT_TARGET = 'dev'
   EXTERNAL_ACCESS_INTEGRATIONS = (DBT_HUB_EAI)
   COMMENT = 'evolv Payment Analytics - dbt project from internal stage';
 
 -- Step 6f: Grant Access
-GRANT USAGE ON DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS
+GRANT USAGE ON DBT PROJECT COCO_SDLC_HOL_99.MARTS.EVOLV_PAYMENT_ANALYTICS
   TO ROLE ATTENDEE_ROLE;
 
 -- Step 6g: Execute dbt project to create staging views, intermediate
 -- dynamic tables, and marts dynamic tables
-EXECUTE DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS
+EXECUTE DBT PROJECT COCO_SDLC_HOL_99.MARTS.EVOLV_PAYMENT_ANALYTICS
   ARGS = 'run';
 
 USE ROLE ATTENDEE_ROLE;
@@ -1605,7 +1706,7 @@ USE ROLE ATTENDEE_ROLE;
 --   openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -out rsa_key.p8 -nocrypt
 -- Then register the public key on the service user:
 --   ALTER USER COCO_SDLC_HOL_SERVICE_USER SET RSA_PUBLIC_KEY='<public_key_content>';
-CREATE OR REPLACE SECRET COCO_SDLC_HOL_01.PUBLIC.coco_sdlc_hol_private_key
+CREATE OR REPLACE SECRET COCO_SDLC_HOL_99.PUBLIC.coco_sdlc_hol_private_key
   TYPE = GENERIC_STRING
   SECRET_STRING = '-----BEGIN PRIVATE KEY-----
 <PASTE_YOUR_UNENCRYPTED_PRIVATE_KEY_HERE>
@@ -1615,11 +1716,11 @@ CREATE OR REPLACE SECRET COCO_SDLC_HOL_01.PUBLIC.coco_sdlc_hol_private_key
 -- ============================================================
 -- SECTION 8: Semantic View + Cortex Agent
 -- ============================================================
-USE DATABASE COCO_SDLC_HOL_01;
+USE DATABASE COCO_SDLC_HOL_99;
 USE SCHEMA MARTS;
 
 CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
-  'COCO_SDLC_HOL_01.MARTS',
+  'COCO_SDLC_HOL_99.MARTS',
   $$
 name: PAYMENT_ANALYTICS
 description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
@@ -1631,7 +1732,7 @@ tables:
   - name: MERCHANTS
     description: Merchant and store reference data for location-based analytics
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: DIM_MERCHANTS
     primary_key:
@@ -1710,7 +1811,7 @@ tables:
   - name: AUTHORIZATIONS
     description: Authorization transactions for payment processing
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: AUTHORIZATIONS
     primary_key:
@@ -1801,7 +1902,7 @@ tables:
   - name: SETTLEMENTS
     description: Settlement and clearing transactions
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: SETTLEMENTS
     primary_key:
@@ -1886,7 +1987,7 @@ tables:
   - name: DEPOSITS
     description: Funding and deposit records
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: DEPOSITS
     primary_key:
@@ -1956,7 +2057,7 @@ tables:
   - name: CHARGEBACKS
     description: Chargeback and dispute records
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: CHARGEBACKS
     primary_key:
@@ -2047,7 +2148,7 @@ tables:
   - name: RETRIEVALS
     description: Retrieval requests
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: RETRIEVALS
     primary_key:
@@ -2113,7 +2214,7 @@ tables:
   - name: ADJUSTMENTS
     description: Fee adjustments and corrections
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: ADJUSTMENTS
     primary_key:
@@ -2343,7 +2444,7 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
 
   tool_resources:
     PaymentAnalyst:
-      semantic_view: "COCO_SDLC_HOL_01.MARTS.PAYMENT_ANALYTICS"
+      semantic_view: "COCO_SDLC_HOL_99.MARTS.PAYMENT_ANALYTICS"
       execution_environment:
         type: warehouse
         warehouse: COMPUTE_WH
@@ -2352,12 +2453,13 @@ CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
 -- ============================================================
 -- SECTION 9: Final Grants
 -- ============================================================
-GRANT USAGE ON AGENT COCO_SDLC_HOL_01.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
-GRANT USAGE ON DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS TO ROLE ATTENDEE_ROLE;
-GRANT SELECT ON ALL TABLES IN SCHEMA COCO_SDLC_HOL_01.MARTS TO ROLE ATTENDEE_ROLE;
-GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL_01.MARTS TO ROLE ATTENDEE_ROLE;
-GRANT SELECT ON ALL VIEWS IN SCHEMA COCO_SDLC_HOL_01.STAGING TO ROLE ATTENDEE_ROLE;
-GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL_01.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
+GRANT USAGE ON AGENT COCO_SDLC_HOL_99.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE;
+GRANT OWNERSHIP ON AGENT COCO_SDLC_HOL_99.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE COPY CURRENT GRANTS;
+GRANT USAGE ON DBT PROJECT COCO_SDLC_HOL_99.MARTS.EVOLV_PAYMENT_ANALYTICS TO ROLE ATTENDEE_ROLE;
+GRANT SELECT ON ALL TABLES IN SCHEMA COCO_SDLC_HOL_99.MARTS TO ROLE ATTENDEE_ROLE;
+GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL_99.MARTS TO ROLE ATTENDEE_ROLE;
+GRANT SELECT ON ALL VIEWS IN SCHEMA COCO_SDLC_HOL_99.STAGING TO ROLE ATTENDEE_ROLE;
+GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL_99.INTERMEDIATE TO ROLE ATTENDEE_ROLE;
 
 
 -- ============================================================
@@ -2367,14 +2469,14 @@ GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA COCO_SDLC_HOL_01.INTERMEDIATE TO RO
 -- cloned user database with the correct database name.
 -- ============================================================
 USE ROLE ATTENDEE_ROLE;
-USE DATABASE COCO_SDLC_HOL_01;
+USE DATABASE COCO_SDLC_HOL_99;
 
-CREATE OR REPLACE TABLE COCO_SDLC_HOL_01.PUBLIC.HOL_YAML_TEMPLATES (
+CREATE OR REPLACE TABLE COCO_SDLC_HOL_99.PUBLIC.HOL_YAML_TEMPLATES (
     template_name VARCHAR COMMENT 'Template identifier',
     content       VARCHAR COMMENT 'Template content'
 );
 
-INSERT INTO COCO_SDLC_HOL_01.PUBLIC.HOL_YAML_TEMPLATES (template_name, content)
+INSERT INTO COCO_SDLC_HOL_99.PUBLIC.HOL_YAML_TEMPLATES (template_name, content)
 VALUES (
     'semantic_view',
     $$
@@ -2388,7 +2490,7 @@ tables:
   - name: MERCHANTS
     description: Merchant and store reference data for location-based analytics
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: DIM_MERCHANTS
     primary_key:
@@ -2467,7 +2569,7 @@ tables:
   - name: AUTHORIZATIONS
     description: Authorization transactions for payment processing
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: AUTHORIZATIONS
     primary_key:
@@ -2558,7 +2660,7 @@ tables:
   - name: SETTLEMENTS
     description: Settlement and clearing transactions
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: SETTLEMENTS
     primary_key:
@@ -2643,7 +2745,7 @@ tables:
   - name: DEPOSITS
     description: Funding and deposit records
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: DEPOSITS
     primary_key:
@@ -2713,7 +2815,7 @@ tables:
   - name: CHARGEBACKS
     description: Chargeback and dispute records
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: CHARGEBACKS
     primary_key:
@@ -2804,7 +2906,7 @@ tables:
   - name: RETRIEVALS
     description: Retrieval requests
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: RETRIEVALS
     primary_key:
@@ -2870,7 +2972,7 @@ tables:
   - name: ADJUSTMENTS
     description: Fee adjustments and corrections
     base_table:
-      database: COCO_SDLC_HOL_01
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: ADJUSTMENTS
     primary_key:
@@ -3077,7 +3179,7 @@ $$
 -- ============================================================
 USE ROLE SYSADMIN;
 
-CREATE OR REPLACE PROCEDURE COCO_SDLC_HOL_01.PUBLIC.PROVISION_HOL_USER(
+CREATE OR REPLACE PROCEDURE COCO_SDLC_HOL_99.PUBLIC.PROVISION_HOL_USER(
     DB_NAME  VARCHAR,
     USERNAME VARCHAR
 )
@@ -3092,15 +3194,39 @@ $$
 def provision_hol_user(session, db_name: str, username: str) -> str:
     # Build dollar-dollar delimiter at runtime (avoids the two-dollar literal in this source)
     dd = '$' + '$'
+    import re
 
     # 1. Zero-copy clone of template database
     session.sql(f"USE ROLE ACCOUNTADMIN").collect()
+    # Per-user account role: each attendee gets HOL_ROLE_NN with a dedicated HOL_WH_NN warehouse
+    # and grants only on their own database. ATTENDEE_ROLE is NOT inherited and is
+    # revoked from the user at provisioning time — Snowsight will only show their
+    # own database with no way to switch to a role that exposes others.
+    # Username pattern: HOL_USER_NN  e.g. HOL_USER_02 -> suffix '02' -> role HOL_ROLE_02
+    suffix = username[len('HOL_USER_'):]   # e.g. 'HOL_USER_02' -> '02'
+    role_name = f'HOL_ROLE_{suffix}'      # -> 'HOL_ROLE_02'
+    wh_name   = f'HOL_WH_{suffix}'        # -> 'HOL_WH_02'
+    session.sql(f"CREATE ROLE IF NOT EXISTS {role_name}").collect()
     session.sql(
-        f"CREATE DATABASE IF NOT EXISTS {db_name} CLONE COCO_SDLC_HOL_01"
+        f"CREATE OR REPLACE WAREHOUSE {wh_name}"
+        f" WITH WAREHOUSE_SIZE = 'X-SMALL'"
+        f" AUTO_SUSPEND = 60"
+        f" AUTO_RESUME = TRUE"
+        f" INITIALLY_SUSPENDED = TRUE"
+        f" COMMENT = 'Dedicated compute for {username}'"
+    ).collect()
+    session.sql(f"GRANT USAGE ON WAREHOUSE {wh_name} TO ROLE {role_name}").collect()
+    # SP runs EXECUTE AS CALLER — grant role to ACCOUNTADMIN so the caller can switch into it.
+    session.sql(f"GRANT ROLE {role_name} TO ROLE ACCOUNTADMIN").collect()
+    session.sql(
+        f"CREATE DATABASE IF NOT EXISTS {db_name} CLONE COCO_SDLC_HOL_99"
         f" COMMENT = 'evolv HOL environment for {username}'"
     ).collect()
-    session.sql(f"GRANT ALL PRIVILEGES ON DATABASE {db_name} TO ROLE ATTENDEE_ROLE").collect()
-    session.sql(f"GRANT ALL PRIVILEGES ON ALL SCHEMAS IN DATABASE {db_name} TO ROLE ATTENDEE_ROLE").collect()
+    session.sql(f"GRANT ALL PRIVILEGES ON DATABASE {db_name} TO ROLE {role_name}").collect()
+    session.sql(f"GRANT ALL PRIVILEGES ON ALL SCHEMAS IN DATABASE {db_name} TO ROLE {role_name}").collect()
+    # HOL_ROLE_NN must be able to SELECT from RAW source tables when running dbt during the lab
+    session.sql(f"GRANT SELECT ON ALL TABLES IN SCHEMA {db_name}.RAW TO ROLE {role_name}").collect()
+    session.sql(f"GRANT SELECT ON FUTURE TABLES IN SCHEMA {db_name}.RAW TO ROLE {role_name}").collect()
 
     # 2. Per-user DBT_FILES stage
     session.sql("USE ROLE SYSADMIN").collect()
@@ -3109,8 +3235,10 @@ def provision_hol_user(session, db_name: str, username: str) -> str:
         f" DIRECTORY = (ENABLE = TRUE)"
         f" COMMENT = 'dbt project files for {username} — upload changes here via snow stage put'"
     ).collect()
-    session.sql(f"COPY FILES INTO @{db_name}.PUBLIC.DBT_FILES/ FROM @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/").collect()
+    session.sql(f"COPY FILES INTO @{db_name}.PUBLIC.DBT_FILES/ FROM @COCO_SDLC_HOL_99.PUBLIC.DBT_FILES/").collect()
     session.sql(f"REMOVE @{db_name}.PUBLIC.DBT_FILES/package-lock.yml").collect()
+    # Remove deploy_and_run_dbt.sql — attendees deploy via Cortex Code prompt
+    session.sql(f"REMOVE @{db_name}.PUBLIC.DBT_FILES/deploy_and_run_dbt.sql").collect()
 
     # Write per-user profiles.yml via COPY INTO FROM SELECT
     # (CHR(10) produces newlines; no single quotes appear in profiles.yml content)
@@ -3121,9 +3249,9 @@ def provision_hol_user(session, db_name: str, username: str) -> str:
         "    dev:",
         "      type: snowflake",
         f"      database: {db_name}",
-        "      role: ATTENDEE_ROLE",
+        f"      role: {role_name}",
         "      schema: STAGING",
-        "      warehouse: COMPUTE_WH",
+        f"      warehouse: {wh_name}",
     ]
     sql_expr = " || CHR(10) || ".join(f"'{ln}'" for ln in profile_lines)
     session.sql(
@@ -3134,7 +3262,30 @@ def provision_hol_user(session, db_name: str, username: str) -> str:
         f" OVERWRITE=TRUE SINGLE=TRUE HEADER=FALSE"
     ).collect()
     session.sql(f"ALTER STAGE {db_name}.PUBLIC.DBT_FILES REFRESH").collect()
-    session.sql(f"GRANT READ, WRITE ON STAGE {db_name}.PUBLIC.DBT_FILES TO ROLE ATTENDEE_ROLE").collect()
+
+    # 2b. Per-user STREAMLIT_FILES stage — populate as SYSADMIN (can read from template)
+    session.sql(
+        f"CREATE OR REPLACE STAGE {db_name}.PUBLIC.STREAMLIT_FILES"
+        f" DIRECTORY = (ENABLE = TRUE)"
+        f" COMMENT = 'Streamlit app files for {username}'"
+    ).collect()
+    session.sql(f"COPY FILES INTO @{db_name}.PUBLIC.STREAMLIT_FILES/ FROM @COCO_SDLC_HOL_99.PUBLIC.STREAMLIT_FILES/").collect()
+    session.sql(f"ALTER STAGE {db_name}.PUBLIC.STREAMLIT_FILES REFRESH").collect()
+    # Grant READ early so HOL_ROLE_NN can reference the stage when creating the Streamlit below
+    session.sql(f"GRANT READ ON STAGE {db_name}.PUBLIC.STREAMLIT_FILES TO ROLE {role_name}").collect()
+    # Create Streamlit as HOL_ROLE_NN — SiS executes SQL as the Streamlit owner's role.
+    # HOL_ROLE_NN owns the MARTS dynamic tables, so no separate SYSADMIN grant is needed.
+    session.sql("USE ROLE ACCOUNTADMIN").collect()
+    session.sql(f"USE ROLE {role_name}").collect()
+    session.sql(
+        f"CREATE OR REPLACE STREAMLIT {db_name}.PUBLIC.PAYMENT_ANALYTICS_DASHBOARD"
+        f" ROOT_LOCATION = '@{db_name}.PUBLIC.STREAMLIT_FILES'"
+        f" MAIN_FILE = 'app.py'"
+        f" QUERY_WAREHOUSE = {wh_name}"  # HOL_ROLE_NN has USAGE on HOL_WH_NN
+        f" COMMENT = 'Payment Analytics Dashboard for {username}'"
+    ).collect()
+    session.sql("USE ROLE ACCOUNTADMIN").collect()
+    # Stage grant (READ, WRITE) also added in section 6 grants loop below
 
     # 3. dbt project — DROP + CREATE forces fresh manifest compile
     #    so {{ target.database }} in sources.yml resolves to db_name
@@ -3147,20 +3298,80 @@ def provision_hol_user(session, db_name: str, username: str) -> str:
         f" COMMENT = 'evolv Payment Analytics dbt project for {username}'"
     ).collect()
     session.sql("USE ROLE ACCOUNTADMIN").collect()
-    session.sql(f"GRANT USAGE ON DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS TO ROLE ATTENDEE_ROLE").collect()
-    session.sql(f"EXECUTE DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = 'run'").collect()
+    # OWNERSHIP required for ALTER DBT PROJECT ADD VERSION (attendees redeploy from workspace)
+    session.sql(
+        f"GRANT OWNERSHIP ON DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS"
+        f" TO ROLE {role_name} COPY CURRENT GRANTS"
+    ).collect()
+    # Fix all objects with wrong DB/warehouse references from zero-copy clone.
+    # Processes in dependency order: STAGING views → INTERMEDIATE → MARTS.
+    # Running as ACCOUNTADMIN — can CREATE OR REPLACE regardless of current ownership.
+    # This replaces EXECUTE DBT PROJECT ARGS='run', eliminating the dbt Hub network call
+    # and compilation step (~1-2 min saved per user).
+    for schema, obj_kind in [
+        ('STAGING',      'view'),
+        ('INTERMEDIATE', 'dynamic_table'),
+        ('MARTS',        'dynamic_table'),
+    ]:
+        # Set session context so unqualified object names from GET_DDL resolve to db_name.schema
+        session.sql(f"USE SCHEMA {db_name}.{schema}").collect()
+        if obj_kind == 'view':
+            # Views show correctly as 'VIEW' in information_schema
+            rows = session.sql(
+                f"SELECT table_name FROM {db_name}.information_schema.tables "
+                f"WHERE table_schema = '{schema}' AND table_type = 'VIEW' "
+                f"ORDER BY table_name"
+            ).collect()
+            tnames = [row[0] for row in rows]
+        else:
+            # Cloned dynamic tables show as BASE TABLE in information_schema —
+            # SHOW DYNAMIC TABLES correctly identifies them regardless of clone origin.
+            rows = session.sql(f"SHOW DYNAMIC TABLES IN SCHEMA {db_name}.{schema}").collect()
+            tnames = [row[1] for row in rows]  # column index 1 = 'name'
+        for tname in tnames:
+            ddl = session.sql(
+                f"SELECT GET_DDL('{obj_kind}', '{db_name}.{schema}.{tname}')"
+            ).collect()[0][0]
+            # Replace any COCO_SDLC_HOL_NN reference (handles _01, _99, etc.)
+            new_ddl = re.sub(r'COCO_SDLC_HOL_\d+', db_name, ddl)
+            # Note: dynamic table refresh warehouse is kept as COMPUTE_WH (same as template).
+            # HOL_WH_NN is used for interactive queries (dbt run, Streamlit, Cortex Analyst).
+            session.sql(new_ddl).collect()
+    # Re-grant ownership — CREATE OR REPLACE above transferred ownership to ACCOUNTADMIN.
+    # HOL_ROLE_NN must own the dynamic tables so attendees can run dbt during the lab.
+    session.sql(f"GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.INTERMEDIATE TO ROLE {role_name} COPY CURRENT GRANTS").collect()
+    session.sql(f"GRANT OWNERSHIP ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.MARTS TO ROLE {role_name} COPY CURRENT GRANTS").collect()
+
+    # 3b. Shared workspace — seeded with the full dbt project so attendees can
+    #     edit models directly in the Snowsight IDE. deploy_and_run_dbt.sql
+    #     (also at the root of DBT_FILES) deploys FROM this workspace's live
+    #     version so workspace edits are what gets pushed to the DBT PROJECT.
+    session.sql("USE ROLE ACCOUNTADMIN").collect()
+    session.sql(
+        f"CREATE OR REPLACE WORKSPACE {db_name}.MARTS.HOL_WORKSPACE"
+        f" FROM '@{db_name}.PUBLIC.DBT_FILES/'"
+    ).collect()
+    # Transfer ownership to the attendee role so they can see it in Cortex Code
+    session.sql(
+        f"GRANT OWNERSHIP ON WORKSPACE {db_name}.MARTS.HOL_WORKSPACE"
+        f" TO ROLE {role_name} COPY CURRENT GRANTS"
+    ).collect()
 
     # 4. Semantic view — drop clone (wrong DB refs), recreate with correct refs
-    session.sql("USE ROLE ATTENDEE_ROLE").collect()
+    # Read YAML as ACCOUNTADMIN (needs access to template DB), then create as HOL_ROLE_NN
+    # so the attendee owns it and can CREATE OR REPLACE it during the lab.
+    session.sql("USE ROLE ACCOUNTADMIN").collect()
     session.sql(f"DROP SEMANTIC VIEW IF EXISTS {db_name}.MARTS.PAYMENT_ANALYTICS").collect()
     rows = session.sql(
-        "SELECT content FROM COCO_SDLC_HOL_01.PUBLIC.HOL_YAML_TEMPLATES"
+        "SELECT content FROM COCO_SDLC_HOL_99.PUBLIC.HOL_YAML_TEMPLATES"
         " WHERE template_name = 'semantic_view'"
     ).collect()
-    sv_yaml = rows[0][0].replace('COCO_SDLC_HOL_01', db_name)
+    sv_yaml = rows[0][0].replace('COCO_SDLC_HOL_99', db_name)
+    session.sql(f"USE ROLE {role_name}").collect()
     session.sql(
         f"CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML('{db_name}.MARTS', {dd}{sv_yaml}{dd}, FALSE)"
     ).collect()
+    session.sql("USE ROLE ACCOUNTADMIN").collect()
 
     # 5. Agent — drop clone, recreate pointing to per-user semantic view
     #    dd substituted at runtime so two dollar-signs never appear consecutively in source
@@ -3193,7 +3404,7 @@ tool_resources:
     semantic_view: "{db_name}.MARTS.PAYMENT_ANALYTICS"
     execution_environment:
       type: warehouse
-      warehouse: COMPUTE_WH
+      warehouse: {wh_name}
 """
     session.sql(
         f"CREATE OR REPLACE AGENT {db_name}.MARTS.PAYMENT_ANALYTICS_AGENT"
@@ -3202,27 +3413,78 @@ tool_resources:
         f" FROM SPECIFICATION {dd}{agent_spec}{dd}"
     ).collect()
 
-    # 6. Final grants
+    # 5b. Transfer agent ownership to attendee role so ALTER AGENT SET SPECIFICATION works
+    session.sql(
+        f"GRANT OWNERSHIP ON AGENT {db_name}.MARTS.PAYMENT_ANALYTICS_AGENT"
+        f" TO ROLE {role_name} COPY CURRENT GRANTS"
+    ).collect()
+
+    # 6. Per-user account role — final grants for objects created after initial clone.
+    #    HOL_ROLE_NN already has ALL PRIVILEGES on the database/schemas (step 1).
+    #    These add grants for objects created during provisioning (stage, agent, etc.)
+    session.sql("USE ROLE ACCOUNTADMIN").collect()
     for sql in [
-        f"GRANT USAGE ON AGENT {db_name}.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE ATTENDEE_ROLE",
-        f"GRANT USAGE ON DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS TO ROLE ATTENDEE_ROLE",
-        f"GRANT SELECT ON ALL TABLES IN SCHEMA {db_name}.MARTS TO ROLE ATTENDEE_ROLE",
-        f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.MARTS TO ROLE ATTENDEE_ROLE",
-        f"GRANT SELECT ON ALL VIEWS IN SCHEMA {db_name}.STAGING TO ROLE ATTENDEE_ROLE",
-        f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.INTERMEDIATE TO ROLE ATTENDEE_ROLE",
+        f"GRANT READ, WRITE ON STAGE {db_name}.PUBLIC.DBT_FILES TO ROLE {role_name}",
+        f"GRANT USAGE ON AGENT {db_name}.MARTS.PAYMENT_ANALYTICS_AGENT TO ROLE {role_name}",
+        f"GRANT USAGE ON STREAMLIT {db_name}.PUBLIC.PAYMENT_ANALYTICS_DASHBOARD TO ROLE {role_name}",
+        f"GRANT READ, WRITE ON STAGE {db_name}.PUBLIC.STREAMLIT_FILES TO ROLE {role_name}",
+        f"GRANT SELECT ON ALL TABLES IN SCHEMA {db_name}.MARTS TO ROLE {role_name}",
+        f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.MARTS TO ROLE {role_name}",
+        f"GRANT SELECT ON ALL VIEWS IN SCHEMA {db_name}.STAGING TO ROLE {role_name}",
+        f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.INTERMEDIATE TO ROLE {role_name}",
+        # Required for ALTER DBT PROJECT ADD VERSION (runs dbt deps via external network)
+        f"GRANT USAGE ON INTEGRATION DBT_HUB_EAI TO ROLE {role_name}",
+        # Required for GET_JIRA_TICKET UDF (calls Atlassian REST API via external network)
+        f"GRANT USAGE ON INTEGRATION ATLASSIAN_EAI TO ROLE {role_name}",
+        # HOL_SHARED: allows attendees to reference the shared secret in their own UDFs
+        f"GRANT USAGE ON DATABASE HOL_SHARED TO ROLE {role_name}",
+        f"GRANT USAGE ON SCHEMA HOL_SHARED.PUBLIC TO ROLE {role_name}",
+        f"GRANT READ ON SECRET HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET TO ROLE {role_name}",
+        f"GRANT USAGE ON SECRET HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET TO ROLE {role_name}",
     ]:
         session.sql(sql).collect()
+
+    # Assign per-user role to the attendee; set as default so Snowsight opens
+    # with HOL_ROLE_NN active — only their own database appears in the catalog.
+    # Revoke ATTENDEE_ROLE from the user so they cannot switch to it in Snowsight
+    # and gain visibility into other attendees' databases.
+    session.sql(f"GRANT ROLE {role_name} TO USER {username}").collect()
+    session.sql(f"ALTER USER {username} SET DEFAULT_ROLE = '{role_name}'").collect()
+    session.sql(f"ALTER USER {username} SET DEFAULT_WAREHOUSE = '{wh_name}'").collect()
+    session.sql(f"ALTER USER {username} SET MINS_TO_BYPASS_MFA = 1200").collect()
+    session.sql(f"REVOKE ROLE ATTENDEE_ROLE FROM USER {username}").collect()
+
+    # Service user access: COCO_SDLC_HOL_SERVICE_USER uses ATTENDEE_ROLE for the
+    # HOL frontend. Database roles are always active regardless of active account
+    # role, so granting {db_name}.HOL_ATTENDEE directly to the service user lets it
+    # query this database without holding HOL_ROLE_NN.
+    session.sql(f"CREATE DATABASE ROLE IF NOT EXISTS {db_name}.HOL_ATTENDEE").collect()
+    for sql in [
+        f"GRANT ALL PRIVILEGES ON DATABASE {db_name} TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT ALL PRIVILEGES ON ALL SCHEMAS IN DATABASE {db_name} TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT READ, WRITE ON STAGE {db_name}.PUBLIC.DBT_FILES TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT USAGE ON AGENT {db_name}.MARTS.PAYMENT_ANALYTICS_AGENT TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT USAGE ON STREAMLIT {db_name}.PUBLIC.PAYMENT_ANALYTICS_DASHBOARD TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT READ ON STAGE {db_name}.PUBLIC.STREAMLIT_FILES TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT USAGE ON DBT PROJECT {db_name}.MARTS.EVOLV_PAYMENT_ANALYTICS TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT SELECT ON ALL TABLES IN SCHEMA {db_name}.MARTS TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.MARTS TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT SELECT ON ALL VIEWS IN SCHEMA {db_name}.STAGING TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+        f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.INTERMEDIATE TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
+    ]:
+        session.sql(sql).collect()
+    session.sql(f"GRANT DATABASE ROLE {db_name}.HOL_ATTENDEE TO USER COCO_SDLC_HOL_SERVICE_USER").collect()
 
     return f"{db_name} provisioned for {username}"
 $$;
 
-GRANT USAGE ON PROCEDURE COCO_SDLC_HOL_01.PUBLIC.PROVISION_HOL_USER(VARCHAR, VARCHAR)
+GRANT USAGE ON PROCEDURE COCO_SDLC_HOL_99.PUBLIC.PROVISION_HOL_USER(VARCHAR, VARCHAR)
     TO ROLE ATTENDEE_ROLE;
 
 -- ============================================================
--- SECTION 10: Clone Template Database for Remaining HOL Users
+-- SECTION 10: Clone Template Database for All HOL Users
 -- ============================================================
--- Clones COCO_SDLC_HOL_01 for users 02..NN and calls
+-- Clones COCO_SDLC_HOL_99 for users 01..NUM_USERS and calls
 -- PROVISION_HOL_USER for each — a Python SP that handles
 -- complex provisioning without $$ delimiter conflicts.
 -- NUM_USERS must match the value set in Section 0.
@@ -3233,15 +3495,15 @@ EXECUTE IMMEDIATE $$
 DECLARE
     num_users INTEGER DEFAULT 20;   -- keep in sync with SET NUM_USERS in Section 0
 BEGIN
-    FOR i IN 2 TO :num_users DO
+    FOR i IN 1 TO :num_users DO
         LET suffix   VARCHAR := LPAD(i::VARCHAR, 2, '0');
         LET db_name  VARCHAR := 'COCO_SDLC_HOL_' || :suffix;
-        LET username VARCHAR := 'HOL_USER' || :suffix;
+        LET username VARCHAR := 'HOL_USER_' || :suffix;
 
-        CALL COCO_SDLC_HOL_01.PUBLIC.PROVISION_HOL_USER(:db_name, :username);
+        CALL COCO_SDLC_HOL_99.PUBLIC.PROVISION_HOL_USER(:db_name, :username);
 
     END FOR;
-    RETURN 'Provisioned ' || (:num_users - 1) || ' cloned HOL databases'
-        || ' (COCO_SDLC_HOL_02 ... COCO_SDLC_HOL_' || LPAD(:num_users::VARCHAR, 2, '0') || ')';
+    RETURN 'Provisioned ' || :num_users || ' HOL databases'
+        || ' (COCO_SDLC_HOL_01 ... COCO_SDLC_HOL_' || LPAD(:num_users::VARCHAR, 2, '0') || ')';
 END;
 $$;

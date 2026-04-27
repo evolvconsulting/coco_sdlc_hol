@@ -121,16 +121,24 @@ When deploying the dbt project from the HOL_WORKSPACE, always use **`versions/li
 - `versions/live` = the current live state of the workspace, including all Cortex Code file edits
 - `versions/last` = the last explicitly committed workspace snapshot — **does not include Cortex Code edits**
 
-Correct ADD VERSION syntax:
+### Correct deployment sequence
+
+**Step 1 — Add a new version** (`ADD VERSION` auto-sets it as the default):
 ```sql
 ALTER DBT PROJECT <your-database>.MARTS.EVOLV_PAYMENT_ANALYTICS
   ADD VERSION
   FROM 'snow://workspace/<your-database>.MARTS."HOL_WORKSPACE"/versions/live';
 ```
 
-When running with new columns added to a dynamic table, always scope with `--select` to avoid `CREATE VIEW` permission errors on the STAGING schema:
+**Step 2 — Execute the project** (uses the new default version automatically):
 ```sql
 EXECUTE DBT PROJECT <your-database>.MARTS.EVOLV_PAYMENT_ANALYTICS
   ARGS = 'run --select int_authorizations__enriched+ --full-refresh';
 ```
+
+**Critical syntax rules:**
+- Do **NOT** add a `VERSION` clause to `EXECUTE DBT PROJECT` — it is not valid syntax and will error. The `DBT_VERSION` parameter is for the dbt Core engine version only.
+- `ADD VERSION` without a name alias is correct — Snowflake auto-generates the version name and sets it as the default.
+- Do **NOT** use a version name alias like `VERSION V2` in `ADD VERSION` — the alias makes re-runs fail because the same alias cannot be added twice.
+- Always scope with `--select int_authorizations__enriched+ --full-refresh` to avoid `CREATE VIEW` permission errors on the STAGING schema.
 
