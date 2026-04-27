@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>COCO SDLC HOL — Lab Flow</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #EFF4FB;
+      color: #1E293B;
+      min-height: 100vh;
+    }
+
+    /* ── Header ────────────────────────────────────────────── */
+    header {
+      background: linear-gradient(135deg, #082D4F 0%, #0F4671 45%, #1A6FA8 100%);
+      color: white;
+      padding: 40px 40px 32px;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    header::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 40%, rgba(41,181,232,0.18) 0%, transparent 60%);
+    }
+    header .eyebrow {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 2.5px;
+      opacity: 0.65;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    header h1 {
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: -0.6px;
+      position: relative;
+    }
+    header h1 span { color: #29B5E8; }
+    header .tagline {
+      margin-top: 10px;
+      font-size: 14px;
+      opacity: 0.75;
+      position: relative;
+    }
+    header .pill {
+      display: inline-block;
+      margin-top: 16px;
+      background: rgba(41,181,232,0.20);
+      border: 1px solid rgba(41,181,232,0.40);
+      color: #A8DAEF;
+      font-size: 12px;
+      padding: 5px 14px;
+      border-radius: 999px;
+      position: relative;
+    }
+
+    /* ── View toggle ───────────────────────────────────────── */
+    .toggle-bar {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      padding: 20px 24px 0;
+    }
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 20px;
+      border-radius: 999px;
+      border: 2px solid #CBD5E1;
+      background: white;
+      color: #64748B;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .tab-btn:hover {
+      border-color: #94A3B8;
+      color: #334155;
+    }
+    .tab-btn.active {
+      background: #0F4671;
+      border-color: #0F4671;
+      color: white;
+      box-shadow: 0 2px 8px rgba(15,70,113,0.30);
+    }
+    .tab-btn .tab-icon { font-size: 15px; }
+
+    /* ── Wrapper + grid ────────────────────────────────────── */
+    .wrapper {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 24px 48px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 48px 1fr;
+      gap: 0;
+      align-items: start;
+      transition: all 0.2s ease;
+    }
+
+    /* Single-path view: collapse to centered single column */
+    .wrapper[data-view="cli"]  .grid,
+    .wrapper[data-view="ui"]   .grid {
+      grid-template-columns: 1fr;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .wrapper[data-view="cli"] .ui-card,
+    .wrapper[data-view="cli"] .spine,
+    .wrapper[data-view="ui"]  .cli-card,
+    .wrapper[data-view="ui"]  .spine {
+      display: none;
+    }
+
+    /* ── Middle spine ──────────────────────────────────────── */
+    .spine {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-top: 90px;
+    }
+    .spine-line {
+      width: 2px;
+      flex: 1;
+      min-height: 30px;
+      background: #E2E8F0;
+    }
+    .spine-label {
+      writing-mode: vertical-rl;
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      font-weight: 700;
+      color: #94A3B8;
+      padding: 10px 0;
+    }
+
+    /* ── Path card ─────────────────────────────────────────── */
+    .path {
+      background: white;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+    }
+
+    .path-header {
+      padding: 22px 24px 20px;
+      text-align: center;
+    }
+    .path-header.cli { background: linear-gradient(135deg, #082D4F 0%, #1A5276 100%); color: white; }
+    .path-header.ui  { background: linear-gradient(135deg, #064E40 0%, #0D9E7E 100%); color: white; }
+    .path-header .icon { font-size: 32px; margin-bottom: 8px; display: block; }
+    .path-header h2 { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; }
+    .path-header .sub {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .path-header .sub span {
+      background: rgba(255,255,255,0.12);
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* ── Prereq strip ──────────────────────────────────────── */
+    .prereq {
+      padding: 10px 16px;
+      background: #F8FAFC;
+      border-bottom: 1px solid #E8EDF5;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      align-items: center;
+    }
+    .prereq-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      color: #94A3B8;
+      margin-right: 4px;
+    }
+    .badge {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+    }
+    .badge.tool  { background: #EEF2FF; color: #3730A3; }
+    .badge.green { background: #DCFCE7; color: #15803D; }
+    .badge.amber { background: #FEF9C3; color: #92400E; }
+
+    /* ── Flow body ─────────────────────────────────────────── */
+    .flow { padding: 0 16px 24px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin: 18px 0 8px;
+    }
+    .section-header .sh-line { flex: 1; height: 1px; background: #E2E8F0; }
+    .section-header .sh-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+    .section-header .sh-time {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .c-setup  { color: #2563EB; }
+    .c-arch   { color: #7C3AED; }
+    .c-task1  { color: #C2410C; }
+    .c-switch { color: #16A34A; }
+    .c-task2  { color: #BE185D; }
+    .t-setup  { background: #DBEAFE; color: #1E40AF; }
+    .t-arch   { background: #EDE9FE; color: #5B21B6; }
+    .t-task1  { background: #FFEDD5; color: #9A3412; }
+    .t-task2  { background: #FCE7F3; color: #9D174D; }
+
+    /* ── Step card ─────────────────────────────────────────── */
+    .step {
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+      padding: 9px 11px;
+      border-radius: 9px;
+      margin-bottom: 4px;
+    }
+    .step-icon {
+      font-size: 15px;
+      flex-shrink: 0;
+      width: 22px;
+      text-align: center;
+      line-height: 1.6;
+    }
+    .step-body  { flex: 1; min-width: 0; }
+    .step-title { font-size: 13px; font-weight: 700; line-height: 1.3; }
+    .step-sub   { font-size: 11px; color: #64748B; margin-top: 2px; line-height: 1.4; }
+
+    /* AI-prompt indicator */
+    .step-ai {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10px;
+      font-weight: 700;
+      background: #F0F9FF;
+      color: #0369A1;
+      border: 1px solid #BAE6FD;
+      padding: 1px 6px;
+      border-radius: 999px;
+      margin-top: 4px;
+    }
+
+    .s-setup  { background: #EFF6FF; border-left: 3px solid #3B82F6; }
+    .s-arch   { background: #F5F3FF; border-left: 3px solid #8B5CF6; }
+    .s-task1  { background: #FFF7ED; border-left: 3px solid #F97316; }
+    .s-switch { background: #F0FDF4; border-left: 3px solid #22C55E; }
+    .s-task2  { background: #FDF2F8; border-left: 3px solid #EC4899; }
+    .s-verify { background: #F0FDFA; border-left: 3px solid #0D9488; }
+
+    .arrow {
+      text-align: center;
+      color: #CBD5E1;
+      font-size: 12px;
+      padding: 1px 0;
+    }
+
+    /* ── Legend ────────────────────────────────────────────── */
+    .legend {
+      margin-top: 24px;
+      background: white;
+      border-radius: 12px;
+      padding: 14px 20px;
+      box-shadow: 0 1px 8px rgba(0,0,0,0.05);
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+    }
+    .legend-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 800;
+      color: #94A3B8;
+      margin-right: 4px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      color: #475569;
+    }
+    .legend-dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+    .legend-ai {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      background: #F0F9FF;
+      color: #0369A1;
+      border: 1px solid #BAE6FD;
+      padding: 2px 8px;
+      border-radius: 999px;
+    }
+
+    /* ── Instructions panel ────────────────────────────────── */
+    .instructions-panel { margin-top: 24px; }
+
+    .instructions-panel .panel-heading {
+      text-align: center;
+      margin-bottom: 16px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.8px;
+      font-weight: 800;
+      color: #94A3B8;
+    }
+
+    .instructions-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .wrapper[data-view="cli"] .instructions-grid,
+    .wrapper[data-view="ui"]  .instructions-grid {
+      grid-template-columns: 1fr;
+      max-width: 540px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .wrapper[data-view="cli"] .guide-ui,
+    .wrapper[data-view="ui"]  .guide-cli { display: none; }
+
+    .guide-card {
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 2px 20px rgba(0,0,0,0.07), 0 1px 4px rgba(0,0,0,0.04);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .guide-header {
+      padding: 22px 24px 20px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+    .guide-header.cli { background: linear-gradient(135deg, #082D4F 0%, #1A5276 100%); }
+    .guide-header.ui  { background: linear-gradient(135deg, #064E40 0%, #0D9E7E 100%); }
+    .guide-header::before {
+      content: '';
+      position: absolute;
+      top: -20px; right: -10px;
+      width: 110px; height: 110px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 50%;
+    }
+    .guide-header::after {
+      content: '';
+      position: absolute;
+      bottom: -30px; right: 50px;
+      width: 70px; height: 70px;
+      background: rgba(255,255,255,0.04);
+      border-radius: 50%;
+    }
+    .guide-eyebrow {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      opacity: 0.60;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .guide-title-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: relative;
+    }
+    .guide-big-icon { font-size: 38px; flex-shrink: 0; }
+    .guide-title { font-size: 19px; font-weight: 800; letter-spacing: -0.3px; line-height: 1.2; }
+    .guide-filename {
+      font-size: 11px;
+      opacity: 0.65;
+      margin-top: 5px;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+    }
+    .guide-prereqs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      margin-top: 14px;
+      position: relative;
+    }
+    .guide-prereq-chip {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 9px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.13);
+      border: 1px solid rgba(255,255,255,0.20);
+      color: rgba(255,255,255,0.90);
+    }
+
+    .guide-body {
+      background: white;
+      flex: 1;
+      padding: 20px 22px;
+      display: flex;
+      flex-direction: column;
+    }
+    .guide-desc {
+      font-size: 13px;
+      color: #475569;
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+    .guide-desc code {
+      background: #F1F5F9;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 11px;
+      color: #334155;
+    }
+    .guide-sections-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      font-weight: 800;
+      color: #94A3B8;
+      margin-bottom: 8px;
+    }
+    .guide-sections { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; flex: 1; }
+    .guide-section-row {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 7px 10px;
+      background: #F8FAFC;
+      border-radius: 7px;
+      border: 1px solid #F1F5F9;
+    }
+    .guide-section-num {
+      width: 20px; height: 20px;
+      border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800;
+      flex-shrink: 0; color: white;
+    }
+    .guide-section-text { font-size: 12px; font-weight: 600; color: #334155; flex: 1; }
+    .guide-section-time {
+      font-size: 10px; font-weight: 700;
+      padding: 2px 6px; border-radius: 999px; white-space: nowrap;
+    }
+
+    .guide-cta {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 13px 20px;
+      border-radius: 10px;
+      font-size: 14px; font-weight: 700;
+      text-decoration: none;
+      transition: all 0.18s ease;
+      letter-spacing: -0.2px;
+      margin-top: auto;
+    }
+    .guide-cta.cli {
+      background: linear-gradient(135deg, #082D4F, #1A5276);
+      color: white;
+      box-shadow: 0 2px 10px rgba(8,45,79,0.25);
+    }
+    .guide-cta.cli:hover { box-shadow: 0 4px 16px rgba(8,45,79,0.35); transform: translateY(-1px); }
+    .guide-cta.ui {
+      background: linear-gradient(135deg, #064E40, #0D9E7E);
+      color: white;
+      box-shadow: 0 2px 10px rgba(6,78,64,0.25);
+    }
+    .guide-cta.ui:hover { box-shadow: 0 4px 16px rgba(6,78,64,0.35); transform: translateY(-1px); }
+
+    /* ── Path docs view ─────────────────────────────────────── */
+    #path-view { display: none; }
+
+    .ph-bar {
+      background: white; border-radius: 14px; padding: 16px 20px;
+      margin-bottom: 20px; display: flex; align-items: center; gap: 14px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+    }
+    .ph-icon { font-size: 34px; flex-shrink: 0; }
+    .ph-info { flex: 1; }
+    .ph-title { font-size: 17px; font-weight: 800; color: #0F172A; }
+    .ph-sub   { font-size: 12px; color: #64748B; margin-top: 2px; }
+    .ph-prereqs { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+    .ph-chip { font-size: 11px; font-weight: 600; padding: 3px 9px; border-radius: 999px; }
+    .ph-chip.prim { background: #EEF2FF; color: #3730A3; }
+    .ph-chip.ok   { background: #DCFCE7; color: #15803D; }
+    .ph-chip.warn { background: #FEF9C3; color: #92400E; }
+
+    .docs-layout {
+      display: grid; grid-template-columns: 230px 1fr; gap: 20px; align-items: start;
+    }
+
+    .docs-nav {
+      background: white; border-radius: 14px; overflow: hidden;
+      position: sticky; top: 20px; box-shadow: 0 2px 12px rgba(0,0,0,0.06); padding: 8px 0;
+    }
+    .docs-nav-head {
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1.5px;
+      font-weight: 800; color: #94A3B8; padding: 10px 16px 6px;
+    }
+
+    .nav-item {
+      display: flex; align-items: center; gap: 9px; padding: 9px 14px;
+      cursor: pointer; border-left: 3px solid transparent; transition: all 0.15s ease;
+    }
+    .nav-item:hover { background: #F8FAFC; }
+    .nav-item.active          { background: #EFF6FF; border-left-color: #1A5276; }
+    .nav-item.active.ui-active { background: #ECFDF5; border-left-color: #0D9E7E; }
+    .nav-num {
+      width: 22px; height: 22px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 800; flex-shrink: 0; color: white;
+    }
+    .nav-info { flex: 1; min-width: 0; }
+    .nav-title { font-size: 12px; font-weight: 700; color: #1E293B; line-height: 1.2; }
+    .nav-time  { font-size: 10px; color: #94A3B8; margin-top: 2px; }
+
+    .docs-content {
+      background: white; border-radius: 14px; padding: 28px 32px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); min-height: 500px;
+    }
+
+    /* Content typography */
+    .sect-header {
+      display: flex; align-items: center; gap: 12px;
+      padding-bottom: 16px; border-bottom: 2px solid #F1F5F9; margin-bottom: 22px;
+    }
+    .sect-num-badge {
+      width: 36px; height: 36px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px; font-weight: 800; color: white; flex-shrink: 0;
+    }
+    .sect-title-text { font-size: 20px; font-weight: 800; color: #0F172A; }
+    .sect-time-badge {
+      margin-left: auto; font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 999px;
+    }
+
+    .docs-content h3 {
+      font-size: 14px; font-weight: 800; color: #1E293B;
+      margin: 22px 0 8px; display: flex; align-items: center; gap: 8px;
+    }
+    .docs-content h3::after { content:''; flex:1; height:1px; background:#F1F5F9; }
+    .docs-content p  { font-size: 13.5px; color: #475569; line-height: 1.65; margin-bottom: 10px; }
+    .docs-content ul, .docs-content ol { margin: 6px 0 12px 20px; }
+    .docs-content li { font-size: 13.5px; color: #475569; line-height: 1.6; margin-bottom: 5px; }
+    .docs-content a  { color: #2563EB; text-decoration: none; }
+    .docs-content a:hover { text-decoration: underline; }
+    .docs-content strong { color: #334155; }
+
+    .docs-content pre {
+      background: #0F172A; border-radius: 10px;
+      padding: 14px 18px; margin: 8px 0 14px; overflow-x: auto;
+    }
+    .docs-content pre code {
+      color: #E2E8F0; font-family: 'SFMono-Regular', Consolas, monospace;
+      font-size: 12.5px; line-height: 1.55;
+    }
+    .ic {
+      background: #F1F5F9; color: #334155; padding: 1px 5px; border-radius: 4px;
+      font-family: 'SFMono-Regular', Consolas, monospace; font-size: 11.5px;
+    }
+
+    .prompt-box {
+      background: #0F172A; border-radius: 10px; padding: 13px 16px;
+      margin: 8px 0 14px; border-left: 4px solid #29B5E8;
+    }
+    .prompt-label {
+      font-size: 9px; text-transform: uppercase; letter-spacing: 1.5px;
+      color: #29B5E8; font-weight: 800; margin-bottom: 6px;
+    }
+    .prompt-text { color: #CBD5E1; font-size: 13px; line-height: 1.55; font-style: italic; }
+
+    .callout {
+      display: flex; gap: 10px; align-items: flex-start;
+      padding: 10px 14px; border-radius: 8px; margin: 10px 0;
+      font-size: 13px; line-height: 1.5;
+    }
+    .cn  { background: #EFF6FF; border-left: 3px solid #3B82F6; color: #1E40AF; }
+    .ct  { background: #F0FDF4; border-left: 3px solid #22C55E; color: #166534; }
+    .cw  { background: #FFF7ED; border-left: 3px solid #F97316; color: #9A3412; }
+    .c-i { font-size: 14px; flex-shrink: 0; }
+
+    .step-card {
+      background: #F8FAFC; border: 1px solid #E8EDF5;
+      border-radius: 10px; padding: 12px 14px; margin: 6px 0 10px;
+      font-size: 13.5px; color: #475569;
+    }
+
+    .docs-content table { width: 100%; border-collapse: collapse; margin: 10px 0 16px; font-size: 12.5px; }
+    .docs-content th { background: #F8FAFC; padding: 8px 12px; text-align: left; font-weight: 700; border-bottom: 2px solid #E2E8F0; color: #334155; }
+    .docs-content td { padding: 8px 12px; border-bottom: 1px solid #F1F5F9; color: #475569; vertical-align: top; }
+
+    /* ── Theme toggle button ────────────────────────────────── */
+    .theme-toggle {
+      position: absolute;
+      top: 14px;
+      right: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(255,255,255,0.13);
+      border: 1px solid rgba(255,255,255,0.25);
+      border-radius: 999px;
+      padding: 6px 13px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 700;
+      color: rgba(255,255,255,0.85);
+      transition: all 0.2s;
+      z-index: 10;
+      letter-spacing: 0.3px;
+    }
+    .theme-toggle:hover { background: rgba(255,255,255,0.22); transform: scale(1.04); }
+    .theme-toggle .t-icon { font-size: 14px; }
+
+    /* ── Dark mode overrides ─────────────────────────────────── */
+    [data-theme="dark"] body { background: #0F172A; color: #E2E8F0; }
+
+    /* Tabs */
+    [data-theme="dark"] .tab-btn {
+      background: #1E293B; border-color: #334155; color: #94A3B8;
+    }
+    [data-theme="dark"] .tab-btn:hover { border-color: #475569; color: #CBD5E1; background: #263448; }
+    [data-theme="dark"] .tab-btn.active { background: #1D4ED8; border-color: #1D4ED8; color: white; }
+
+    /* Diagram cards */
+    [data-theme="dark"] .path { background: #1E293B; box-shadow: 0 2px 20px rgba(0,0,0,0.4); }
+    [data-theme="dark"] .prereq { background: #263448; border-bottom-color: #334155; }
+    [data-theme="dark"] .prereq-label { color: #475569; }
+    [data-theme="dark"] .badge.tool  { background: #1e2d5e; color: #93C5FD; }
+    [data-theme="dark"] .badge.green { background: #1a3a2a; color: #4ade80; }
+    [data-theme="dark"] .badge.amber { background: #2d2100; color: #FDE68A; }
+
+    /* Section headers in diagram */
+    [data-theme="dark"] .section-header .sh-line { background: #334155; }
+    [data-theme="dark"] .c-setup  { color: #60A5FA; }
+    [data-theme="dark"] .c-arch   { color: #A78BFA; }
+    [data-theme="dark"] .c-task1  { color: #FB923C; }
+    [data-theme="dark"] .c-switch { color: #4ade80; }
+    [data-theme="dark"] .c-task2  { color: #F472B6; }
+    [data-theme="dark"] .t-setup  { background: #1e3355; color: #93C5FD; }
+    [data-theme="dark"] .t-arch   { background: #2d2050; color: #A78BFA; }
+    [data-theme="dark"] .t-task1  { background: #2d1800; color: #FB923C; }
+    [data-theme="dark"] .t-task2  { background: #2d0f1f; color: #F472B6; }
+
+    /* Step cards in diagram */
+    [data-theme="dark"] .s-setup  { background: rgba(59,130,246,0.12);  border-left-color: #3B82F6; }
+    [data-theme="dark"] .s-arch   { background: rgba(139,92,246,0.12);  border-left-color: #8B5CF6; }
+    [data-theme="dark"] .s-task1  { background: rgba(249,115,22,0.12);  border-left-color: #F97316; }
+    [data-theme="dark"] .s-switch { background: rgba(34,197,94,0.10);   border-left-color: #22C55E; }
+    [data-theme="dark"] .s-task2  { background: rgba(236,72,153,0.11);  border-left-color: #EC4899; }
+    [data-theme="dark"] .s-verify { background: rgba(13,148,136,0.12);  border-left-color: #0D9488; }
+    [data-theme="dark"] .step-title { color: #CBD5E1; }
+    [data-theme="dark"] .step-sub   { color: #475569; }
+    [data-theme="dark"] .step-ai    { background: #1e2d3d; color: #60A5FA; border-color: #1e4a7a; }
+    [data-theme="dark"] .arrow      { color: #334155; }
+
+    /* Legend */
+    [data-theme="dark"] .legend { background: #1E293B; box-shadow: 0 1px 8px rgba(0,0,0,0.3); }
+    [data-theme="dark"] .legend-item { color: #64748B; }
+    [data-theme="dark"] .legend-ai { background: #0f2d40; color: #38BDF8; border-color: #1e4a7a; }
+
+    /* Spine */
+    [data-theme="dark"] .spine-line  { background: #334155; }
+    [data-theme="dark"] .spine-label { color: #475569; }
+
+    /* Path header bar */
+    [data-theme="dark"] .ph-bar { background: #1E293B; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+    [data-theme="dark"] .ph-title { color: #E2E8F0; }
+    [data-theme="dark"] .ph-sub   { color: #475569; }
+    [data-theme="dark"] .ph-chip.prim { background: #1e2d5e; color: #93C5FD; }
+    [data-theme="dark"] .ph-chip.ok   { background: #1a3a2a; color: #4ade80; }
+    [data-theme="dark"] .ph-chip.warn { background: #2d2100; color: #FDE68A; }
+
+    /* Docs nav */
+    [data-theme="dark"] .docs-nav { background: #1E293B; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+    [data-theme="dark"] .docs-nav-head { color: #475569; }
+    [data-theme="dark"] .nav-item:hover { background: #263448; }
+    [data-theme="dark"] .nav-item.active           { background: #1e3355; border-left-color: #3B82F6; }
+    [data-theme="dark"] .nav-item.active.ui-active  { background: #1a3a2a; border-left-color: #22C55E; }
+    [data-theme="dark"] .nav-title { color: #CBD5E1; }
+    [data-theme="dark"] .nav-time  { color: #475569; }
+
+    /* Docs content */
+    [data-theme="dark"] .docs-content { background: #1E293B; box-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+    [data-theme="dark"] .sect-header { border-bottom-color: #334155; }
+    [data-theme="dark"] .sect-title-text { color: #F1F5F9; }
+    [data-theme="dark"] .docs-content h3 { color: #CBD5E1; }
+    [data-theme="dark"] .docs-content h3::after { background: #334155; }
+    [data-theme="dark"] .docs-content p  { color: #94A3B8; }
+    [data-theme="dark"] .docs-content li { color: #94A3B8; }
+    [data-theme="dark"] .docs-content strong { color: #CBD5E1; }
+    [data-theme="dark"] .docs-content a  { color: #60A5FA; }
+
+    /* Inline code */
+    [data-theme="dark"] .ic { background: #0F172A; color: #CBD5E1; }
+
+    /* Step cards in docs */
+    [data-theme="dark"] .step-card { background: #263448; border-color: #334155; color: #94A3B8; }
+
+    /* Tables in docs */
+    [data-theme="dark"] .docs-content th { background: #263448; border-bottom-color: #334155; color: #CBD5E1; }
+    [data-theme="dark"] .docs-content td { border-bottom-color: #2d3f55; color: #94A3B8; }
+
+    /* Callouts */
+    [data-theme="dark"] .cn { background: rgba(59,130,246,0.12);  border-left-color: #3B82F6; color: #93C5FD; }
+    [data-theme="dark"] .ct { background: rgba(34,197,94,0.10);   border-left-color: #22C55E; color: #4ade80; }
+    [data-theme="dark"] .cw { background: rgba(249,115,22,0.12);  border-left-color: #F97316; color: #FCA572; }
+
+    /* Footer */
+    [data-theme="dark"] footer { color: #475569; }
+    [data-theme="dark"] footer strong { color: #64748B; }
+
+    /* ── Footer ────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      color: #94A3B8;
+      font-size: 11px;
+      padding: 0 24px 32px;
+    }
+    footer strong { color: #64748B; }
+  </style>
+</head>
+<body>
+
+<header>
+  <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">
+    <span class="t-icon" id="theme-icon">🌙</span>
+  </button>
+  <div class="eyebrow">Hands-On Lab &nbsp;·&nbsp; Evolv Consulting &nbsp;·&nbsp; Powered by Snowflake</div>
+  <h1>AI-Assisted <span>SDLC</span> with Cortex Code</h1>
+  <p class="tagline">Payment Analytics Platform &nbsp;·&nbsp; Add Retry Success Rate end-to-end</p>
+  <span class="pill">⏱ ~90 minutes &nbsp;·&nbsp; Two paths, same outcome</span>
+</header>
+
+<!-- View toggle -->
+<div class="toggle-bar">
+  <button class="tab-btn" data-view="side-by-side" onclick="setView('side-by-side')">
+    <span class="tab-icon">⊞</span> Side by Side
+  </button>
+  <button class="tab-btn" data-view="cli" onclick="openPath('cli')">
+    <span class="tab-icon">💻</span> CLI Path
+  </button>
+  <button class="tab-btn" data-view="ui" onclick="openPath('ui')">
+    <span class="tab-icon">❄️</span> Snowsight Path
+  </button>
+</div>
+
+<div class="wrapper" id="wrapper">
+
+  <!-- ═══════════════ DIAGRAM VIEW (side by side) ═══════════════ -->
+  <div id="diagram-view">
+  <div class="grid">
+
+    <!-- ═══════════════════ CLI PATH ═══════════════════ -->
+    <div class="path cli-card">
+      <div class="path-header cli">
+        <span class="icon">💻</span>
+        <h2>CLI Path</h2>
+        <div class="sub">
+          <span>Snow CLI</span><span>Cortex Code CLI</span><span>Node.js</span><span>Terminal</span>
+        </div>
+      </div>
+      <div class="prereq">
+        <span class="prereq-label">Requires</span>
+        <span class="badge tool">Snow CLI</span>
+        <span class="badge tool">Cortex Code CLI</span>
+        <span class="badge tool">Node.js 20</span>
+      </div>
+      <div class="flow">
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-setup">Setup</span>
+          <span class="sh-line"></span>
+          <span class="sh-time t-setup">~5 min</span>
+        </div>
+
+        <div class="step s-setup">
+          <div class="step-icon">📦</div>
+          <div class="step-body">
+            <div class="step-title">Get Repository</div>
+            <div class="step-sub">Download ZIP or git clone from GitHub → launch cortex</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-setup">
+          <div class="step-icon">🔗</div>
+          <div class="step-body">
+            <div class="step-title">Connect to Snowflake</div>
+            <div class="step-sub">snow connection add → HOL_ROLE_NN + COCO_SDLC_HOL_NN</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-setup">
+          <div class="step-icon">🔌</div>
+          <div class="step-body">
+            <div class="step-title">Install Atlassian MCP</div>
+            <div class="step-sub">cortex mcp add atlassian (Jira + Confluence)</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-arch">Architecture</span>
+          <span class="sh-line"></span>
+          <span class="sh-time t-arch">~10 min</span>
+        </div>
+
+        <div class="step s-arch">
+          <div class="step-icon">🤖</div>
+          <div class="step-body">
+            <div class="step-title">Explore with Cortex Code</div>
+            <div class="step-sub">Auto-loads AGENTS.md · medallion layers, metrics, agent</div>
+            <div class="step-ai">🤖 Cortex Code prompt</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-task1">Task 1 — Retry Success Rate</span>
+          <span class="sh-line"></span>
+          <span class="sh-time t-task1">~30 min</span>
+        </div>
+
+        <div class="step s-task1">
+          <div class="step-icon">🎫</div>
+          <div class="step-body">
+            <div class="step-title">Read Jira EPA-2</div>
+            <div class="step-sub">Cortex Code calls Atlassian MCP automatically</div>
+            <div class="step-ai">🤖 Cortex Code prompt</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task1">
+          <div class="step-icon">📋</div>
+          <div class="step-body">
+            <div class="step-title">Enable Plan Mode → Review</div>
+            <div class="step-sub">/plan · Cortex Code proposes all edits for approval</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task1">
+          <div class="step-icon">✏️</div>
+          <div class="step-body">
+            <div class="step-title">Cortex Code Edits 4 Files</div>
+            <div class="step-sub">int_authorizations__enriched.sql · authorizations.sql<br>payment_analytics_semantic_view.sql · 03_create_agent.sql</div>
+            <div class="step-ai">🤖 AI edits — review &amp; approve each change</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task1">
+          <div class="step-icon">🚀</div>
+          <div class="step-body">
+            <div class="step-title">Deploy</div>
+            <div class="step-sub">EXECUTE DBT PROJECT (Snowflake-native dbt)</div>
+            <div class="step-ai">🤖 Cortex Code prompt</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-verify">
+          <div class="step-icon">✅</div>
+          <div class="step-body">
+            <div class="step-title">Verify End-to-End</div>
+            <div class="step-sub">SQL on MARTS.AUTHORIZATIONS · Ask Cortex Agent</div>
+            <div class="step-ai">🤖 Cortex Code prompt</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-switch">Context Switch</span>
+          <span class="sh-line"></span>
+        </div>
+
+        <div class="step s-switch">
+          <div class="step-icon">🔄</div>
+          <div class="step-body">
+            <div class="step-title">Clear Context</div>
+            <div class="step-sub">/new · fresh conversation for Task 2</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-task2">Task 2 — KPI Card</span>
+          <span class="sh-line"></span>
+          <span class="sh-time t-task2">~20 min</span>
+        </div>
+
+        <div class="step s-task2">
+          <div class="step-icon">🎫</div>
+          <div class="step-body">
+            <div class="step-title">Read Jira EPA-3</div>
+            <div class="step-sub">Cortex Code calls Atlassian MCP automatically</div>
+            <div class="step-ai">🤖 Cortex Code prompt</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task2">
+          <div class="step-icon">⚛️</div>
+          <div class="step-body">
+            <div class="step-title">Cortex Code Edits React KPI Card</div>
+            <div class="step-sub">apps/frontend/src/ · TypeScript + Tailwind</div>
+            <div class="step-ai">🤖 AI edits — review &amp; approve each change</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task2">
+          <div class="step-icon">🌐</div>
+          <div class="step-body">
+            <div class="step-title">Verify Locally</div>
+            <div class="step-sub">npm dev → localhost:3000/analytics/authorization</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- ═══════════════════ SPINE ═══════════════════ -->
+    <div class="spine">
+      <div class="spine-line" style="min-height:50px"></div>
+      <div class="spine-label">vs</div>
+      <div class="spine-line" style="flex:1;min-height:200px"></div>
+    </div>
+
+    <!-- ═══════════════════ UI PATH ═══════════════════ -->
+    <div class="path ui-card">
+      <div class="path-header ui">
+        <span class="icon">❄️</span>
+        <h2>Snowsight Path</h2>
+        <div class="sub">
+          <span>Cortex Code UI</span><span>Workspace</span><span>Browser only</span>
+        </div>
+      </div>
+      <div class="prereq">
+        <span class="prereq-label">Requires</span>
+        <span class="badge green">Snowflake account</span>
+        <span class="badge green">Browser</span>
+        <span class="badge amber">No local tools needed</span>
+      </div>
+      <div class="flow">
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-setup">Setup</span>
+          <span class="sh-line"></span>
+          <span class="sh-time t-setup">~5 min</span>
+        </div>
+
+        <div class="step s-setup">
+          <div class="step-icon">🔑</div>
+          <div class="step-body">
+            <div class="step-title">Log into Snowsight</div>
+            <div class="step-sub">Open Snowsight → log in with HOL credentials</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-setup">
+          <div class="step-icon">✅</div>
+          <div class="step-body">
+            <div class="step-title">Confirm App Runs</div>
+            <div class="step-sub">Projects → Streamlit → PAYMENT_ANALYTICS_DASHBOARD</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-setup">
+          <div class="step-icon">🤖</div>
+          <div class="step-body">
+            <div class="step-title">Open Cortex Code + Set Context</div>
+            <div class="step-sub">AI &amp; ML → Cortex Code → set role, warehouse, DB → open HOL_WORKSPACE</div>
+            <div class="step-ai">🤖 Cortex Code prompt</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-arch">Architecture</span>
+          <span class="sh-line"></span>
+          <span class="sh-time t-arch">~5 min</span>
+        </div>
+
+        <div class="step s-arch">
+          <div class="step-icon">🤖</div>
+          <div class="step-body">
+            <div class="step-title">Explore with Cortex Code</div>
+            <div class="step-sub">Reads workspace files · medallion layers, metrics, agent</div>
+            <div class="step-ai">🤖 Cortex Code prompt</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-task1">Task 1 — Retry Success Rate</span>
+          <span class="sh-line"></span>
+          <span class="sh-time t-task1">~30 min</span>
+        </div>
+
+        <div class="step s-task1">
+          <div class="step-icon">🔧</div>
+          <div class="step-body">
+            <div class="step-title">Set Up Jira Access</div>
+            <div class="step-sub">Create GET_JIRA_TICKET UDF · add JiraLookup tool to agent</div>
+            <div class="step-ai">🤖 3 Cortex Code prompts</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task1">
+          <div class="step-icon">🎫</div>
+          <div class="step-body">
+            <div class="step-title">Read Jira EPA-2</div>
+            <div class="step-sub">Ask Cortex Agent → JiraLookup retrieves requirements</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task1">
+          <div class="step-icon">📋</div>
+          <div class="step-body">
+            <div class="step-title">Enable Plan Mode → Review</div>
+            <div class="step-sub">Ask Cortex Code to use plan mode · review all 4 file changes</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task1">
+          <div class="step-icon">✏️</div>
+          <div class="step-body">
+            <div class="step-title">Cortex Code Edits 4 Files</div>
+            <div class="step-sub">int_authorizations__enriched.sql · authorizations.sql<br>payment_analytics_semantic_view.sql · 03_create_agent.sql</div>
+            <div class="step-ai">🤖 AI edits — Apply each change</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task1">
+          <div class="step-icon">🚀</div>
+          <div class="step-body">
+            <div class="step-title">Deploy from Workspace</div>
+            <div class="step-sub">ADD VERSION versions/live → EXECUTE DBT PROJECT --full-refresh</div>
+            <div class="step-ai">🤖 Cortex Code prompt</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-verify">
+          <div class="step-icon">✅</div>
+          <div class="step-body">
+            <div class="step-title">Verify End-to-End</div>
+            <div class="step-sub">SQL on MARTS.AUTHORIZATIONS · Ask Cortex Agent</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-switch">Context Switch</span>
+          <span class="sh-line"></span>
+        </div>
+
+        <div class="step s-switch">
+          <div class="step-icon">🔄</div>
+          <div class="step-body">
+            <div class="step-title">New Conversation</div>
+            <div class="step-sub">New Conversation button · fresh context for Task 2</div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <span class="sh-line"></span>
+          <span class="sh-label c-task2">Task 2 — KPI Card</span>
+          <span class="sh-line"></span>
+          <span class="sh-time t-task2">~20 min</span>
+        </div>
+
+        <div class="step s-task2">
+          <div class="step-icon">🎫</div>
+          <div class="step-body">
+            <div class="step-title">Read Jira EPA-3</div>
+            <div class="step-sub">Ask Cortex Agent → JiraLookup retrieves ticket</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task2">
+          <div class="step-icon">📊</div>
+          <div class="step-body">
+            <div class="step-title">Cortex Code Edits Streamlit app.py</div>
+            <div class="step-sub">Add retry_success_rate query + st.metric() card</div>
+            <div class="step-ai">🤖 AI edits — Apply change</div>
+          </div>
+        </div>
+        <div class="arrow">↓</div>
+        <div class="step s-task2">
+          <div class="step-icon">🌐</div>
+          <div class="step-body">
+            <div class="step-title">Verify Dashboard</div>
+            <div class="step-sub">Projects → Streamlit → 5 KPI cards with Retry Success Rate</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div><!-- .grid -->
+
+  <!-- ═══════════════════ LEGEND ═══════════════════ -->
+  <div class="legend">
+    <span class="legend-title">Legend</span>
+    <div class="legend-item"><div class="legend-dot" style="background:#3B82F6"></div> Setup</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#8B5CF6"></div> Architecture</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#F97316"></div> Task 1</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#22C55E"></div> Context Switch</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#EC4899"></div> Task 2</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#0D9488"></div> Verify</div>
+    <div class="legend-ai">🤖 Cortex Code prompt</div>
+  </div>
+
+  </div><!-- #diagram-view -->
+
+  <!-- ═══════════════════ INSTRUCTIONS PANEL ═══════════════════ -->
+  <div class="instructions-panel">
+    <div class="panel-heading">Open Step-by-Step Lab Guide</div>
+    <div class="instructions-grid">
+
+      <div class="guide-card guide-cli">
+        <div class="guide-header cli">
+          <div class="guide-eyebrow">Step-by-Step Guide</div>
+          <div class="guide-title-row">
+            <span class="guide-big-icon">💻</span>
+            <div>
+              <div class="guide-title">CLI Path</div>
+              <div class="guide-filename">LAB_INSTRUCTIONS_CLI.md</div>
+            </div>
+          </div>
+          <div class="guide-prereqs">
+            <span class="guide-prereq-chip">Snow CLI</span>
+            <span class="guide-prereq-chip">Cortex Code CLI</span>
+            <span class="guide-prereq-chip">Node.js 20</span>
+            <span class="guide-prereq-chip">Git</span>
+          </div>
+        </div>
+        <div class="guide-body">
+          <div class="guide-desc">Local development using Cortex Code CLI in your terminal. Includes Atlassian MCP integration, git workflow, and React frontend verification.</div>
+          <div class="guide-sections-label">Sections</div>
+          <div class="guide-sections" id="cli-sections-list"></div>
+          <a class="guide-cta cli" href="#path-view" onclick="openPath('cli')">Start CLI Guide →</a>
+        </div>
+      </div>
+
+      <div class="guide-card guide-ui">
+        <div class="guide-header ui">
+          <div class="guide-eyebrow">Step-by-Step Guide</div>
+          <div class="guide-title-row">
+            <span class="guide-big-icon">❄️</span>
+            <div>
+              <div class="guide-title">Snowsight Path</div>
+              <div class="guide-filename">LAB_INSTRUCTIONS_UI.md</div>
+            </div>
+          </div>
+          <div class="guide-prereqs">
+            <span class="guide-prereq-chip">Snowflake account</span>
+            <span class="guide-prereq-chip">Browser only</span>
+          </div>
+        </div>
+        <div class="guide-body">
+          <div class="guide-desc">Browser-only path using Cortex Code in Snowsight. No local tools required. Uses workspace, Streamlit dashboard, and Cortex Agent for Jira access.</div>
+          <div class="guide-sections-label">Sections</div>
+          <div class="guide-sections" id="ui-sections-list"></div>
+          <a class="guide-cta ui" href="#path-view" onclick="openPath('ui')">Start Snowsight Guide →</a>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════ PATH VIEW ═══════════════════ -->
+  <div id="path-view">
+    <div class="ph-bar" id="ph-bar">
+      <span class="ph-icon" id="ph-icon">💻</span>
+      <div class="ph-info">
+        <div class="ph-title" id="ph-title">CLI Path</div>
+        <div class="ph-sub" id="ph-sub">Local development with Snow CLI + Cortex Code CLI</div>
+        <div class="ph-prereqs" id="ph-prereqs"></div>
+      </div>
+      <button onclick="backToDiagram()" style="margin-left:auto;padding:8px 16px;border-radius:8px;border:1px solid #CBD5E1;background:white;color:#475569;font-size:12px;font-weight:700;cursor:pointer;">← Back to Overview</button>
+    </div>
+    <div class="docs-layout">
+      <div class="docs-nav">
+        <div class="docs-nav-head">Sections</div>
+        <div id="docs-nav-items"></div>
+      </div>
+      <div class="docs-content" id="docs-content"></div>
+    </div>
+  </div>
+
+</div><!-- .wrapper -->
+
+<footer>
+  <strong>COCO SDLC HOL</strong> &nbsp;·&nbsp; Evolv Consulting &nbsp;·&nbsp; Powered by Snowflake Cortex
+</footer>
+
+<script>
+// ── Helpers ────────────────────────────────────────────────────────────────
+function ic(t) { return `<code class="ic">${t}</code>`; }
+function pb(t) { return `<p>${t}</p>`; }
+function note(t) { return `<div class="callout cn"><span class="c-i">ℹ️</span><div>${t}</div></div>`; }
+function tip(t)  { return `<div class="callout ct"><span class="c-i">💡</span><div>${t}</div></div>`; }
+function warn(t) { return `<div class="callout cw"><span class="c-i">⚠️</span><div>${t}</div></div>`; }
+function pbox(label, t) {
+  return `<div class="prompt-box"><div class="prompt-label">${label||'Cortex Code prompt'}</div><div class="prompt-text">${t}</div></div>`;
+}
+function sc(t) { return `<div class="step-card">${t}</div>`; }
+function h3(t) { return `<h3>${t}</h3>`; }
+function shead(n, title, time, color) {
+  return `<div class="sect-header">
+    <div class="sect-num-badge" style="background:${color}">${n}</div>
+    <div class="sect-title-text">${title}</div>
+    ${time ? `<span class="sect-time-badge" style="background:${color}22;color:${color}">${time}</span>` : ''}
+  </div>`;
+}
+
+// ── Nav data ───────────────────────────────────────────────────────────────
+const NAV = {
+  cli: [
+    { n:1, title:'Environment Setup',          time:'~5 min',   color:'#2563EB' },
+    { n:2, title:'Cortex Code Primer',          time:'~10 min',  color:'#7C3AED' },
+    { n:3, title:'Architecture Overview',        time:'~10 min',  color:'#7C3AED' },
+    { n:4, title:'Task 1: Retry Success Rate',   time:'~30 min',  color:'#C2410C' },
+    { n:5, title:'Context Switch + Task 2',      time:'~20 min',  color:'#BE185D' },
+    { n:6, title:'Wrap-up + Troubleshooting',    time:'~5 min',   color:'#16A34A' }
+  ],
+  ui: [
+    { n:1, title:'Environment Setup',            time:'~5 min',   color:'#2563EB' },
+    { n:2, title:'Cortex Code Primer',            time:'~5 min',   color:'#7C3AED' },
+    { n:3, title:'Architecture Overview',          time:'~5 min',   color:'#7C3AED' },
+    { n:4, title:'Task 1: Retry Success Rate',     time:'~30 min',  color:'#C2410C' },
+    { n:5, title:'Context Switch + Task 2',        time:'~20 min',  color:'#BE185D' },
+    { n:6, title:'Wrap-up + Troubleshooting',      time:'~5 min',   color:'#16A34A' }
+  ]
+};
+
+// ── State ──────────────────────────────────────────────────────────────────
+let currentPath = 'cli';
+let currentSection = 1;
+
+// ── View toggle ────────────────────────────────────────────────────────────
+function setView(v) {
+  document.getElementById('wrapper').dataset.view = v;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === v));
+}
+
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.dataset.theme === 'dark';
+  html.dataset.theme = isDark ? 'light' : 'dark';
+  document.getElementById('theme-icon').textContent = isDark ? '🌙' : '☀️';
+}
+
+// ── Path docs view ─────────────────────────────────────────────────────────
+function openPath(path) {
+  currentPath = path;
+  currentSection = 1;
+  document.getElementById('diagram-view').style.display = 'none';
+  document.querySelector('.instructions-panel').style.display = 'none';
+  const pv = document.getElementById('path-view');
+  pv.style.display = 'block';
+  // Highlight the matching tab button
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === path));
+
+  const isCli = path === 'cli';
+  document.getElementById('ph-icon').textContent   = isCli ? '💻' : '❄️';
+  document.getElementById('ph-title').textContent  = isCli ? 'CLI Path' : 'Snowsight Path';
+  document.getElementById('ph-sub').textContent    = isCli
+    ? 'Local development with Snow CLI + Cortex Code CLI'
+    : 'Browser-only path — Cortex Code UI in Snowsight';
+
+  const prereqsEl = document.getElementById('ph-prereqs');
+  const chips = isCli
+    ? [{t:'Snow CLI',c:'prim'},{t:'Cortex Code CLI',c:'prim'},{t:'Node.js 20',c:'prim'},{t:'Git',c:'ok'}]
+    : [{t:'Snowflake account',c:'ok'},{t:'Browser only',c:'ok'},{t:'No local tools',c:'warn'}];
+  prereqsEl.innerHTML = chips.map(c => `<span class="ph-chip ${c.c}">${c.t}</span>`).join('');
+
+  buildNav();
+  loadSection(1);
+  window.scrollTo(0, 0);
+}
+
+function backToDiagram() {
+  document.getElementById('path-view').style.display = 'none';
+  document.getElementById('diagram-view').style.display = 'block';
+  document.querySelector('.instructions-panel').style.display = 'block';
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.view === 'side-by-side'));
+  window.scrollTo(0, 0);
+}
+
+function buildNav() {
+  const container = document.getElementById('docs-nav-items');
+  const isUi = currentPath === 'ui';
+  container.innerHTML = NAV[currentPath].map(s => `
+    <div class="nav-item${currentSection===s.n ? ' active'+(isUi?' ui-active':'') : ''}" onclick="loadSection(${s.n})">
+      <div class="nav-num" style="background:${s.color}">${s.n}</div>
+      <div class="nav-info">
+        <div class="nav-title">${s.title}</div>
+        <div class="nav-time">${s.time}</div>
+      </div>
+    </div>`).join('');
+}
+
+function loadSection(n) {
+  currentSection = n;
+  buildNav();
+  const fn = (currentPath === 'cli' ? cliS : uiS)[n];
+  document.getElementById('docs-content').innerHTML = fn ? fn() : '<p>Section not found.</p>';
+}
+
+const cliS = { 1: cliS1, 2: cliS2, 3: cliS3, 4: cliS4, 5: cliS5, 6: cliS6 };
+const uiS  = { 1: uiS1,  2: uiS2,  3: uiS3,  4: uiS4,  5: uiS5,  6: uiS6  };
+
+// ── Section fill on page load ──────────────────────────────────────────────
+function buildSectionLists() {
+  ['cli','ui'].forEach(path => {
+    const el = document.getElementById(`${path}-sections-list`);
+    if (!el) return;
+    el.innerHTML = NAV[path].map(s => `
+      <div class="guide-section-row">
+        <div class="guide-section-num" style="background:${s.color}">${s.n}</div>
+        <div class="guide-section-text">${s.title}</div>
+        <span class="guide-section-time" style="background:${s.color}22;color:${s.color}">${s.time}</span>
+      </div>`).join('');
+  });
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// CLI SECTIONS
+// ══════════════════════════════════════════════════════════════════════════
+
+function cliS1() {
+  return shead(1,'Environment Setup','~5 min','#2563EB') +
+  h3('Step 0: Get the Lab Repository') +
+  pb('Clone the repository directly — no fork required:') +
+  '<pre><code>git clone https://github.com/evolvconsulting/coco_sdlc_hol.git\ncd coco_sdlc_hol</code></pre>' +
+  note('If Git is not available, download the ZIP from GitHub, extract, and run <code class="ic">git init && git add . && git commit -m "initial"</code> inside the folder.') +
+  h3('Step 1: Configure Snowflake Connection') +
+  pb('From the repository root, launch Cortex Code:') +
+  '<pre><code>cortex</code></pre>' +
+  pb('The first-run wizard will prompt you to create a connection. Select <strong>More options</strong> and enter:') +
+  sc('<strong>Connection name:</strong> coco-hol<br><strong>Account identifier:</strong> provided by your instructor<br><strong>Username:</strong> e.g. HOL_USER_02<br><strong>Password:</strong> provided by your instructor<br><strong>Auth method:</strong> Password (snowflake)') +
+  pb('Once connected, set your session context (replace <code class="ic">02</code> with your number):') +
+  pbox('Cortex Code prompt','Set my role to HOL_ROLE_02, warehouse to HOL_WH_02, and use database COCO_SDLC_HOL_02 with schema MARTS.') +
+  pb('Then verify:') +
+  '<pre><code>/status</code></pre>' +
+  note('Expected: HOL_ROLE_NN as role, COCO_SDLC_HOL_NN as database, MARTS as schema.') +
+  h3('Step 1c: Configure Frontend Config') +
+  pbox('Cortex Code prompt','Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local with my account identifier &lt;orgname-accountname&gt;.') +
+  h3('Step 2: Confirm App Runs') +
+  pbox('Cortex Code prompt','Install the frontend dependencies and start the dev server from apps/frontend.') +
+  pb('Open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a>. You should see the Payment Analytics dashboard with real transaction data — charts, KPI cards, and natural language query interface.') +
+  tip('If the dashboard loads with data, your environment is correctly connected to Snowflake.');
+}
+
+function cliS2() {
+  return shead(2,'Cortex Code Primer','~10 min','#7C3AED') +
+  h3('2.1 What is Cortex Code') +
+  pb('Cortex Code is Snowflake\'s AI coding assistant. It reads ' + 'AGENTS.md' + ' at the repo root automatically — giving it full awareness of your data architecture, business rules, and file paths without any manual setup.') +
+  h3('2.2 Key Slash Commands') +
+  '<table><thead><tr><th>Command</th><th>Purpose</th></tr></thead><tbody>' +
+  '<tr><td><code class="ic">/plan</code></td><td>Enable plan mode — review proposed changes before execution</td></tr>' +
+  '<tr><td><code class="ic">/plan-off</code></td><td>Disable plan mode — return to direct execution</td></tr>' +
+  '<tr><td><code class="ic">/new</code></td><td>Start a fresh conversation (clears context)</td></tr>' +
+  '<tr><td><code class="ic">/model</code></td><td>Select AI model (auto, Opus 4.6, Sonnet 4.6, etc.)</td></tr>' +
+  '<tr><td><code class="ic">/mcp</code></td><td>Manage MCP integrations</td></tr>' +
+  '<tr><td><code class="ic">/status</code></td><td>Show current session status</td></tr></tbody></table>' +
+  note('Plan mode is session-scoped. After /new, re-enable /plan if needed.') +
+  h3('2.3 Install Atlassian MCP') +
+  pb('Exit the Cortex Code session first:') +
+  '<pre><code>/exit</code></pre>' +
+  pb('Then run in the terminal:') +
+  '<pre><code>cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http \\\n  -H "Authorization: Basic dHJlbnQuZm9sZXlAZ..."</code></pre>' +
+  note('Your instructor will provide the full Base64 token. This command is run once per machine.') +
+  tip('Beyond the lab: with write access, Cortex Code can transition Jira tickets, log time, and update Confluence pages — completing the full dev loop.');
+}
+
+function cliS3() {
+  return shead(3,'Architecture Overview','~10 min','#7C3AED') +
+  h3('3.1 Explore with Cortex Code') +
+  pb('Relaunch Cortex Code from the repository root:') +
+  '<pre><code>cortex</code></pre>' +
+  pbox('Cortex Code prompt','Describe this project\'s data architecture and the Cortex Agent setup. What database, schemas, layers, domain tables, semantic view, and metrics are configured?') +
+  pb('<strong>Expected:</strong> Cortex Code references your assigned database and describes the medallion architecture (RAW → STAGING → INTERMEDIATE → MARTS), domain tables, and the PAYMENT_ANALYTICS semantic view with its 10 metrics — all sourced from AGENTS.md.') +
+  h3('3.2 Architecture Reference') +
+  '<pre><code>RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tables)</code></pre>' +
+  '<table><thead><tr><th>Layer</th><th>Schema</th><th>Type</th><th>Purpose</th></tr></thead><tbody>' +
+  '<tr><td>RAW</td><td>RAW</td><td>Tables</td><td>Source data as-is</td></tr>' +
+  '<tr><td>STAGING</td><td>STAGING</td><td>Views</td><td>Renaming, casting, filters</td></tr>' +
+  '<tr><td>INTERMEDIATE</td><td>INTERMEDIATE</td><td>Dynamic Tables</td><td>Business logic, enrichment</td></tr>' +
+  '<tr><td>MARTS</td><td>MARTS</td><td>Dynamic Tables</td><td>Business-ready, exposed to BI + AI</td></tr></tbody></table>' +
+  note('Dynamic tables auto-refresh when upstream models change — no scheduled jobs required.') +
+  pb('<strong>Semantic View:</strong> ' + 'COCO_SDLC_HOL_NN.MARTS.PAYMENT_ANALYTICS' + ' — 10 pre-defined metrics including approval_rate, chargeback_win_rate, effective_fee_rate, and more. You will add RETRY_SUCCESS_RATE.');
+}
+
+function cliS4() {
+  return shead(4,'Task 1: Retry Success Rate','~30 min','#C2410C') +
+  h3('Step 4.1: Read the Jira Ticket') +
+  pbox('Cortex Code prompt','Show me Jira ticket EPA-2. What does it ask me to implement?') +
+  pb('Cortex Code uses the Atlassian MCP to retrieve the ticket. Review the acceptance criteria — it asks you to add a retry success rate metric to the authorizations domain.') +
+  h3('Step 4.2: Create a Git Branch') +
+  pbox('Cortex Code prompt','Create a new git branch called feature/retry-success-rate and switch to it.') +
+  h3('Step 4.3: Enable Plan Mode') +
+  '<pre><code>/plan</code></pre>' +
+  pbox('Cortex Code prompt','Plan the implementation for the Jira ticket.') +
+  pb('The plan should include changes to all four files:') +
+  sc('1. packages/dbt/models/intermediate/payments/int_authorizations__enriched.sql<br>2. packages/dbt/models/marts/payments/authorizations.sql<br>3. packages/dbt/analyses/payment_analytics_semantic_view.sql<br>4. packages/database/utilities/03_create_agent.sql') +
+  h3('Step 4.4–4.7: Cortex Code Edits 4 Files') +
+  pb('After approving the plan, Cortex Code will modify each file. Review each proposed change carefully:') +
+  sc('<strong>int_authorizations__enriched.sql</strong> — adds retry_attempt_flag and retry_success_flag via window function<br><strong>authorizations.sql</strong> — passes the two flags through to the marts layer<br><strong>payment_analytics_semantic_view.sql</strong> — adds RETRY_SUCCESS_RATE metric<br><strong>03_create_agent.sql</strong> — updates agent instructions') +
+  h3('Step 4.8: Deploy via Snowflake CLI') +
+  pb('Upload your edited dbt files and add a new project version:') +
+  '<pre><code>snow stage put --stage COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES \\\n  packages/dbt/ --overwrite --parallel 4</code></pre>' +
+  '<pre><code>snow sql -q "ALTER DBT PROJECT COCO_SDLC_HOL_NN.MARTS.EVOLV_PAYMENT_ANALYTICS ADD VERSION FROM \'@COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES/\'"</code></pre>' +
+  '<pre><code>snow sql -q "EXECUTE DBT PROJECT COCO_SDLC_HOL_NN.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = \'run --select int_authorizations__enriched+ --full-refresh\'"</code></pre>' +
+  warn('Always include <code class="ic">--select int_authorizations__enriched+</code>. Running without --select will fail with a permission denied error on the STAGING schema.') +
+  note('Dynamic tables begin refreshing automatically. This may take 2–3 minutes.') +
+  h3('Step 4.9: Run SQL + Semantic View DDL') +
+  pb('Open a SQL Worksheet and run:') +
+  '<pre><code>-- Rebuild semantic view with RETRY_SUCCESS_RATE\n-- Copy contents of packages/dbt/analyses/payment_analytics_semantic_view.sql\n-- and run as DDL</code></pre>' +
+  '<pre><code>-- Rebuild Cortex Agent\n-- Copy contents of packages/database/utilities/03_create_agent.sql\n-- and run as DDL</code></pre>' +
+  h3('Step 4.10: Verify the Metric') +
+  '<pre><code>SELECT ROUND(\n  SUM(CASE WHEN retry_success_flag = 1 THEN 1.0 ELSE 0 END) * 100.0 /\n  NULLIF(SUM(CASE WHEN retry_attempt_flag = 1 THEN 1 ELSE 0 END), 0), 2)\n  AS retry_success_rate\nFROM COCO_SDLC_HOL_NN.MARTS.AUTHORIZATIONS\nWHERE transaction_date >= DATEADD(day, -30, CURRENT_DATE);</code></pre>' +
+  pb('<strong>Expected:</strong> A non-null percentage (typically 20–80%). If null, the dynamic table is still refreshing — wait 2–3 min and retry.') +
+  pbox('Ask the Cortex Agent','What is the retry success rate for the last 30 days?') +
+  pb('The agent should use the RETRY_SUCCESS_RATE metric and return a percentage.');
+}
+
+function cliS5() {
+  return shead(5,'Context Switch + Task 2','~20 min','#BE185D') +
+  h3('Context Switch') +
+  pb('Start a fresh Cortex Code conversation before Task 2:') +
+  '<pre><code>/new</code></pre>' +
+  note('Plan mode is session-scoped — re-enable /plan if needed in the new session.') +
+  h3('Task 2: Add KPI Card to React Dashboard') +
+  pbox('Cortex Code prompt','Show me Jira ticket EPA-3. What does it ask me to implement?') +
+  '<pre><code>/plan</code></pre>' +
+  pbox('Cortex Code prompt','Plan the implementation for the Jira ticket.') +
+  pb('Cortex Code will edit three files in the React frontend:') +
+  sc('<strong>apps/frontend/src/types/domain.ts</strong> — add retrySuccessRate to AuthorizationKPIs interface<br><strong>apps/frontend/src/app/api/analytics/authorization/kpis/route.ts</strong> — add retry_success_rate SQL column + return field<br><strong>apps/frontend/src/app/analytics/authorization/page.tsx</strong> — add KPI card component') +
+  h3('Verify Locally') +
+  pbox('Cortex Code prompt','Start the frontend dev server from apps/frontend.') +
+  pb('Open <a href="http://localhost:3000/analytics/authorization" target="_blank">http://localhost:3000/analytics/authorization</a>. You should see a new <strong>Retry Success Rate</strong> KPI card alongside the existing authorization metrics.') +
+  h3('Git Commit') +
+  '<pre><code>git commit -am "feat: add retry success rate KPI card"</code></pre>';
+}
+
+function cliS6() {
+  return shead(6,'Wrap-up + Troubleshooting','~5 min','#16A34A') +
+  h3('What You Accomplished') +
+  '<ul>' +
+  '<li><strong>Task 1:</strong> Added retry success rate end-to-end — dbt model, dynamic table, semantic view, Cortex Agent</li>' +
+  '<li><strong>Task 2:</strong> Added a React KPI card following existing component patterns</li>' +
+  '<li><strong>Along the way:</strong> Read Jira tickets via MCP, planned with AI, reviewed changes step-by-step, verified locally and in Snowflake, committed code</li>' +
+  '</ul>' +
+  h3('Troubleshooting') +
+  '<table><thead><tr><th>Issue</th><th>Cause</th><th>Fix</th></tr></thead><tbody>' +
+  '<tr><td>New columns missing after dbt run</td><td>stage upload succeeded but ADD VERSION was not run after</td><td>Run ALTER DBT PROJECT ... ADD VERSION FROM \'@...DBT_FILES/\' first, then re-run EXECUTE with --select --full-refresh</td></tr>' +
+  '<tr><td>dbt run fails — permission denied on STAGING</td><td>--full-refresh without --select tries to recreate staging views; HOL_ROLE_NN lacks CREATE VIEW on STAGING</td><td>Always use ARGS = \'run --select int_authorizations__enriched+ --full-refresh\'</td></tr>' +
+  '<tr><td>Dynamic table shows old data</td><td>Auto-refresh has not run yet</td><td>Run ALTER DYNAMIC TABLE COCO_SDLC_HOL_NN.MARTS.AUTHORIZATIONS REFRESH;</td></tr>' +
+  '<tr><td>KPI card shows 0</td><td>RETRY_SUCCESS_RATE column not returned from API</td><td>Check domain.ts has retrySuccessRate and kpis/route.ts returns the field</td></tr>' +
+  '</tbody></table>';
+}
+
+// ══════════════════════════════════════════════════════════════════════════
+// UI SECTIONS
+// ══════════════════════════════════════════════════════════════════════════
+
+function uiS1() {
+  return shead(1,'Environment Setup','~5 min','#2563EB') +
+  h3('Step 1.1: Log Into Snowsight') +
+  pb('Open Snowsight using the account URL provided by your instructor. Log in with your HOL credentials.') +
+  sc('<strong>Username:</strong> Your assigned user — e.g. HOL_USER_03<br><strong>Password:</strong> Provided by your instructor') +
+  h3('Step 1.2: Confirm the App Runs') +
+  pb('Before making any changes, verify the baseline dashboard is working. Go to <strong>Projects → Streamlit</strong> and open <code class="ic">PAYMENT_ANALYTICS_DASHBOARD</code> (under your assigned database).') +
+  pb('You should see the Payment Analytics dashboard with real transaction data — 4 KPI cards, charts, and filters. You will return here after Task 2 to see your new KPI card.') +
+  h3('Step 1.3: Open Cortex Code and Set Session Context') +
+  pb('In Snowsight, open <strong>AI &amp; ML → Cortex Code</strong>. Replace NN with your number (e.g. 03 for HOL_USER_03) and paste:') +
+  pbox('Cortex Code prompt','Set my role to HOL_ROLE_NN, warehouse to HOL_WH_NN, and use database COCO_SDLC_HOL_NN with schema MARTS.') +
+  pb('Verify with:') +
+  '<pre><code>/status</code></pre>' +
+  h3('Step 1.4: Open Your Workspace') +
+  pbox('Cortex Code prompt','open HOL_WORKSPACE') +
+  pb('The file tree on the left shows the full project — dbt models, SQL utilities, and context files. This is your editing environment.') +
+  note('Cortex Code reads workspace files automatically, giving it full context for the project architecture, business rules, and key file paths.');
+}
+
+function uiS2() {
+  return shead(2,'Cortex Code Primer','~5 min','#7C3AED') +
+  h3('2.1 What is Cortex Code') +
+  pb('Cortex Code is Snowflake\'s AI coding assistant. In the Snowsight UI it reads your workspace files to understand your project, executes SQL against your Snowflake environment, edits files and proposes changes for review, and answers questions about your data stack.') +
+  h3('2.2 Key Features in the UI') +
+  '<table><thead><tr><th>Feature</th><th>How to use</th></tr></thead><tbody>' +
+  '<tr><td>Plan mode</td><td>Ask Cortex Code to "use plan mode" or "show me a plan before making changes"</td></tr>' +
+  '<tr><td>File context</td><td>Cortex Code reads workspace files automatically — no setup needed</td></tr>' +
+  '<tr><td>SQL execution</td><td>Ask Cortex Code to run SQL — it executes in your session context</td></tr>' +
+  '<tr><td>Code edits</td><td>Cortex Code proposes edits; click <strong>Apply</strong> to accept or <strong>Dismiss</strong> to reject</td></tr>' +
+  '</tbody></table>' +
+  h3('2.3 Jira Access') +
+  pb('Since MCP is not available in the Snowsight UI, you will use a <code class="ic">GET_JIRA_TICKET</code> function instead. In Section 4, Cortex Code will create this function, which connects to the Atlassian REST API. You can then call it from the Cortex Agent.');
+}
+
+function uiS3() {
+  return shead(3,'Architecture Overview','~5 min','#7C3AED') +
+  h3('3.1 Explore with Cortex Code') +
+  pbox('Cortex Code prompt','Describe this project\'s data architecture and the Cortex Agent setup. What database, schemas, layers, domain tables, semantic view, and metrics are configured?') +
+  pb('<strong>Expected:</strong> Cortex Code reads the workspace files and describes the medallion architecture, domain tables, and the PAYMENT_ANALYTICS semantic view with its 10 metrics.') +
+  h3('3.2 Architecture Reference') +
+  '<pre><code>RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tables)</code></pre>' +
+  '<table><thead><tr><th>Layer</th><th>Schema</th><th>Type</th><th>Purpose</th></tr></thead><tbody>' +
+  '<tr><td>RAW</td><td>RAW</td><td>Tables</td><td>Source data as-is</td></tr>' +
+  '<tr><td>STAGING</td><td>STAGING</td><td>Views</td><td>Renaming, casting, filters</td></tr>' +
+  '<tr><td>INTERMEDIATE</td><td>INTERMEDIATE</td><td>Dynamic Tables</td><td>Business logic, enrichment</td></tr>' +
+  '<tr><td>MARTS</td><td>MARTS</td><td>Dynamic Tables</td><td>Business-ready, exposed to BI + AI</td></tr></tbody></table>' +
+  pb('You will add <strong>RETRY_SUCCESS_RATE</strong> to the semantic view and verify the Cortex Agent can answer questions about it.');
+}
+
+function uiS4() {
+  return shead(4,'Task 1: Retry Success Rate','~30 min','#C2410C') +
+  h3('Step 4.1: Set Up Jira Access') +
+  pb('Run these three prompts in order to create the Jira UDF, add it to the agent, and test it:') +
+  pbox('Prompt 1 — Create the UDF','Create a Python UDF called GET_JIRA_TICKET(issue_key VARCHAR) in COCO_SDLC_HOL_NN.PUBLIC. It should call the Jira REST API and return the ticket type, summary, status, and description as plain text. Use REST API: https://api.atlassian.com/ex/jira/310bd229-0685-4130-a7cc-f994764ba475/rest/api/3/issue/{issue_key}. Auth: Basic auth — token in HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET. EAI: ATLASSIAN_EAI. Runtime: Python 3.11.') +
+  pbox('Prompt 2 — Update the agent','Add a JiraLookup tool to COCO_SDLC_HOL_NN.MARTS.PAYMENT_ANALYTICS_AGENT that calls COCO_SDLC_HOL_NN.PUBLIC.GET_JIRA_TICKET. Update the agent instructions to use JiraLookup when the user asks about a Jira ticket.') +
+  pbox('Prompt 3 — Test','Run SELECT GET_JIRA_TICKET(\'EPA-2\') and show me the result.') +
+  note('If Cortex Code asks which database to use, select COCO_SDLC_HOL_NN (your own HOL database, not HOL_SHARED).') +
+  h3('Step 4.2: Read the Jira Ticket') +
+  pb('Navigate to <strong>AI &amp; ML → Cortex Agents</strong> and open <code class="ic">PAYMENT_ANALYTICS_AGENT</code>. Ask:') +
+  pbox('Cortex Agent query','Show me Jira ticket EPA-2. What does it ask me to implement?') +
+  h3('Step 4.3: Enable Plan Mode') +
+  pb('Back in Cortex Code:') +
+  pbox('Cortex Code prompt','Use plan mode. Based on the EPA-2 Jira ticket requirements, plan the implementation for adding the retry success rate metric.') +
+  pb('The plan should include all four files:') +
+  sc('1. int_authorizations__enriched.sql<br>2. authorizations.sql<br>3. payment_analytics_semantic_view.sql<br>4. 03_create_agent.sql') +
+  h3('Steps 4.4–4.7: Cortex Code Edits 4 Files') +
+  sc('<strong>4.4 int_authorizations__enriched.sql</strong> — adds retry_attempt_flag and retry_success_flag (window function)<br><strong>4.5 authorizations.sql</strong> — passes the two flags through to marts<br><strong>4.6 payment_analytics_semantic_view.sql</strong> — adds RETRY_SUCCESS_RATE metric<br><strong>4.7 03_create_agent.sql</strong> — updates agent instructions') +
+  pb('Review each proposed edit and click <strong>Apply</strong>.  A <strong>Keep all</strong> button appears at the bottom — you can use it to accept all changes at once.') +
+  h3('Step 4.8: Deploy from Workspace') +
+  pbox('Cortex Code prompt','Deploy my workspace edits: add a new version from HOL_WORKSPACE using versions/live, then execute the dbt project scoped to int_authorizations__enriched and its downstream models with full-refresh.') +
+  pb('Cortex Code runs two statements:') +
+  sc('1. <code class="ic">ALTER DBT PROJECT ... ADD VERSION FROM \'snow://workspace/.../versions/live\'</code> — packages your Cortex Code edits<br>2. <code class="ic">EXECUTE DBT PROJECT ... ARGS = \'run --select int_authorizations__enriched+ --full-refresh\'</code> — rebuilds only the changed models') +
+  warn('The prompt explicitly requests <code class="ic">versions/live</code>. Do not paraphrase — <code class="ic">versions/last</code> only picks up committed workspace snapshots and will miss your Cortex Code edits, causing the new columns to be absent.') +
+  note('The <code class="ic">--select int_authorizations__enriched+</code> scope skips staging views. HOL_ROLE_NN does not have CREATE VIEW on STAGING — running without --select would fail.') +
+  note('Dynamic tables begin refreshing automatically. This may take 2–3 minutes.') +
+  h3('Step 4.9: Rebuild Semantic View and Cortex Agent') +
+  pb('Open a new SQL Worksheet. For each file, open it in the workspace file tree, copy the full contents, paste into the worksheet, and run:') +
+  sc('1. <code class="ic">packages/dbt/analyses/payment_analytics_semantic_view.sql</code><br>2. <code class="ic">packages/database/utilities/03_create_agent.sql</code>') +
+  note('These files are not executed by EXECUTE DBT PROJECT — they must be run separately as DDL.') +
+  h3('Steps 4.10–4.11: Verify') +
+  '<pre><code>SELECT ROUND(\n  SUM(CASE WHEN retry_success_flag = 1 THEN 1.0 ELSE 0 END) * 100.0 /\n  NULLIF(SUM(CASE WHEN retry_attempt_flag = 1 THEN 1 ELSE 0 END), 0), 2)\n  AS retry_success_rate\nFROM COCO_SDLC_HOL_NN.MARTS.AUTHORIZATIONS\nWHERE transaction_date >= DATEADD(day, -30, CURRENT_DATE);</code></pre>' +
+  pbox('Ask the Cortex Agent','What is the retry success rate for the last 30 days?');
+}
+
+function uiS5() {
+  return shead(5,'Context Switch + Task 2','~20 min','#BE185D') +
+  h3('Context Switch') +
+  pb('Click <strong>New Conversation</strong> (or the + icon) to start a fresh session.') +
+  note('This simulates a real-world context switch — moving from one ticket to the next without stale context.') +
+  h3('Task 2: Add KPI Card to Streamlit Dashboard') +
+  pbox('Cortex Agent query','Show me Jira ticket EPA-3. What does it ask me to implement?') +
+  pbox('Cortex Code prompt','Use plan mode. Based on the EPA-3 Jira ticket, plan the implementation for adding a Retry Success Rate KPI card to the Streamlit dashboard in apps/streamlit/app.py.') +
+  pb('The plan should include two changes in <code class="ic">app.py</code>:') +
+  sc('1. Add <code class="ic">retry_success_rate</code> column to the KPI SQL query<br>2. Add a new <code class="ic">st.metric()</code> card for Retry Success Rate') +
+  pb('Review the proposed edits and click <strong>Apply</strong>.') +
+  h3('Verify the Dashboard') +
+  pb('Navigate to <strong>Projects → Streamlit</strong> and open <code class="ic">PAYMENT_ANALYTICS_DASHBOARD</code>. You should see five KPI cards: Total Transactions, Approval Rate, Approved Amount, Avg Ticket Size, and <strong>Retry Success Rate</strong>.') +
+  warn('If the dashboard shows an error, check that RETRY_SUCCESS_RATE is spelled correctly in both the SQL query and the st.metric() call. Snowflake returns column names in uppercase.');
+}
+
+function uiS6() {
+  return shead(6,'Wrap-up + Troubleshooting','~5 min','#16A34A') +
+  h3('What You Accomplished') +
+  '<ul>' +
+  '<li><strong>Task 1:</strong> Added retry success rate end-to-end — dbt intermediate model, marts dynamic table, semantic view, Cortex Agent</li>' +
+  '<li><strong>Task 2:</strong> Added a Streamlit KPI card to the dashboard</li>' +
+  '<li><strong>Along the way:</strong> Read Jira tickets via Cortex Agent, planned with AI, reviewed changes step-by-step, deployed and verified — entirely inside Snowsight without any local tools</li>' +
+  '</ul>' +
+  h3('Troubleshooting') +
+  '<table><thead><tr><th>Issue</th><th>Cause</th><th>Fix</th></tr></thead><tbody>' +
+  '<tr><td>Cortex Code asks which database to use</td><td>Multiple databases visible</td><td>Select COCO_SDLC_HOL_NN (your own HOL database)</td></tr>' +
+  '<tr><td>GET_JIRA_TICKET returns an error</td><td>EAI or secret not accessible</td><td>Confirm role is HOL_ROLE_NN and rerun Prompt 1 from Step 4.1</td></tr>' +
+  '<tr><td>Dynamic table shows old data</td><td>Auto-refresh has not run yet</td><td>Run ALTER DYNAMIC TABLE COCO_SDLC_HOL_NN.MARTS.AUTHORIZATIONS REFRESH;</td></tr>' +
+  '<tr><td>New columns missing after dbt run</td><td>ADD VERSION used versions/last instead of versions/live — workspace edits not packaged</td><td>Re-run the Step 4.8 prompt verbatim (it explicitly requests versions/live), then re-run EXECUTE with --select int_authorizations__enriched+ --full-refresh</td></tr>' +
+  '<tr><td>dbt run fails — permission denied on STAGING</td><td>Cortex Code omitted --select, causing --full-refresh to try recreating staging views</td><td>Ask Cortex Code: Re-run EXECUTE DBT PROJECT with ARGS = \'run --select int_authorizations__enriched+ --full-refresh\'</td></tr>' +
+  '<tr><td>Semantic view metric not found</td><td>View not rebuilt after workspace edit</td><td>Rerun packages/dbt/analyses/payment_analytics_semantic_view.sql as DDL in a worksheet</td></tr>' +
+  '<tr><td>Cortex Agent gives generic answer</td><td>Agent not rebuilt after spec change</td><td>Rerun packages/database/utilities/03_create_agent.sql in a worksheet</td></tr>' +
+  '<tr><td>Streamlit dashboard shows error</td><td>Column name case mismatch</td><td>Use row["RETRY_SUCCESS_RATE"] not row["retry_success_rate"]</td></tr>' +
+  '</tbody></table>';
+}
+
+// ── Init ───────────────────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  // Set default view
+  document.getElementById('wrapper').dataset.view = 'side-by-side';
+  document.querySelector('[data-view="side-by-side"]').classList.add('active');
+  // Build section lists in guide cards
+  buildSectionLists();
+});
+</script>
+</body>
+</html>

@@ -15,9 +15,23 @@ Schemas:
 ## Atlassian
 
 ```
-Site URL: https://evolv-coco-sdlc-hol.atlassian.net/
-Used by: Jira MCP, Confluence MCP
+Site URL:    https://evolv-coco-sdlc-hol.atlassian.net/
+Cloud ID:    310bd229-0685-4130-a7cc-f994764ba475
+REST API:    https://api.atlassian.com/ex/jira/310bd229-0685-4130-a7cc-f994764ba475/rest/api/3/issue/{issue_key}
+Auth:        Basic auth — Base64(email:api_token) stored in HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET
+Used by:     Jira MCP (CLI path), GET_JIRA_TICKET UDF (UI path), Confluence MCP
 ```
+
+## Snowflake Atlassian Infrastructure (pre-provisioned by instructor)
+
+```
+External Access Integration : ATLASSIAN_EAI
+Secret                      : HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET  (TYPE = GENERIC_STRING)
+Network Rule                : HOL_SHARED.PUBLIC.ATLASSIAN_NETWORK_RULE
+```
+
+> Attendees have USAGE on ATLASSIAN_EAI and READ/USAGE on HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET.
+> Create GET_JIRA_TICKET in your own PUBLIC schema referencing these shared objects.
 
 ## Data Architecture
 
@@ -99,3 +113,24 @@ RAW → STAGING (views) → INTERMEDIATE (dynamic tables) → MARTS (dynamic tab
 | `packages/dbt/models/intermediate/` | Enriched dynamic tables |
 | `packages/dbt/models/marts/` | Business-ready dynamic tables |
 | `packages/dbt/analyses/payment_analytics_semantic_view.sql` | Semantic View DDL |
+
+## Deployment Rules
+
+When deploying the dbt project from the HOL_WORKSPACE, always use **`versions/live`** — never `versions/last`.
+
+- `versions/live` = the current live state of the workspace, including all Cortex Code file edits
+- `versions/last` = the last explicitly committed workspace snapshot — **does not include Cortex Code edits**
+
+Correct ADD VERSION syntax:
+```sql
+ALTER DBT PROJECT <your-database>.MARTS.EVOLV_PAYMENT_ANALYTICS
+  ADD VERSION
+  FROM 'snow://workspace/<your-database>.MARTS."HOL_WORKSPACE"/versions/live';
+```
+
+When running with new columns added to a dynamic table, always scope with `--select` to avoid `CREATE VIEW` permission errors on the STAGING schema:
+```sql
+EXECUTE DBT PROJECT <your-database>.MARTS.EVOLV_PAYMENT_ANALYTICS
+  ARGS = 'run --select int_authorizations__enriched+ --full-refresh';
+```
+
