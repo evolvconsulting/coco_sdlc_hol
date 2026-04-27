@@ -100,10 +100,15 @@ cd apps/frontend
 cp .env.example .env.local
 ```
 
-Open `.env.local` and set your account identifier:
+Open `.env.local` and fill in your credentials:
 
 ```
 SNOWFLAKE_ACCOUNT=<orgname>-<accountname>
+SNOWFLAKE_USER=HOL_USER_NN
+SNOWFLAKE_PASSWORD=<password>
+SNOWFLAKE_ROLE=HOL_ROLE_NN
+SNOWFLAKE_WAREHOUSE=HOL_WH_NN
+SNOWFLAKE_DATABASE=COCO_SDLC_HOL_NN
 ```
 
 Then install and start:

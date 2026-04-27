@@ -138,9 +138,9 @@ The first-run setup wizard will guide you through connecting to Snowflake. Selec
 
 | Prompt | What to enter |
 |--------|---------------|
-| Connection name | `coco-hol` (or any name you prefer) |
+| Connection name | `HOL_USER_NN` (replace `NN` with your assigned number) |
 | Account identifier | Provided by your instructor (format: `orgname-accountname`) |
-| Username | Your assigned user — e.g. `HOL_USER_02` |
+| Username | Your assigned user — e.g. `HOL_USER_NN` |
 | Password | Provided by your instructor |
 | Authentication method | Password (`snowflake`) |
 
@@ -150,10 +150,10 @@ Once authenticated, Cortex Code connects and drops you into an interactive sessi
 
 **1b. Set your role, warehouse, database, and schema**
 
-In the Cortex Code session, set your session context. Replace `02` with your assigned number (e.g. `HOL_ROLE_05`, `HOL_WH_05`, and `COCO_SDLC_HOL_05` for `HOL_USER_05`):
+In the Cortex Code session, set your session context. Replace `NN` with your assigned number (e.g. `03` for `HOL_USER_03`):
 
 ```
-Set my role to HOL_ROLE_02, warehouse to HOL_WH_02, and use database COCO_SDLC_HOL_02 with schema MARTS.
+Set my role to HOL_ROLE_NN, warehouse to HOL_WH_NN, and use database COCO_SDLC_HOL_NN with schema MARTS.
 ```
 
 Then verify your connection is configured correctly:
@@ -162,17 +162,17 @@ Then verify your connection is configured correctly:
 /status
 ```
 
-**Expected output:** You should see `HOL_ROLE_NN` as the role, your assigned database (e.g. `COCO_SDLC_HOL_02`) as the database, and `MARTS` as the schema.
+**Expected output:** You should see `HOL_ROLE_NN` as the role, your assigned database (e.g. `COCO_SDLC_HOL_NN`) as the database, and `MARTS` as the schema.
 
 **1c. Configure local project files**
 
-Ask Cortex Code to update the frontend config file with your Snowflake account identifier:
+Ask Cortex Code to configure the frontend with your Snowflake credentials:
 
 ```
-Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local with my account identifier <orgname-accountname>.
+Update apps/frontend/.env.local with my Snowflake credentials: SNOWFLAKE_ACCOUNT=<orgname-accountname>, SNOWFLAKE_USER=HOL_USER_NN, SNOWFLAKE_ROLE=HOL_ROLE_NN, SNOWFLAKE_WAREHOUSE=HOL_WH_NN, SNOWFLAKE_PASSWORD=<password>, SNOWFLAKE_DATABASE=COCO_SDLC_HOL_NN.
 ```
 
-Replace `<orgname-accountname>` with the account identifier your instructor provided in Step 1a.
+Replace `<orgname-accountname>`, `NN`, and `<password>` with the values your instructor provided in Step 1a.
 
 > **Note:** The dbt `profiles.yml` does not need updating. The dbt project runs inside Snowflake where authentication is handled by the session context -- no account credentials are stored in the profile.
 
@@ -226,7 +226,7 @@ A single Atlassian MCP connection gives Cortex Code access to both Jira and Conf
 First, exit your Cortex Code session so you can run the MCP registration command in the terminal:
 
 ```
-/exit
+/quit
 ```
 
 Then run the following command in your terminal:
@@ -320,22 +320,12 @@ Show me Jira ticket EPA-2. What does it ask me to implement?
 
 Cortex Code will use the Jira MCP skill you configured in Section 2 to retrieve the ticket. You should see a description asking you to add a retry success rate metric to the authorizations domain. Review the acceptance criteria before proceeding.
 
-### Step 4.2: Create a Git Branch
-
-Ask Cortex Code to create a feature branch:
-
-```
-Create a new git branch called feature/retry-success-rate and switch to it.
-```
-
-This keeps your changes isolated from the main branch. You will push this branch after verifying the metric works.
-
-### Step 4.3: Implement the Retry Success Rate Metric
+### Step 4.2: Implement the Retry Success Rate Metric
 
 Ask Cortex Code to make all four file changes at once:
 
 ```
-Based on the EPA-2 Jira ticket requirements, implement the retry success rate metric: add retry_attempt_flag and retry_success_flag columns to int_authorizations__enriched.sql using a window function (same card/amount/merchant within 5 minutes of a prior decline), pass both flags through in authorizations.sql, add the RETRY_SUCCESS_RATE metric to payment_analytics_semantic_view.sql, and update the Cortex Agent instructions in 03_create_agent.sql. Do not run dbt compile, dbt deps, or any dbt CLI commands after making the changes.
+Based on the EPA-2 Jira ticket requirements, implement the retry success rate metric: add retry_attempt_flag and retry_success_flag columns to int_authorizations__enriched.sql using a window function (same card/amount/merchant within 5 minutes of a prior decline), pass both flags through in authorizations.sql, add the RETRY_SUCCESS_RATE metric to payment_analytics_semantic_view.sql, and update the Cortex Agent instructions in 03_create_agent.sql. Do not run dbt compile, dbt deps, or any dbt CLI commands.
 ```
 
 Cortex Code will edit 4 files:
@@ -347,36 +337,28 @@ Cortex Code will edit 4 files:
 
 Confirm each file change as Cortex Code presents them.
 
-### Step 4.4: Deploy and Verify in Snowflake
+### Step 4.3: Deploy to Snowflake
 
-Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Type each prompt below directly into Cortex Code -- it will write and execute the necessary SQL for you.
-
-**a) Upload changed dbt files to Snowflake stage and execute**
-
-Ask Cortex Code to upload your changed dbt files and run the project:
+Once the file changes are confirmed, send this follow-up prompt. Replace `NN` with your assigned number before sending:
 
 ```
-Upload my changed dbt files to the Snowflake stage and execute the dbt project.
+Run:
+  snow stage copy packages/dbt/ @COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES --overwrite --parallel 4 --recursive -c HOL_USER_NN
+
+Then add a new version of the dbt project from @COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES/ and execute it with --select int_authorizations__enriched+ --full-refresh.
 ```
 
-Cortex Code identifies the changed files and runs `snow stage put` to upload them directly to the internal stage, then executes the dbt project. No GitHub push is required -- files go straight to the Snowflake stage:
+Cortex Code will:
 
-```bash
-snow stage put packages/dbt/models/intermediate/payments/int_authorizations__enriched.sql \
-  @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/models/intermediate/payments/ --overwrite
-snow stage put packages/dbt/models/marts/payments/authorizations.sql \
-  @COCO_SDLC_HOL_01.PUBLIC.DBT_FILES/models/marts/payments/ --overwrite
-```
+1. Run `snow stage copy` to upload your edited files to the stage
+2. Run `ALTER DBT PROJECT ... ADD VERSION FROM '@COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES/'`
+3. Run `EXECUTE DBT PROJECT ... ARGS = 'run --select int_authorizations__enriched+ --full-refresh'`
 
-```sql
-EXECUTE DBT PROJECT COCO_SDLC_HOL_01.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = 'run';
-```
+> **Warning:** Always include `--select int_authorizations__enriched+`. Running without `--select` will fail with a permission denied error on the STAGING schema.
 
-The `EXECUTE DBT PROJECT ... ARGS = 'run'` command runs dbt server-side inside Snowflake. It reads your models from the stage and applies the DDL directly. Dynamic tables will begin refreshing automatically on their configured schedule.
+> **Note:** Dynamic tables begin refreshing automatically after the run completes. This may take 2–3 minutes.
 
-> **Note:** No GitHub push is needed. Your changed files are uploaded directly to the Snowflake internal stage, so Snowflake can read the latest version immediately.
-
-**b) Rebuild the semantic view and Cortex Agent**
+### Step 4.4: Rebuild Semantic View and Cortex Agent
 
 ```
 Execute the semantic view DDL from packages/dbt/analyses/payment_analytics_semantic_view.sql and the Cortex Agent DDL from packages/database/utilities/03_create_agent.sql against my database.
@@ -386,17 +368,17 @@ Cortex Code will execute both DDL files. Look for `RETRY_SUCCESS_RATE` in the se
 
 > **Note:** These files are not executed by `EXECUTE DBT PROJECT` — they must be applied separately as DDL statements.
 
-**c) Verify end-to-end**
+### Step 4.5: Verify End-to-End
 
 ```
 Verify the retry success rate metric end-to-end: query MARTS.AUTHORIZATIONS directly for the retry success rate over the last 30 days using retry_attempt_flag and retry_success_flag, then ask the PAYMENT_ANALYTICS_AGENT the same question and confirm both return a consistent non-null percentage.
 ```
 
-**Expected:** A percentage between 20% and 80%. If the direct query returns null, the dynamic table is still refreshing — wait 2–3 minutes and retry. The agent result confirms the full chain works: dbt model → dynamic table → semantic view → Cortex Agent.
+**Expected:** A percentage between 20% and 80%. If the direct query returns null, the dynamic table is still refreshing — wait 2–3 minutes and retry. The agent result confirms the full chain: dbt model → dynamic table → semantic view → Cortex Agent.
 
 > **Note:** Cortex Code validates the agent by querying the `PAYMENT_ANALYTICS` semantic view via Cortex Analyst — the same underlying engine the agent uses. You will see "Cortex Analyst" in the output rather than a literal agent call; both paths exercise the same metric.
 
-### Step 4.5: Git Commit (Informational)
+### Step 4.6: Git Commit (Informational)
 
 In a real workflow, changes would be committed and pushed to a Git repository for code review and CI/CD. For this lab, commit locally to preserve the history:
 
@@ -404,9 +386,9 @@ In a real workflow, changes would be committed and pushed to a Git repository fo
 git commit -am "feat: add retry success rate metric"
 ```
 
-No remote push is required. The stage upload in Step 4.4a already delivered your changes to Snowflake.
+No remote push is required for this lab.
 
-### Step 4.6: Reference the Confluence Data Dictionary
+### Step 4.7: Reference the Confluence Data Dictionary
 
 Before wrapping up this ticket, use Cortex Code to read the existing data dictionary from Confluence. This demonstrates how MCP integrations let you pull project documentation directly into your coding workflow for reference:
 
@@ -436,8 +418,6 @@ In the Cortex Code terminal, start a fresh conversation:
 
 This starts a fresh conversation. Cortex Code no longer has Task 1's context loaded. This is intentional -- it demonstrates good AI workflow hygiene: bring only the context needed for the task at hand.
 
-> **Note:** Plan mode is session-scoped. After `/new`, plan mode is off by default. You will re-enable it at the start of Task 2.
-
 ### Review What You Accomplished in Task 1
 
 Take a moment to review what you completed:
@@ -465,7 +445,7 @@ In this task, you will add a KPI card to the authorization dashboard that displa
 In Cortex Code, pull the ticket details for your second task:
 
 ```
-Show me Jira ticket EPA-3. What does it ask me to implement?
+Using the Jira MCP, show me ticket EPA-3. What does it ask me to implement?
 ```
 
 > **Note:** EPA-3 is a placeholder -- your instructor will provide the actual Jira ticket ID.
@@ -482,92 +462,28 @@ Create a new git branch called feature/retry-success-kpi-card and switch to it.
 
 This keeps the KPI card changes separate from the data model changes in Task 1.
 
-### Step 6.3: Enable Plan Mode and Describe the Task
+### Step 6.3: Implement the KPI Card
 
-In the Cortex Code terminal, enable plan mode:
-
-```
-/plan
-```
-
-Then describe the task. Suggested prompt:
+Ask Cortex Code to implement the changes:
 
 ```
-Plan the code file changes for this Jira ticket. Show only the file modifications — do not deploy.
+Using the Jira MCP, read EPA-3 and implement the KPI card changes.
 ```
 
-Review the plan. Confirm it includes changes to:
+Cortex Code will edit three files. Review each change as it is applied:
 
-- `apps/frontend/src/types/domain.ts` -- add `retrySuccessRate` to `AuthorizationKPIs` interface
-- `apps/frontend/src/app/api/analytics/authorization/kpis/route.ts` -- add SQL column and return field
-- `apps/frontend/src/app/analytics/authorization/page.tsx` -- add new `<Col>` and `<KPICard>`
+- `apps/frontend/src/types/domain.ts` — adds `retrySuccessRate: number` to the `AuthorizationKPIs` interface
+- `apps/frontend/src/app/api/analytics/authorization/kpis/route.ts` — adds SQL query for `retry_success_rate` using `retry_success_flag` / `retry_attempt_flag` and adds the return field
+- `apps/frontend/src/app/analytics/authorization/page.tsx` — adds a new `<KPICard>` for Retry Success Rate
 
-> **Important:** The TypeScript interface must be updated BEFORE the API route and page component. If Cortex Code's plan shows the page change first, ask it to reorder.
+Confirm each file change as Cortex Code presents them.
 
-### Step 6.4: Execute the Plan
+### Step 6.4: Verify Locally
 
-Once the plan looks complete, Cortex Code will present a confirmation dialog. Select **Yes** to begin execution.
-
-Cortex Code will make changes to three files. Review each change as it is applied:
-
-**a) `apps/frontend/src/types/domain.ts`** -- add `retrySuccessRate: number` to the `AuthorizationKPIs` interface:
-
-```typescript
-export interface AuthorizationKPIs {
-  totalTransactions: number;
-  approvedCount: number;
-  declinedCount: number;
-  approvalRate: number;
-  totalAmount: number;
-  approvedAmount: number;
-  avgTicketSize: number;
-  retrySuccessRate: number;  // NEW
-  trends: {
-    transactions: number;
-    approvalRate: number;
-    amount: number;
-  };
-}
-```
-
-**b) `apps/frontend/src/app/api/analytics/authorization/kpis/route.ts`** -- add to the SQL SELECT:
-
-```sql
-ROUND(
-  SUM(CASE WHEN retry_success_flag = 1 THEN 1.0 ELSE 0 END) * 100.0 /
-  NULLIF(SUM(CASE WHEN retry_attempt_flag = 1 THEN 1 ELSE 0 END), 0),
-2) as retry_success_rate
-```
-
-And add to the return object:
-
-```typescript
-retrySuccessRate: Number(row.RETRY_SUCCESS_RATE) || 0,
-```
-
-**c) `apps/frontend/src/app/analytics/authorization/page.tsx`** -- add after the existing KPI cards in the `<Row gutter={[16, 16]}>` block:
-
-```tsx
-<Col xs={24} sm={12} lg={6}>
-  <KPICard
-    title="Retry Success Rate"
-    value={kpiData?.retrySuccessRate ?? 0}
-    format="percent"
-    description="Percentage of declined transactions that succeeded on retry"
-    loading={kpis.isLoading}
-    color="#52c41a"
-  />
-</Col>
-```
-
-This follows the exact same pattern as the existing KPI cards -- same `Col` grid layout, same `KPICard` component props, same data fetching hook.
-
-### Step 6.5: Verify Locally
-
-Ask Cortex Code to start the dev server if it is not already running:
+Ask Cortex Code to restart the dev server:
 
 ```
-Start the frontend dev server from apps/frontend.
+Restart the frontend dev server from apps/frontend.
 ```
 
 Open [http://localhost:3000/analytics/authorization](http://localhost:3000/analytics/authorization) in your browser. You should see a new "Retry Success Rate" KPI card alongside the existing authorization KPIs. The card displays a percentage value with a green color indicator.
@@ -578,17 +494,7 @@ If the card shows 0 or undefined, ask Cortex Code to help debug:
 The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs interface in domain.ts includes retrySuccessRate and that the API route in kpis/route.ts returns the field.
 ```
 
-### Step 6.6: Git Commit (Informational)
-
-Once the KPI card displays correctly, commit the changes locally to preserve the history:
-
-```bash
-git commit -am "feat: add retry success rate KPI card"
-```
-
-In a real workflow, these changes would be pushed to a Git repository for code review. For this lab, a local commit is sufficient.
-
-### Step 6.7: Pull Request (Informational)
+### Step 6.5: Pull Request (Informational)
 
 In a real workflow, you would open a pull request at this point to have the changes reviewed before merging. For this lab, there is no remote push, so this step is skipped.
 
@@ -603,8 +509,8 @@ Congratulations! In this lab, you completed two full development cycles using Co
 ### What You Accomplished
 
 - **Task 1:** Added a new business metric (retry success rate) end-to-end through the data stack -- dbt intermediate model, marts dynamic table, semantic view, and Cortex Agent instructions. Verified the metric in Snowflake and referenced the Confluence data dictionary for documentation context.
-- **Task 2:** Added a frontend KPI card to visualize the new metric, following existing component patterns. Committed and created a pull request.
-- **Along the way:** Read Jira tickets and Confluence documentation via MCP, planned work with AI before executing, reviewed changes step-by-step, verified results locally and in Snowflake, committed code, and created a pull request -- all with Cortex Code as your AI coding assistant.
+- **Task 2:** Added a frontend KPI card to visualize the new metric, following existing component patterns.
+- **Along the way:** Read Jira tickets and Confluence documentation via MCP, planned work with AI before executing, reviewed changes step-by-step, and verified results locally and in Snowflake -- all with Cortex Code as your AI coding assistant.
 
 ### Key Takeaways
 

@@ -1386,14 +1386,14 @@ function cliS1() {
   pb('From the repository root, launch Cortex Code:') +
   '<pre><code>cortex</code></pre>' +
   pb('The first-run wizard will prompt you to create a connection. Select <strong>More options</strong> and enter:') +
-  sc('<strong>Connection name:</strong> coco-hol<br><strong>Account identifier:</strong> provided by your instructor<br><strong>Username:</strong> e.g. HOL_USER_02<br><strong>Password:</strong> provided by your instructor<br><strong>Auth method:</strong> Password (snowflake)') +
-  pb('Once connected, set your session context (replace <code class="ic">02</code> with your number):') +
-  pbox('Cortex Code prompt','Set my role to HOL_ROLE_02, warehouse to HOL_WH_02, and use database COCO_SDLC_HOL_02 with schema MARTS.') +
+  sc('<strong>Connection name:</strong> HOL_USER_NN (your number)<br><strong>Account identifier:</strong> provided by your instructor<br><strong>Username:</strong> e.g. HOL_USER_NN<br><strong>Password:</strong> provided by your instructor<br><strong>Auth method:</strong> Password (snowflake)') +
+  pb('Once connected, set your session context (replace <code class="ic">NN</code> with your number):') +
+  pbox('Cortex Code prompt','Set my role to HOL_ROLE_NN, warehouse to HOL_WH_NN, and use database COCO_SDLC_HOL_NN with schema MARTS.') +
   pb('Then verify:') +
   '<pre><code>/status</code></pre>' +
   note('Expected: HOL_ROLE_NN as role, COCO_SDLC_HOL_NN as database, MARTS as schema.') +
   h3('Step 1c: Configure Frontend Config') +
-  pbox('Cortex Code prompt','Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local with my account identifier &lt;orgname-accountname&gt;.') +
+  pbox('Cortex Code prompt','Update apps/frontend/.env.local with my Snowflake credentials: SNOWFLAKE_ACCOUNT=&lt;orgname-accountname&gt;, SNOWFLAKE_USER=HOL_USER_NN, SNOWFLAKE_ROLE=HOL_ROLE_NN, SNOWFLAKE_WAREHOUSE=HOL_WH_NN, SNOWFLAKE_PASSWORD=&lt;password&gt;, SNOWFLAKE_DATABASE=COCO_SDLC_HOL_NN.') +
   h3('Step 2: Confirm App Runs') +
   pbox('Cortex Code prompt','Install the frontend dependencies and start the dev server from apps/frontend.') +
   pb('Open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a>. You should see the Payment Analytics dashboard with real transaction data — charts, KPI cards, and natural language query interface.') +
@@ -1415,10 +1415,9 @@ function cliS2() {
   note('Plan mode is session-scoped. After /new, re-enable /plan if needed.') +
   h3('2.3 Install Atlassian MCP') +
   pb('Exit the Cortex Code session first:') +
-  '<pre><code>/exit</code></pre>' +
+  '<pre><code>/quit</code></pre>' +
   pb('Then run in the terminal:') +
-  '<pre><code>cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http \\\n  -H "Authorization: Basic dHJlbnQuZm9sZXlAZ..."</code></pre>' +
-  note('Your instructor will provide the full Base64 token. This command is run once per machine.') +
+  '<pre><code>cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorization: Basic dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU="</code></pre>' +
   tip('Beyond the lab: with write access, Cortex Code can transition Jira tickets, log time, and update Confluence pages — completing the full dev loop.');
 }
 
@@ -1445,23 +1444,20 @@ function cliS4() {
   h3('Step 4.1: Read the Jira Ticket') +
   pbox('Cortex Code prompt','Show me Jira ticket EPA-2. What does it ask me to implement?') +
   pb('Cortex Code uses the Atlassian MCP to retrieve the ticket. Review the acceptance criteria — it asks you to add a retry success rate metric to the authorizations domain.') +
-  h3('Step 4.2: Create a Git Branch') +
-  pbox('Cortex Code prompt','Create a new git branch called feature/retry-success-rate and switch to it.') +
-  h3('Step 4.3: Implement the Retry Success Rate Metric') +
-  pbox('Cortex Code prompt','Based on the EPA-2 Jira ticket requirements, implement the retry success rate metric: add retry_attempt_flag and retry_success_flag columns to int_authorizations__enriched.sql using a window function (same card/amount/merchant within 5 minutes of a prior decline), pass both flags through in authorizations.sql, add the RETRY_SUCCESS_RATE metric to payment_analytics_semantic_view.sql, and update the Cortex Agent instructions in 03_create_agent.sql. Do not run dbt compile, dbt deps, or any dbt CLI commands after making the changes.') +
+  h3('Step 4.2: Implement the Retry Success Rate Metric') +
+  pbox('Cortex Code prompt','Based on the EPA-2 Jira ticket requirements, implement the retry success rate metric: add retry_attempt_flag and retry_success_flag columns to int_authorizations__enriched.sql using a window function (same card/amount/merchant within 5 minutes of a prior decline), pass both flags through in authorizations.sql, add the RETRY_SUCCESS_RATE metric to payment_analytics_semantic_view.sql, and update the Cortex Agent instructions in 03_create_agent.sql. Do not run dbt compile, dbt deps, or any dbt CLI commands.') +
   sc('<strong>int_authorizations__enriched.sql</strong> — adds retry_attempt_flag and retry_success_flag via window function<br><strong>authorizations.sql</strong> — passes the two flags through to the marts layer<br><strong>payment_analytics_semantic_view.sql</strong> — adds RETRY_SUCCESS_RATE metric<br><strong>03_create_agent.sql</strong> — updates agent instructions') +
   pb('Confirm each file change as Cortex Code presents them.') +
-  h3('Step 4.4: Deploy via Snowflake CLI') +
-  pb('Upload your edited dbt files and add a new project version:') +
-  '<pre><code>snow stage put --stage COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES \\\n  packages/dbt/ --overwrite --parallel 4</code></pre>' +
-  '<pre><code>snow sql -q "ALTER DBT PROJECT COCO_SDLC_HOL_NN.MARTS.EVOLV_PAYMENT_ANALYTICS ADD VERSION FROM \'@COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES/\'"</code></pre>' +
-  '<pre><code>snow sql -q "EXECUTE DBT PROJECT COCO_SDLC_HOL_NN.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = \'run --select int_authorizations__enriched+ --full-refresh\'"</code></pre>' +
+  h3('Step 4.3: Deploy to Snowflake') +
+  pb('Once the file changes are confirmed, send this follow-up prompt — replace <code class="ic">NN</code> with your number before sending:') +
+  pbox('Cortex Code prompt','Run:\n  snow stage copy packages/dbt/ @COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES --overwrite --parallel 4 --recursive -c HOL_USER_NN\n\nThen add a new version of the dbt project from @COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES/ and execute it with --select int_authorizations__enriched+ --full-refresh.') +
+  sc('1. Runs <code class="ic">snow stage copy</code> to upload to your personal stage<br>2. Runs <code class="ic">ALTER DBT PROJECT ... ADD VERSION FROM \'@COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES/\'</code><br>3. Runs <code class="ic">EXECUTE DBT PROJECT ... ARGS = \'run --select int_authorizations__enriched+ --full-refresh\'</code>') +
   warn('Always include <code class="ic">--select int_authorizations__enriched+</code>. Running without --select will fail with a permission denied error on the STAGING schema.') +
   note('Dynamic tables begin refreshing automatically. This may take 2–3 minutes.') +
-  h3('Step 4.5: Rebuild Semantic View and Cortex Agent') +
+  h3('Step 4.4: Rebuild Semantic View and Cortex Agent') +
   pbox('Cortex Code prompt','Execute the semantic view DDL from packages/dbt/analyses/payment_analytics_semantic_view.sql and the Cortex Agent DDL from packages/database/utilities/03_create_agent.sql against my database.') +
   note('These files are not executed by EXECUTE DBT PROJECT — they must be applied separately as DDL.') +
-  h3('Step 4.6: Verify End-to-End') +
+  h3('Step 4.5: Verify End-to-End') +
   pbox('Cortex Code prompt','Verify the retry success rate metric end-to-end: query MARTS.AUTHORIZATIONS directly for the retry success rate over the last 30 days using retry_attempt_flag and retry_success_flag, then ask the PAYMENT_ANALYTICS_AGENT the same question and confirm both return a consistent non-null percentage.') +
   pb('<strong>Expected:</strong> A percentage between 20–80%. If null, the dynamic table is still refreshing — wait 2–3 min and retry. The agent result confirms the full chain: dbt model → dynamic table → semantic view → Cortex Agent.') +
   note('Cortex Code validates the agent by querying the PAYMENT_ANALYTICS semantic view via Cortex Analyst — the same engine the agent uses. You will see "Cortex Analyst" in the output rather than a literal agent call; both paths exercise the same metric.');
@@ -1472,18 +1468,14 @@ function cliS5() {
   h3('Context Switch') +
   pb('Start a fresh Cortex Code conversation before Task 2:') +
   '<pre><code>/new</code></pre>' +
-  note('Plan mode is session-scoped — re-enable /plan if needed in the new session.') +
   h3('Add KPI Card to React Dashboard') +
-  pbox('Cortex Code prompt','Show me Jira ticket EPA-3. What does it ask me to implement?') +
-  '<pre><code>/plan</code></pre>' +
-  pbox('Cortex Code prompt','Plan the code file changes for this Jira ticket. Show only the file modifications — do not deploy.') +
+  pbox('Cortex Code prompt','Using the Jira MCP, show me ticket EPA-3. What does it ask me to implement?') +
+  pbox('Cortex Code prompt','Using the Jira MCP, read EPA-3 and implement the KPI card changes.') +
   pb('Cortex Code will edit three files in the React frontend:') +
-  sc('<strong>apps/frontend/src/types/domain.ts</strong> — add retrySuccessRate to AuthorizationKPIs interface<br><strong>apps/frontend/src/app/api/analytics/authorization/kpis/route.ts</strong> — add retry_success_rate SQL column + return field<br><strong>apps/frontend/src/app/analytics/authorization/page.tsx</strong> — add KPI card component') +
+  sc('<strong>apps/frontend/src/types/domain.ts</strong> — adds retrySuccessRate to AuthorizationKPIs interface<br><strong>apps/frontend/src/app/api/analytics/authorization/kpis/route.ts</strong> — adds retry_success_rate SQL column + return field<br><strong>apps/frontend/src/app/analytics/authorization/page.tsx</strong> — adds KPI card component') +
   h3('Verify Locally') +
-  pbox('Cortex Code prompt','Start the frontend dev server from apps/frontend.') +
-  pb('Open <a href="http://localhost:3000/analytics/authorization" target="_blank">http://localhost:3000/analytics/authorization</a>. You should see a new <strong>Retry Success Rate</strong> KPI card alongside the existing authorization metrics.') +
-  h3('Git Commit') +
-  '<pre><code>git commit -am "feat: add retry success rate KPI card"</code></pre>';
+  pbox('Cortex Code prompt','Restart the frontend dev server from apps/frontend.') +
+  pb('Open <a href="http://localhost:3000/analytics/authorization" target="_blank">http://localhost:3000/analytics/authorization</a>. You should see a new <strong>Retry Success Rate</strong> KPI card alongside the existing authorization metrics.');
 }
 
 function cliS6() {
@@ -1492,7 +1484,7 @@ function cliS6() {
   '<ul>' +
   '<li><strong>Task 1:</strong> Added retry success rate end-to-end — dbt model, dynamic table, semantic view, Cortex Agent</li>' +
   '<li><strong>Task 2:</strong> Added a React KPI card following existing component patterns</li>' +
-  '<li><strong>Along the way:</strong> Read Jira tickets via MCP, planned with AI, reviewed changes step-by-step, verified locally and in Snowflake, committed code</li>' +
+  '<li><strong>Along the way:</strong> Read Jira tickets via MCP, planned with AI, reviewed changes step-by-step, and verified locally and in Snowflake</li>' +
   '</ul>' +
   h3('Troubleshooting') +
   '<table><thead><tr><th>Issue</th><th>Cause</th><th>Fix</th></tr></thead><tbody>' +
