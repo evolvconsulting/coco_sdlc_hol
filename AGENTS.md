@@ -33,6 +33,7 @@ Network Rule                : HOL_SHARED.PUBLIC.ATLASSIAN_NETWORK_RULE
 > Attendees have USAGE on ATLASSIAN_EAI and READ/USAGE on HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET.
 > Create GET_JIRA_TICKET in your own PUBLIC schema referencing these shared objects.
 
+
 ## Data Architecture
 
 ### Medallion Layers
