@@ -78,46 +78,6 @@ git --version
 
 Get the lab repository (fork + clone, or download ZIP) -- instructions are in Section 1, Step 0.
 
-### 6. uv (Python package manager)
-
-uv manages Python and packages without requiring a separate Python install or virtual environment setup. It is used to install dbt in the next step.
-
-**Install (macOS / Linux):**
-
-```bash
-curl -LsSf https://astral.sh/uv/install.sh | sh
-```
-
-**Install (Windows PowerShell):**
-
-```powershell
-powershell -ExecutionPolicy ByPass -c "irm https://astral.sh/uv/install.ps1 | iex"
-```
-
-**Verify:**
-
-```bash
-uv --version
-```
-
-> **Corporate machine note:** If `astral.sh` is blocked by your network, install Python 3.11+ from [python.org/downloads](https://python.org/downloads) (check "Add Python to PATH" on Windows) and use `pip install "dbt-snowflake>=1.9.0"` in the next step instead.
-
-### 7. dbt (dbt-snowflake)
-
-Cortex Code uses the local `dbt` CLI to apply model changes to Snowflake during the lab. Install the Snowflake adapter (which includes dbt-core):
-
-```bash
-uv tool install "dbt-core>=1.9.0" --with dbt-snowflake
-```
-
-**Verify:**
-
-```bash
-dbt --version
-```
-
-> **pip fallback:** If you used the pip path above, run `pip install "dbt-core>=1.9.0" dbt-snowflake` instead.
-
 ---
 
 ## Section 1: Environment Setup Verification (~5 min)
@@ -221,13 +181,15 @@ Then verify your connection is configured correctly:
 
 **2c. Configure local project files**
 
-Ask Cortex Code to update the local config files with your Snowflake account identifier:
+Ask Cortex Code to update the frontend config file with your Snowflake account identifier:
 
 ```
-Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local and the account field in packages/dbt/profiles.yml with my account identifier <orgname-accountname>.
+Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local with my account identifier <orgname-accountname>.
 ```
 
 Replace `<orgname-accountname>` with the account identifier your instructor provided in Step 2a.
+
+> **Note:** The dbt `profiles.yml` does not need updating. The dbt project runs inside Snowflake where authentication is handled by the session context -- no account credentials are stored in the profile.
 
 ### Step 3: Confirm Local App Runs
 
@@ -453,7 +415,7 @@ The intermediate model (`int_authorizations__enriched`) is already configured as
 
 If the project has dbt tests, Cortex Code may update them to cover the new columns. Review any test changes for correctness.
 
-> **Note:** In this lab environment, dbt tests are not run directly -- the compiled DDL is what matters. You will ask Cortex Code to apply the DDL changes to Snowflake in the verification step.
+> **Note:** In this lab environment, dbt tests are not run directly. The dbt project runs inside Snowflake (via `EXECUTE DBT PROJECT`), so there is no local `dbt test` step. You will push your changes and execute the dbt project in the verification step.
 
 ### Step 4.8: Review Semantic View Update
 
@@ -487,15 +449,30 @@ Verify the instruction text mentions retry success rate. For example, the `respo
 
 Now use Cortex Code to deploy and verify the changes end-to-end in Snowflake. Type each prompt below directly into Cortex Code -- it will write and execute the necessary SQL for you.
 
-**a) Apply DDL changes and refresh dynamic tables**
+**a) Commit, push, and deploy via Snowflake-native dbt**
+
+First, commit and push your dbt model changes so Snowflake can see them:
 
 ```
-Deploy my dbt changes to Snowflake and refresh the intermediate and marts dynamic tables.
+Commit and push my dbt changes to the feature branch.
 ```
 
-Cortex Code will apply the DDL and trigger a refresh on both tables. You should see confirmation that both were updated.
+Once the push succeeds, tell Cortex Code to refresh the Git repository cache and execute the dbt project inside Snowflake:
 
-> **Why the refresh?** Dynamic tables refresh on a schedule (e.g., every hour). Without a manual refresh, you would have to wait for the next scheduled cycle before the new columns contain data.
+```
+Fetch the latest commits into the Snowflake Git repository and then execute the dbt project to deploy my model changes.
+```
+
+Cortex Code will run SQL similar to:
+
+```sql
+ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;
+EXECUTE DBT PROJECT COCO_SDLC_HOL.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = 'run';
+```
+
+The `EXECUTE DBT PROJECT ... ARGS = 'run'` command runs dbt server-side inside Snowflake. It reads your models from the Git repository stage and applies the DDL directly. Dynamic tables will begin refreshing automatically on their configured schedule.
+
+> **Why fetch first?** Snowflake caches the Git repository state. After pushing new commits, you must `FETCH` to update the cache before the dbt project can see your changes.
 
 **b) Rebuild the semantic view and verify**
 
@@ -504,6 +481,8 @@ Rebuild the semantic view from the updated DDL file and verify that RETRY_SUCCES
 ```
 
 Cortex Code will execute the semantic view DDL and show you the DESCRIBE output. Look for `RETRY_SUCCESS_RATE` in the results.
+
+> **Note:** The semantic view is defined as a dbt `analysis` file, not a model. It is not executed by `EXECUTE DBT PROJECT` -- it must be applied separately via its DDL.
 
 **c) Verify the metric data**
 
@@ -521,15 +500,15 @@ What is the retry success rate for the last 30 days?
 
 The Cortex Agent should generate a SQL query using the new `RETRY_SUCCESS_RATE` metric and return a meaningful answer. This confirms the full chain works: dbt model → dynamic table → semantic view → Cortex Agent.
 
-### Step 4.11: Commit and Push
+### Step 4.11: Commit and Push Remaining Changes
 
-Once verification passes, ask Cortex Code to commit and push:
+The dbt model changes were already committed and pushed in Step 4.10a. If you made additional changes after that (e.g., semantic view updates, Cortex Agent instruction changes), commit and push those now:
 
 ```
-Commit and push the changes.
+Commit and push the remaining changes.
 ```
 
-Cortex Code will stage the files, create the commit, and push to the remote. This commits all dbt model changes, the semantic view update, and the Cortex Agent instruction change together as a single logical unit.
+Cortex Code will stage any uncommitted files, create the commit, and push to the remote. If there are no uncommitted changes, Cortex Code will let you know everything is already up to date.
 
 ### Step 4.12: Reference the Confluence Data Dictionary
 
@@ -571,7 +550,7 @@ Take a moment to review what you completed:
 - Passed `retry_attempt_flag` and `retry_success_flag` through to the authorizations mart
 - Added the `RETRY_SUCCESS_RATE` metric to the semantic view
 - Updated the Cortex Agent instructions to mention retry success rate
-- Verified the metric end-to-end in Snowflake via Cortex Code (DDL deploy, dynamic table refresh, SQL query)
+- Verified the metric end-to-end in Snowflake via Cortex Code (Git push, dbt project execution, SQL query)
 - Referenced the Confluence data dictionary via Cortex Code MCP to review existing documentation format
 - Committed and pushed your changes to the feature branch
 
@@ -748,12 +727,16 @@ Congratulations! In this lab, you completed two full development cycles using Co
 | Issue | Cause | Solution |
 |-------|-------|----------|
 | `cortex: command not found` | CLI not installed or not in PATH | Run install script: `curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh` then restart terminal |
-| Dynamic table shows old data | Dynamic tables refresh on schedule, not on DDL change | Ask Cortex Code to run `ALTER DYNAMIC TABLE ... REFRESH;` (see Step 4.10a) |
+| Dynamic table shows old data | Dynamic tables refresh on schedule, not immediately after `EXECUTE DBT PROJECT` | Ask Cortex Code to run `ALTER DYNAMIC TABLE ... REFRESH;` to trigger an immediate refresh |
 | Semantic view metric not found | YAML updated but view not rebuilt | Ask Cortex Code to rerun the semantic view DDL from `payment_analytics_semantic_view.sql` (see Step 4.10b) |
 | KPI card shows 0 or undefined | TypeScript interface not updated | Add `retrySuccessRate: number` to `AuthorizationKPIs` in `apps/frontend/src/types/domain.ts` |
 | Cortex Agent gives generic answer | Agent instructions not updated | Rerun `03_create_agent.sql` with the updated `instructions.response` mentioning retry success rate |
 | `/plan` mode off after `/new` | Plan mode is session-scoped | Re-enable with `/plan` in each new session after using `/new` |
 | Verification query returns empty | Missing `clnt_id` filter | Add `WHERE clnt_id = 'dmcl'` to all verification queries |
+| `EXECUTE DBT PROJECT` shows stale models | Git repository cache not refreshed after push | Run `ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;` before executing the dbt project |
+| `EXECUTE DBT PROJECT` fails with package error | dbt packages not accessible from Snowflake | Verify the `DBT_HUB_EAI` external access integration is active and the network rule allows `hub.getdbt.com` |
+| Branch path not found in Git stage | Branch name contains `/` and is not quoted | Use double quotes around the branch name in stage paths: `branches/"feature/dbt-in-snowflake"` |
+| `EXECUTE DBT PROJECT` permission denied | Missing grants on dbt project object | Ensure `ATTENDEE_ROLE` has USAGE on the dbt project: `GRANT USAGE ON DBT PROJECT ... TO ROLE ATTENDEE_ROLE;` |
 
 ### B. Resources
 
@@ -767,6 +750,8 @@ Congratulations! In this lab, you completed two full development cycles using Co
 
 - **Medallion architecture:** Data pipeline pattern with RAW (bronze), STAGING (silver), INTERMEDIATE/MARTS (gold) layers. Each layer progressively refines and enriches the data.
 - **Dynamic table:** A Snowflake table that auto-refreshes based on upstream changes, configured with a target lag (e.g., every hour). Dynamic tables do not refresh on DDL changes -- a manual refresh is required after schema modifications.
+- **Snowflake-native dbt:** A deployment model where the dbt project is created as a Snowflake object (`CREATE DBT PROJECT`) and executed server-side (`EXECUTE DBT PROJECT`). No local dbt CLI is required -- Snowflake reads models directly from a Git repository stage.
+- **Git repository (Snowflake):** A Snowflake object that mirrors an external Git repository. Snowflake caches the repository state; use `ALTER GIT REPOSITORY ... FETCH` to pull the latest commits before referencing updated files.
 - **Semantic view:** A YAML-defined metadata layer over tables that declares dimensions, facts, metrics, and relationships. It enables natural language queries by telling the Cortex Agent what data is available and how to query it.
 - **Cortex Agent:** A Snowflake AI agent that answers natural language questions by generating SQL queries against semantic view metadata. Defined in SQL with configurable instructions.
 - **MCP (Model Context Protocol):** A standard protocol for connecting AI tools to external services such as Jira, Confluence, and GitHub. Cortex Code uses MCP to integrate with project management and documentation tools.

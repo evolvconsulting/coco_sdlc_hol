@@ -132,17 +132,17 @@ Then run `spcs_setup.sql` (SPCS service spec) to create the service and get the 
 
 ## dbt Transformations (reference)
 
-The dbt models are already compiled into `hol_setup.sql` -- you do not need to run dbt to set up the lab environment. The dbt project is included for exploration:
+The dbt project runs inside Snowflake via `EXECUTE DBT PROJECT` -- no local dbt CLI is required. The dbt project object reads models directly from the Git repository stage. To deploy changes:
 
-```bash
-# Install dbt-snowflake first (if not already installed)
-uv tool install "dbt-core>=1.9.0" --with dbt-snowflake
-# pip fallback: pip install "dbt-core>=1.9.0" dbt-snowflake
+```sql
+-- Refresh the Git repository cache after pushing new commits
+ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;
 
-cd packages/dbt
-dbt deps
-dbt build
+-- Execute the dbt project server-side
+EXECUTE DBT PROJECT COCO_SDLC_HOL.MARTS.EVOLV_PAYMENT_ANALYTICS ARGS = 'run';
 ```
+
+The dbt project source is in `packages/dbt/` for exploration and editing. Changes take effect after committing, pushing, fetching, and executing the dbt project.
 
 ---
 
