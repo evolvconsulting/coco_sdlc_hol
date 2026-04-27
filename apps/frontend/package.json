@@ -27,7 +27,7 @@
     "react-vega": "^8.0.0",
     "remark-gfm": "^4.0.1",
     "snowflake-sdk": "^2.4.0",
-    "uuid": "^13.0.0",
+    "uuid": "^14.0.0",
     "vega": "^6.2.0",
     "vega-lite": "^6.4.2",
     "xlsx": "^0.18.5"
