@@ -331,7 +331,10 @@ tool_resources:
         f"GRANT SELECT ON ALL DYNAMIC TABLES IN SCHEMA {db_name}.INTERMEDIATE TO DATABASE ROLE {db_name}.HOL_ATTENDEE",
     ]:
         session.sql(sql).collect()
-    session.sql(f"GRANT DATABASE ROLE {db_name}.HOL_ATTENDEE TO USER COCO_SDLC_HOL_SERVICE_USER").collect()
+    try:
+        session.sql(f"GRANT DATABASE ROLE {db_name}.HOL_ATTENDEE TO USER COCO_SDLC_HOL_SERVICE_USER").collect()
+    except Exception:
+        pass  # Service user may not exist if Section 7 (SPCS) was skipped
 
     return f"{db_name} provisioned for {username}"
 $$;
