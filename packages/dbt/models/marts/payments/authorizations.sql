@@ -56,11 +56,6 @@ select
 
     -- Response codes
     avs_response_code as avs_response,
-    cvv_response_code as cvv_response,
-
-    -- Retry detection
-    is_retry_attempt,
-    is_retried_decline,
-    case when is_retry_attempt and approval_status_code = 1 then 1 else 0 end as retry_recovered_count
+    cvv_response_code as cvv_response
 
 from enriched

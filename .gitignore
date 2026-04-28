@@ -6,10 +6,10 @@ node_modules/
 dist/
 build/
 
-# Environment files
-.env
-.env.local
-.env.*.local
+# Environment files — block all .env* variants, only allow .env.example
+.env*
+!.env.example
+!**/.env.example
 
 # IDE
 .idea/
@@ -37,3 +37,13 @@ coverage/
 **/dbt_packages/
 **/dbt_internal_packages/
 **/logs/
+
+# Cortex Code internal planning files (not for public repo)
+.planning/
+plans/
+
+# HOL instructor config (secrets — never commit)
+config.local.yml
+
+# Python / uv
+.venv/

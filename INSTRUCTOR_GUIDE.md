@@ -1,429 +1,216 @@
-# Instructor Reference Guide — AI-Assisted SDLC HOL
+# Instructor Guide — AI-Assisted SDLC Hands-On Lab
 
-**Instructor-only.** Live-use reference during the session. Companion to LAB_INSTRUCTIONS.md (participant guide) and INFRASTRUCTURE.md (pre-lab setup).
+**Instructor-only.** Pre-lab setup reference, environment provisioning, and live facilitation notes for both lab paths.
 
-**How to use:** Step numbers here mirror LAB_INSTRUCTIONS.md exactly — when a participant says "I'm on step 4.3," look it up here instantly.
+**Total duration:** ~90 min  
+**Two paths:** UI (Snowsight, no local tools, Streamlit) and CLI (Cortex Code CLI, React frontend)
 
-**Total duration:** ~90 min
-
----
-
-## Section 1: Environment Setup Verification (~5 min)
-
-**Step 0 — Get the Lab Repository**
-
-Participants choose one of two options:
-
-**Option A: Fork and Clone (recommended — requires GitHub account)**
-
-Fork `evolvconsulting/coco_sdlc_hol` on GitHub, then clone their own fork:
-
-```bash
-git clone https://github.com/<their-username>/coco_sdlc_hol.git
-cd coco_sdlc_hol
-```
-
-> Watch for: Participants who skip this step will hit errors in Step 3 (missing `apps/frontend`) and Section 3 (Cortex Code won't find `AGENTS.md`).
-> Watch for: Participant cloned the upstream URL (`evolvconsulting/coco_sdlc_hol`) instead of their fork — push in Step 4.11 will fail with "permission denied" or "protected branch." Diagnose with `git remote -v`; origin must show their username. Fix: `git remote set-url origin https://github.com/<their-username>/coco_sdlc_hol.git`.
-> Watch for: Participant skipped forking entirely — same push-failure symptom. Have them fork first on GitHub, then re-clone or update their remote with the fix command above.
-
-**Option B: Download and Unzip (no GitHub account required)**
-
-Download the ZIP from `https://github.com/evolvconsulting/coco_sdlc_hol` (green **Code** button → **Download ZIP**), extract it, then initialize a local Git repo:
-
-```bash
-cd coco_sdlc_hol-main
-git init
-git add .
-git commit -m "Initial commit from ZIP download"
-```
-
-> Watch for: Participant using Option B will not have a remote configured. They can make local commits but **cannot push or create PRs**. Steps 4.11, 6.6, and 6.7 should be skipped (local commit only, no push/PR).
-> Watch for: Participant forgot `git init` — Cortex Code and git commands will fail with "not a git repository." Have them run the three commands above.
+Step numbers here mirror `LAB_INSTRUCTIONS_UI.md` and `LAB_INSTRUCTIONS_CLI.md` exactly — when a participant says "I'm on step 4.3," look it up here instantly.
 
 ---
 
-**Step 1 — Temporarily Bypass MFA**
+## Part 1: Pre-Lab Setup
 
-Each participant logs in to Snowsight and runs:
+### Snowflake Account Requirements
+
+The lab account must have the following features enabled:
+
+- **Cortex Analyst / Cortex Agent** — required for natural language queries
+- **Dynamic Tables** — required for INTERMEDIATE and MARTS layers
+- **Semantic Views** — required for the Cortex Agent semantic layer
+- **Streamlit in Snowflake** — required for UI path Task 2
+
+The account must be on **Enterprise tier or higher**.
+
+---
+
+### HOL Setup
+
+The lab environment is provisioned using a Python-based setup pipeline. `scripts/hol_setup.sql` also exists as a Snowsight worksheet alternative for accounts where Python tooling is unavailable.
+
+#### Recommended: Python setup script
+
+```bash
+# Full setup — all three phases in order:
+uv run python3 scripts/hol_setup.py
+
+# Or run individual phases:
+uv run python3 scripts/hol_setup.py --phase account     # Phase 1: bootstrap + users
+uv run python3 scripts/hol_setup.py --phase template    # Phase 2: template DB (COCO_SDLC_HOL_99)
+uv run python3 scripts/hol_setup.py --phase provision   # Phase 3: provision attendee databases
+```
+
+Configure credentials in `scripts/config.local.yml` before running (see `scripts/config.yml` for the shape).
+
+| Phase | Script | What it does |
+|-------|--------|--------------|
+| account | `setup_account.py` | Account bootstrap: `ATTENDEE_ROLE`, `COMPUTE_WH`, Atlassian EAI + secret; creates `HOL_USER_01` … `HOL_USER_NN` with password + MFA bypass (20 hours) |
+| template | `build_template.py` | Builds template database `COCO_SDLC_HOL_99`: schemas, raw tables, synthetic data, staging views, dynamic tables, dbt project, workspace, Streamlit app, semantic view, Cortex Agent, `PROVISION_HOL_USER` SP |
+| provision | `provision_attendees.py` | Clones template → provisions `COCO_SDLC_HOL_01` … `NN` in parallel; much faster than sequential SQL for large cohorts |
+
+> **Dependency:** `account` phase must complete before `provision`. The `provision` phase calls `PROVISION_HOL_USER` for each user — but it does not create users. If users don't exist, provisioning will fail.
+
+#### Alternative: Snowsight worksheet
+
+`scripts/hol_setup.sql` (3500+ lines) contains the same setup as a single SQL script. Run all sections in order in a Snowsight worksheet as `ACCOUNTADMIN`.
+
+```
+Section 0   → Set HOL_PASSWORD and NUM_USERS
+Section 1   → Account-level bootstrap
+Section 2   → Create HOL_USER_NN with password + MFA bypass
+Sections 3–9 → Build template database COCO_SDLC_HOL_99
+Section 10  → Clone template → provision attendee databases
+```
+
+> **Note:** Section 2 must run before Section 10 — same dependency as the Python approach.
+
+#### What each attendee database contains
+
+| Object | Pattern |
+|--------|---------|
+| Database | `COCO_SDLC_HOL_NN` |
+| Role | `HOL_ROLE_NN` |
+| Warehouse | `HOL_WH_NN` |
+| dbt project | `COCO_SDLC_HOL_NN.MARTS.EVOLV_PAYMENT_ANALYTICS` |
+| Workspace | `COCO_SDLC_HOL_NN.MARTS.HOL_WORKSPACE` |
+| dbt stage | `COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES` |
+| Streamlit stage | `COCO_SDLC_HOL_NN.PUBLIC.STREAMLIT_FILES` |
+| Streamlit app | `COCO_SDLC_HOL_NN.PUBLIC.PAYMENT_ANALYTICS_DASHBOARD` |
+| Semantic view | `COCO_SDLC_HOL_NN.MARTS.PAYMENT_ANALYTICS` |
+| Cortex Agent | `COCO_SDLC_HOL_NN.MARTS.PAYMENT_ANALYTICS_AGENT` |
+
+#### Re-provisioning a single user
+
+To reprovision one attendee's database without touching others:
 
 ```sql
-ALTER USER USER SET MINS_TO_BYPASS_MFA = 720;
+CALL COCO_SDLC_HOL_99.PUBLIC.PROVISION_HOL_USER('COCO_SDLC_HOL_02', 'HOL_USER_02');
 ```
 
-(Replace `USER` with their actual username if it differs.) This grants a 12-hour MFA bypass window so Cortex Code CLI connections don't trigger MFA prompts.
-
-> Watch for: Participant skips this step — the Cortex Code setup wizard may trigger an MFA prompt that blocks the connection flow. Have them go back and run the ALTER USER command in Snowsight.
+This only reprovisiones the database — it does not recreate the user or reset the password.
 
 ---
 
-**Step 2 — Configure and Confirm Snowflake Connection**
+### Running the Dashboard Locally (optional pre-validation)
 
-Each attendee launches Cortex Code CLI, which triggers the first-run setup wizard to create a Snowflake connection.
-
-From the cloned repository root:
-```bash
-cortex
-```
-
-The setup wizard presents connection options. Attendees select **"More options"** to create a new connection:
-
-| Prompt | Value |
-|--------|-------|
-| Connection name | `coco-hol` (attendee's choice) |
-| Account identifier | Provide per-attendee (format: `orgname-accountname`) |
-| Username | `USER` (unless you specify otherwise) |
-| Authentication method | Password (`snowflake`) |
-
-Once connected, attendees set session context and verify:
-```
-Set my role to ATTENDEE_ROLE, warehouse to COMPUTE_WH, and use database COCO_SDLC_HOL with schema MARTS.
-```
-
-Then:
-```
-/status
-```
-
-Expected output: `ATTENDEE_ROLE` as role, `COCO_SDLC_HOL` as database, `MARTS` as schema.
-
-> Watch for: Role shows as SYSADMIN or empty — attendee needs to run `USE ROLE ATTENDEE_ROLE;` via `/sql`.
-> Watch for: "Account not found" or "invalid account" in the wizard — check the account identifier format with the attendee (must be `orgname-accountname`, not a URL).
-> Watch for: If password auth fails, confirm the username and password with the attendee.
-> Watch for: Connection saved to `~/.snowflake/connections.toml` — if attendee needs to redo, they can edit or delete that file and re-run `cortex`.
-
-**Step 2c — Configure Local Project Files**
-
-Participant asks Cortex Code:
-```
-Update SNOWFLAKE_ACCOUNT in apps/frontend/.env.local with my account identifier <orgname-accountname>.
-```
-
-Expected behavior: Cortex Code reads the `.env.local` file and replaces the placeholder value with the participant's account identifier. The dbt `profiles.yml` does not need updating -- authentication is handled by the Snowflake session context when running dbt inside Snowflake.
-
-> Watch for: Participant uses a URL instead of `orgname-accountname` format — same format as the wizard in Step 2a.
-
----
-
-**Step 3 — Confirm Local App Runs**
-
-Participant asks Cortex Code:
-```
-Install the frontend dependencies and start the dev server from apps/frontend.
-```
-
-Expected output: Dashboard loads at http://localhost:3000 with real transaction data.
-
-> Watch for: Dashboard loads but shows no data — check `.env.local` SNOWFLAKE_ACCOUNT value.
-
----
-
-## Section 2: Cortex Code Primer (~10 min)
-
-Sections 2.1 and 2.2 are instructor-led explanations — no participant inputs.
-
-**Step 2.3 — Install Atlassian MCP**
-
-Participants must exit Cortex Code first (`/exit`), then run the MCP registration command in the terminal:
+Before the lab, you can validate the app against your Snowflake environment:
 
 ```bash
-cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp -t http -H "Authorization: Basic dHJlbnQuZm9sZXlAZXZvbHZjb25zdWx0aW5nLmNvbTpBVEFUVDN4RmZHRjBzRlNUanJfUFhtcTNmXzZpUjNOZDdnSWtsMDUweG92Vk5Nc2xMTTZ1bTlyb1lLelBpU2NsbUFoQjEzdjUzVzdiQ2xvamk3MHQwcEFITUdkZE9VZEcwY3E0RnhqM1BCNmo5R0NKbjl2bTVUMENzMVpnOEdJQk5veXVrUDVoQXF0SFZSMWY0Qmo0X2pYOUw0YmNRd2x6cWZ1RWhHVVV6VndJS2FTYVgtRy1RZG89NzU1RUY3RDU="
+cd apps/frontend
+cp .env.example .env.local
 ```
 
-> Watch for: Participant runs `cortex mcp add` inside Cortex Code — it must be run in the terminal. Have them `/exit` first.
-> Watch for: "command not found" for `cortex mcp add` — Cortex Code CLI not installed. Have attendee install it (see Prerequisites in LAB_INSTRUCTIONS.md) and restart terminal.
+Open `.env.local` and fill in your credentials:
+
+```
+SNOWFLAKE_ACCOUNT=<orgname>-<accountname>
+SNOWFLAKE_USER=HOL_USER_NN
+SNOWFLAKE_PASSWORD=<password>
+SNOWFLAKE_ROLE=HOL_ROLE_NN
+SNOWFLAKE_WAREHOUSE=HOL_WH_NN
+SNOWFLAKE_DATABASE=COCO_SDLC_HOL_NN
+```
+
+Then install and start:
+
+```bash
+npm install
+npm run dev
+```
+
+The app is available at [http://localhost:3000](http://localhost:3000). Dashboard should load with real transaction data.
 
 ---
 
-## Section 3: Architecture Overview (~10 min)
+## Part 2: Lab Facilitation
 
-Participants use Cortex Code interactively to explore the architecture — this replaces a static instructor-led walkthrough.
+**Participant guides:** [`LAB_INSTRUCTIONS_UI.md`](LAB_INSTRUCTIONS_UI.md) (Snowsight path) · [`LAB_INSTRUCTIONS_CLI.md`](LAB_INSTRUCTIONS_CLI.md) (CLI path)  
+**Visual overview:** Open [`lab_flow.html`](lab_flow.html) in a browser — side-by-side step comparison for both paths.
 
-**Step 3.1 — Explore the Architecture with Cortex Code**
+### Two Paths at a Glance
 
-Participants relaunch Cortex Code from the repository root (`cortex`), then ask:
-
-```
-Describe this project's data architecture and the Cortex Agent setup. What database, schemas, layers, domain tables, semantic view, and metrics are configured?
-```
-
-Expected behavior: Response mentions `COCO_SDLC_HOL` and the medallion architecture (RAW, STAGING, INTERMEDIATE, MARTS) with domain tables, plus the `PAYMENT_ANALYTICS` semantic view and `PAYMENT_ANALYTICS_AGENT` with 10 metrics — all sourced from `AGENTS.md`.
-
-> Watch for: Response is generic and doesn't mention COCO_SDLC_HOL — Cortex Code must be launched from repo root, not a subdirectory. If participants haven't cloned yet (missed Step 0), stop and have them do that first.
-> Call out to group: Cortex Code reads `AGENTS.md` automatically — this is how it knows the project architecture without being told.
-
----
-
-## Section 4: Task 1 — Add Retry Success Rate Metric (~30 min)
-
-**Step 4.1 — Read the Jira Ticket**
-
-In Cortex Code (still running from Section 3):
-```
-Show me Jira ticket EPA-2. What does it ask me to implement?
-```
+| | UI Path | CLI Path |
+|-|---------|----------|
+| Tool | Cortex Code in Snowsight | Cortex Code CLI in terminal |
+| Repo setup | None — HOL_WORKSPACE pre-loaded | Clone from GitHub |
+| Jira access | GET_JIRA_TICKET UDF + Cortex Agent tool | Atlassian MCP |
+| dbt deploy | Workspace → ADD VERSION → EXECUTE | `snow stage put` → EXECUTE |
+| Task 2 dashboard | Streamlit in Snowflake | React (local dev server) |
+| Plan mode | Not used | `/plan` used in Task 2 |
 
 ---
 
-**Step 4.2 — Create Feature Branch**
+### Pre-Lab Checklist
 
-```
-Create a new git branch called feature/retry-success-rate and switch to it.
-```
+Run the provisioning pipeline before participants arrive (see Part 1 — HOL Setup).
 
----
+After provisioning, verify for each attendee slot:
+- `HOL_USER_NN` can log into Snowsight with the shared password
+- `PAYMENT_ANALYTICS_DASHBOARD` loads and shows data (Streamlit baseline)
+- `COCO_SDLC_HOL_NN.MARTS.HOL_WORKSPACE` exists and contains the project files
 
-**Step 4.3 — Enable Plan Mode and Describe Task**
-
-```cortex
-/plan
-```
-
-Then:
-```
-Plan the implementation for the Jira ticket.
-```
-
-> Watch for: Plan shows only 2-3 files — prompt to expand scope.
-
-[If plan misses intermediate model or agent file]:
-```
-Please also include changes to the intermediate model (int_authorizations__enriched.sql) for the retry detection logic and the Cortex Agent instructions (03_create_agent.sql).
-```
-
-> Call out to group: Plan mode — Cortex Code shows what it will do before doing it. This is your review gate.
+Distribute to attendees:
+- Snowflake account URL
+- Assigned `HOL_USER_NN` username and password
+- Which path they are on (UI or CLI)
 
 ---
 
-**Step 4.4 — Confirm and Execute Plan**
+### Watch-Fors by Section
 
-Cortex Code presents a confirmation dialog — participant selects **Yes** to begin execution.
+Step-by-step prompts and expected outputs are in the participant guides. Watch for these common issues during the session.
 
----
+#### Section 1 — Environment Setup
 
-**Step 4.5 — dbt Model Update (if retry logic missing)**
+| Watch for | Path | Fix |
+|-----------|------|-----|
+| `/status` shows `SYSADMIN` or empty role | UI | Re-send the session context prompt (`Set my role to HOL_ROLE_NN...`) |
+| `HOL_WORKSPACE` not found | UI | Check that provisioning ran for this user's database |
+| "Account not found" in connection wizard | CLI | Account identifier must be `orgname-accountname`, not a URL |
+| Local app loads but shows no data | CLI | Check `SNOWFLAKE_ACCOUNT` value in `apps/frontend/.env.local` |
 
-[If Cortex Code's plan doesn't include retry detection SQL]:
-```
-Add retry detection logic in int_authorizations__enriched.sql using a window function. Flag transactions where the same card and amount retry within 5 minutes of a decline. Add retry_attempt_flag and retry_success_flag columns.
-```
+#### Section 2 — Cortex Code Primer
 
----
+| Watch for | Path | Fix |
+|-----------|------|-----|
+| `cortex mcp add` run inside Cortex Code | CLI | Must be run in the terminal — have them `/exit` first, then relaunch `cortex` for Section 3 |
 
-**Step 4.6 — dbt Materialization Check** _(no participant input)_
+#### Section 3 — Architecture Overview
 
-> Watch for: Any suggestion to change materialization type — existing types (staging=view, intermediate=dynamic table, marts=dynamic table) must be preserved.
+| Watch for | Path | Fix |
+|-----------|------|-----|
+| Response is generic, no `COCO_SDLC_HOL_NN` mentioned | Both | CLI: not launched from repo root. UI: workspace not opened. Fix first, then re-prompt. |
 
----
+> Call out: Cortex Code reads `AGENTS.md` automatically from the workspace. This is how it knows the full architecture.
 
-**Step 4.7 — dbt Unit Tests** _(no participant input)_
+#### Section 4 — Task 1 (Retry Success Rate Metric)
 
-_(Cortex Code may update tests automatically — review for correctness. No manual prompt needed in lab environment.)_
+| Watch for | Path | Fix |
+|-----------|------|-----|
+| Cortex Code asks which database to use for the UDF | UI | Select `COCO_SDLC_HOL_NN` (their HOL database, not `HOL_SHARED`) |
+| `GET_JIRA_TICKET` returns auth error | UI | Confirm role is `HOL_ROLE_NN`; re-run the UDF creation prompt |
+| Only 2–3 files edited (missing model or agent file) | Both | Re-prompt to include `int_authorizations__enriched.sql` and `03_create_agent.sql` |
+| Cortex Code runs `dbt deps` or `dbt compile` (triggers EAI dialog) | Both | The implementation prompt already includes "Do not run dbt CLI commands" — re-send verbatim |
+| `versions/last` used instead of `versions/live` | UI | Re-run the deploy prompt verbatim; new columns won't appear until `versions/live` is used |
+| `EXECUTE DBT PROJECT` permission denied on STAGING | UI | `--select` scope missing — ask Cortex Code to re-run with `--select int_authorizations__enriched+ --full-refresh` |
+| `snow stage put` fails — stage not found | CLI | Verify `DBT_FILES` stage exists: `SHOW STAGES IN DATABASE COCO_SDLC_HOL_NN` |
+| `EXECUTE DBT PROJECT` fails | CLI | Confirm `HOL_ROLE_NN` has USAGE on the dbt project |
+| Metric not found after semantic view rebuild | Both | Ask Cortex Code to re-execute the DDL specifying the full file path |
+| Dynamic table shows old data after dbt run | Both | Wait 2–3 min, or ask Cortex Code: `ALTER DYNAMIC TABLE COCO_SDLC_HOL_NN.MARTS.AUTHORIZATIONS REFRESH;` |
 
----
+> Call out: `ADD VERSION` auto-sets the new version as default — no `SET DEFAULT_VERSION` needed.  
+> Call out: Cortex Code validates the agent via Cortex Analyst (same engine). Participants will see "Cortex Analyst" in the output — this is expected.
 
-**Step 4.8 — Review Semantic View Update** _(no participant input)_
+#### Section 5 — Context Switch
 
-_(Cortex Code applies RETRY_SUCCESS_RATE metric automatically as part of plan execution. Review output for correct metric structure.)_
+> Call out: Plan mode (CLI) is session-scoped — participants must re-enable `/plan` in the new session for Task 2.
 
----
+#### Section 6 — Task 2 (KPI Card)
 
-**Step 4.9 — Review Cortex Agent Instruction Change** _(no participant input)_
+| Watch for | Path | Fix |
+|-----------|------|-----|
+| Streamlit still shows 4 cards after implementation | UI | Click the refresh button in the top-right of the Streamlit app |
+| Plan order wrong (`page.tsx` before `domain.ts`) | CLI | Ask Cortex Code to reorder — `domain.ts` (TypeScript interface) must come first |
+| React KPI card shows 0 or undefined | CLI | Check `AuthorizationKPIs` in `domain.ts` includes `retrySuccessRate: number` and `kpis/route.ts` returns the field |
 
-_(Cortex Code updates 03_create_agent.sql automatically. Verify instruction text mentions "retry success rate".)_
-
----
-
-**Step 4.10a — Commit, Push, and Deploy via Snowflake-native dbt**
-
-Participant first commits and pushes dbt model changes:
-```
-Commit and push my dbt changes to the feature branch.
-```
-
-Then refreshes the Snowflake Git repository and executes the dbt project:
-```
-Fetch the latest commits into the Snowflake Git repository and then execute the dbt project to deploy my model changes.
-```
-
-Expected behavior: Cortex Code runs `ALTER GIT REPOSITORY ... FETCH` followed by `EXECUTE DBT PROJECT ... ARGS = 'run'`. The dbt project runs server-side inside Snowflake, reading models from the Git repository stage and applying DDL directly. Dynamic tables begin refreshing on their configured schedule.
-
-> Watch for: Participant forgets to push before fetching — the Git repository cache will not have the latest commits. Remind them to push first.
-> Watch for: `EXECUTE DBT PROJECT` fails with stale models — run `ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;` and retry.
-> Watch for: Permission errors on the dbt project — verify `ATTENDEE_ROLE` has USAGE on the dbt project object.
-
----
-
-**Step 4.10b — Rebuild Semantic View and Verify**
-
-Participant prompt to Cortex Code:
-```
-Rebuild the semantic view from the updated DDL file and verify that RETRY_SUCCESS_RATE now appears as a metric.
-```
-
-Expected behavior: Cortex Code runs the semantic view DDL from `payment_analytics_semantic_view.sql` and shows DESCRIBE output with `RETRY_SUCCESS_RATE` in the metrics list.
-
-> Watch for: Metric missing from DESCRIBE — Cortex Code may have run an older cached version. Ask participant to re-prompt specifying the file path explicitly.
-
-> Call out to group: Metric is now live in the semantic view — Cortex Agent can answer questions about it.
-
----
-
-**Step 4.10c — Verify Metric Data**
-
-Participant prompt to Cortex Code:
-```
-Query the authorizations mart and show me the retry success rate for the last 30 days.
-```
-
-Expected behavior: Non-null retry_success_rate_pct value (typically 20-80%).
-
-> Watch for: Zero rows or null values — Cortex Code may have omitted the `clnt_id = 'dmcl'` filter. Ask participant to re-prompt with "for clnt_id dmcl".
-
----
-
-**Step 4.10d — Test Cortex Agent**
-
-```
-What is the retry success rate for the last 30 days?
-```
-
-Expected behavior: Cortex Agent generates SQL using RETRY_SUCCESS_RATE metric and returns a meaningful answer.
-
-> Call out to group: Full stack connected — one natural language question, Cortex generates the SQL automatically.
-
----
-
-**Step 4.11 — Commit and Push Remaining Changes**
-
-```
-Commit and push the remaining changes.
-```
-
-The dbt model changes were already committed and pushed in Step 4.10a. This step commits any remaining changes (semantic view updates, Cortex Agent instruction changes). If everything was already pushed, Cortex Code will report nothing to commit.
-
-> Watch for: Participants who used Option B (ZIP download) in Step 0 have no remote — they should commit locally only. The push will fail; this is expected. Have them skip the push.
-
----
-
-**Step 4.12 — Reference Confluence Data Dictionary**
-
-```
-Read the Confluence data dictionary at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. How should I document retry_success_rate to match the existing format?
-```
-
----
-
-## Section 5: Context Switch (~2 min)
-
-**Clear Context**
-
-```cortex
-/new
-```
-
-> Call out to group: Context hygiene — clear stale context before switching tasks. Clean context = better AI suggestions.
-
-> Watch for: After /new, plan mode is off. Participants must re-enable /plan at the start of Task 2.
-
----
-
-## Section 6: Task 2 — Add KPI Card to Dashboard (~20 min)
-
-**Step 6.1 — Read the Jira Ticket**
-
-```
-Show me Jira ticket EPA-3. What does it ask me to implement?
-```
-
----
-
-**Step 6.2 — Create Feature Branch**
-
-```
-Create a new git branch called feature/retry-success-kpi-card and switch to it.
-```
-
----
-
-**Step 6.3 — Enable Plan Mode and Describe Task**
-
-```cortex
-/plan
-```
-
-Then:
-```
-Plan the implementation for the Jira ticket.
-```
-
-> Watch for: Plan order wrong — TypeScript interface (domain.ts) must be updated BEFORE API route and page component. If page.tsx appears first, ask Cortex Code to reorder.
-
-> Watch for: Plan mode is session-scoped — after /new, participants must re-enable /plan. If Cortex Code starts executing immediately, remind them.
-
----
-
-**Step 6.4 — Execute the Plan**
-
-Cortex Code presents a confirmation dialog — participant selects **Yes** to begin execution.
-
----
-
-**Step 6.5 — Verify Locally**
-
-```
-Start the frontend dev server from apps/frontend.
-```
-
-Open http://localhost:3000/analytics/authorization. Expected behavior: "Retry Success Rate" KPI card visible, showing a percentage value with green color indicator.
-
-> Watch for: Card shows 0 or undefined — use debug prompt below.
-
-> Call out to group: Ticket 1 became Ticket 2's data source — same metric, different surface, full SDLC cycle complete.
-
-[If KPI card shows 0]:
-```
-The retry success rate KPI card is showing 0. Check that the AuthorizationKPIs interface in domain.ts includes retrySuccessRate and that the API route in kpis/route.ts returns the field.
-```
-
----
-
-**Step 6.6 — Commit and Push**
-
-```
-Commit and push the changes.
-```
-
-> Watch for: Participants who used Option B (ZIP download) in Step 0 should commit locally only and skip the push.
-
----
-
-**Step 6.7 — Create a Pull Request**
-
-```
-Create a GitHub pull request for this branch. Title: "Add retry success rate KPI card". Describe what was changed and why.
-```
-
-> Watch for: Participants who used Option B (ZIP download) in Step 0 should skip this step entirely — they have no remote to push to and cannot create a PR.
-
-> Call out to group: Jira ticket read at the start, PR created at the end — full development loop without leaving the terminal.
-
-_Lab complete._
-
----
-
-## Quick-Reference Troubleshooting
-
-| Issue | Cause | Fix |
-|-------|-------|-----|
-| `cortex: command not found` | CLI not in PATH | `curl -LsS https://ai.snowflake.com/static/cc-scripts/install.sh \| sh` then restart terminal |
-| Dynamic table shows old data | Refreshes on schedule, not immediately after `EXECUTE DBT PROJECT` | Ask Cortex Code: `ALTER DYNAMIC TABLE ... REFRESH;` to trigger immediate refresh |
-| Semantic view metric not found | YAML updated but view not rebuilt | Ask Cortex Code to rerun semantic view DDL (Step 4.10b) |
-| KPI card shows 0 or undefined | TypeScript interface not updated | Add `retrySuccessRate: number` to `AuthorizationKPIs` in `domain.ts` |
-| Cortex Agent gives generic answer | Agent instructions not updated | Rerun `03_create_agent.sql` with updated `instructions.response` |
-| `/plan` mode off after `/new` | Plan mode is session-scoped | Re-enable with `/plan` in each new session |
-| Verification query returns empty | Missing `clnt_id` filter | Add `WHERE clnt_id = 'dmcl'` to all verification queries |
-| `EXECUTE DBT PROJECT` shows stale models | Git repo cache not refreshed after push | Run `ALTER GIT REPOSITORY COCO_SDLC_HOL.PUBLIC.HOL_REPO FETCH;` before executing |
-| `EXECUTE DBT PROJECT` fails with package error | dbt packages not accessible from Snowflake | Verify `DBT_HUB_EAI` external access integration is active and network rule allows `hub.getdbt.com` |
-| Branch path not found in Git stage | Branch name contains `/` and is not quoted | Use double quotes: `branches/"feature/dbt-in-snowflake"` |
-| `EXECUTE DBT PROJECT` permission denied | Missing grants on dbt project object | Verify `ATTENDEE_ROLE` has USAGE on the dbt project |
+> Call out (CLI): Jira ticket read at the start, PR created at the end — full development loop without leaving the terminal.

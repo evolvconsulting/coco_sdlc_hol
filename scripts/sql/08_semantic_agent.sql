@@ -1,8 +1,10 @@
-USE DATABASE COCO_SDLC_HOL;
+-- SECTION 8: Semantic View + Cortex Agent
+-- ============================================================
+USE DATABASE COCO_SDLC_HOL_99;
 USE SCHEMA MARTS;
 
 CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
-  'COCO_SDLC_HOL.MARTS',
+  'COCO_SDLC_HOL_99.MARTS',
   $$
 name: PAYMENT_ANALYTICS
 description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
@@ -14,7 +16,7 @@ tables:
   - name: MERCHANTS
     description: Merchant and store reference data for location-based analytics
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: DIM_MERCHANTS
     primary_key:
@@ -93,7 +95,7 @@ tables:
   - name: AUTHORIZATIONS
     description: Authorization transactions for payment processing
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: AUTHORIZATIONS
     primary_key:
@@ -177,14 +179,6 @@ tables:
         synonyms:
           - auth count
           - transaction count
-      - name: RETRY_RECOVERED_COUNT
-        description: Count of successful retry recoveries after a decline (1 if recovered, 0 otherwise). A retry is the same card, same amount, same merchant within 24 hours of a decline.
-        expr: RETRY_RECOVERED_COUNT
-        data_type: NUMBER
-        synonyms:
-          - recovered transactions
-          - retry count
-          - retried count
 
   # ============================================================================
   # SETTLEMENTS - Settlement batch records
@@ -192,7 +186,7 @@ tables:
   - name: SETTLEMENTS
     description: Settlement and clearing transactions
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: SETTLEMENTS
     primary_key:
@@ -277,7 +271,7 @@ tables:
   - name: DEPOSITS
     description: Funding and deposit records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: DEPOSITS
     primary_key:
@@ -347,7 +341,7 @@ tables:
   - name: CHARGEBACKS
     description: Chargeback and dispute records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: CHARGEBACKS
     primary_key:
@@ -438,7 +432,7 @@ tables:
   - name: RETRIEVALS
     description: Retrieval requests
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: RETRIEVALS
     primary_key:
@@ -504,7 +498,7 @@ tables:
   - name: ADJUSTMENTS
     description: Fee adjustments and corrections
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: ADJUSTMENTS
     primary_key:
@@ -697,13 +691,46 @@ metrics:
     data_type: NUMBER
     synonyms:
       - RR fulfillment rate
-
 $$,
   FALSE  -- Set to TRUE to validate only without creating
 );
 
--- =============================================================================
--- Grant access (uncomment and modify role as needed)
--- =============================================================================
--- GRANT SELECT ON SEMANTIC VIEW COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS 
---   TO ROLE ANALYST_ROLE;
+CREATE OR REPLACE AGENT PAYMENT_ANALYTICS_AGENT
+  COMMENT = 'Cortex Agent for natural language queries on evolv Payment Analytics data'
+  PROFILE = '{"display_name": "Payment Analytics Assistant", "color": "blue"}'
+  FROM SPECIFICATION
+  $$
+  models:
+    orchestration: claude-sonnet-4-5
+
+  orchestration:
+    budget:
+      seconds: 60
+      tokens: 16000
+
+  instructions:
+    response: "You are a helpful payment analytics assistant. Provide clear, concise answers about payment transactions, settlements, funding, chargebacks, and merchant performance. Format numerical data appropriately with dollar signs and percentages where relevant."
+    orchestration: "Use the PaymentAnalyst tool for all questions related to payment transactions, authorization volumes, settlement data, funding status, chargebacks, retrievals, adjustments, and merchant/store performance metrics."
+    system: "You are a payment analytics expert helping users understand their transaction data, identify trends, and analyze merchant performance."
+    sample_questions:
+      - question: "What was our total authorization volume last month?"
+        answer: "I'll analyze the authorization data to calculate the total volume for last month."
+      - question: "Which merchants have the highest chargeback rates?"
+        answer: "Let me query the chargeback data to identify merchants with elevated dispute rates."
+      - question: "Show me the funding status breakdown"
+        answer: "I'll retrieve the funding transaction data grouped by payment status."
+
+  tools:
+    - tool_spec:
+        type: "cortex_analyst_text_to_sql"
+        name: "PaymentAnalyst"
+        description: "Analyzes payment transaction data including authorizations, settlements, funding, chargebacks, retrievals, and adjustments across merchants and stores"
+
+  tool_resources:
+    PaymentAnalyst:
+      semantic_view: "COCO_SDLC_HOL_99.MARTS.PAYMENT_ANALYTICS"
+      execution_environment:
+        type: warehouse
+        warehouse: COMPUTE_WH
+  $$;
+

@@ -1,9 +1,20 @@
-USE DATABASE COCO_SDLC_HOL;
-USE SCHEMA MARTS;
+-- SECTION 9.5: Store YAML template for per-user provisioning
+-- ============================================================
+-- Used by Section 10 to recreate the semantic view for each
+-- cloned user database with the correct database name.
+-- ============================================================
+USE ROLE ATTENDEE_ROLE;
+USE DATABASE COCO_SDLC_HOL_99;
 
-CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
-  'COCO_SDLC_HOL.MARTS',
-  $$
+CREATE OR REPLACE TABLE COCO_SDLC_HOL_99.PUBLIC.HOL_YAML_TEMPLATES (
+    template_name VARCHAR COMMENT 'Template identifier',
+    content       VARCHAR COMMENT 'Template content'
+);
+
+INSERT INTO COCO_SDLC_HOL_99.PUBLIC.HOL_YAML_TEMPLATES (template_name, content)
+VALUES (
+    'semantic_view',
+    $$
 name: PAYMENT_ANALYTICS
 description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
 
@@ -14,7 +25,7 @@ tables:
   - name: MERCHANTS
     description: Merchant and store reference data for location-based analytics
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: DIM_MERCHANTS
     primary_key:
@@ -93,7 +104,7 @@ tables:
   - name: AUTHORIZATIONS
     description: Authorization transactions for payment processing
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: AUTHORIZATIONS
     primary_key:
@@ -177,14 +188,6 @@ tables:
         synonyms:
           - auth count
           - transaction count
-      - name: RETRY_RECOVERED_COUNT
-        description: Count of successful retry recoveries after a decline (1 if recovered, 0 otherwise). A retry is the same card, same amount, same merchant within 24 hours of a decline.
-        expr: RETRY_RECOVERED_COUNT
-        data_type: NUMBER
-        synonyms:
-          - recovered transactions
-          - retry count
-          - retried count
 
   # ============================================================================
   # SETTLEMENTS - Settlement batch records
@@ -192,7 +195,7 @@ tables:
   - name: SETTLEMENTS
     description: Settlement and clearing transactions
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: SETTLEMENTS
     primary_key:
@@ -277,7 +280,7 @@ tables:
   - name: DEPOSITS
     description: Funding and deposit records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: DEPOSITS
     primary_key:
@@ -347,7 +350,7 @@ tables:
   - name: CHARGEBACKS
     description: Chargeback and dispute records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: CHARGEBACKS
     primary_key:
@@ -438,7 +441,7 @@ tables:
   - name: RETRIEVALS
     description: Retrieval requests
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: RETRIEVALS
     primary_key:
@@ -504,7 +507,7 @@ tables:
   - name: ADJUSTMENTS
     description: Fee adjustments and corrections
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_99
       schema: MARTS
       table: ADJUSTMENTS
     primary_key:
@@ -697,13 +700,6 @@ metrics:
     data_type: NUMBER
     synonyms:
       - RR fulfillment rate
-
-$$,
-  FALSE  -- Set to TRUE to validate only without creating
+$$
 );
 
--- =============================================================================
--- Grant access (uncomment and modify role as needed)
--- =============================================================================
--- GRANT SELECT ON SEMANTIC VIEW COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS 
---   TO ROLE ANALYST_ROLE;
