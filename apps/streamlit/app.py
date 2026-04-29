@@ -278,9 +278,7 @@ with tab_details:
                 approval_status    AS "Status",
                 transaction_amount AS "Amount",
                 decline_reason     AS "Decline reason",
-                processor_name     AS "Processor",
-                is_retry_attempt   AS "Retry",
-                retry_recovered_count AS "Recovered"
+                processor_name     AS "Processor"
             FROM MARTS.AUTHORIZATIONS
             WHERE transaction_date BETWEEN '{start_date}' AND '{end_date}'
             {brand_filter}
@@ -294,8 +292,6 @@ with tab_details:
                 column_config={
                     "Amount":    st.column_config.NumberColumn(format="$%.2f"),
                     "Status":    st.column_config.TextColumn(),
-                    "Retry":     st.column_config.CheckboxColumn(),
-                    "Recovered": st.column_config.NumberColumn(),
                 },
             )
         else:

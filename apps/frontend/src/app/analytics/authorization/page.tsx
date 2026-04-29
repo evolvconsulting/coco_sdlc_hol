@@ -8,7 +8,6 @@ import {
   HomeOutlined,
   TableOutlined,
   LineChartOutlined,
-  SyncOutlined,
 } from '@ant-design/icons';
 import dayjs from 'dayjs';
 import { KPICard } from '@/components/ui';
@@ -239,17 +238,6 @@ export default function AuthorizationPage() {
                 value={kpiData?.avgTicketSize ?? 0}
                 format="currency"
                 description="Average transaction amount"
-                loading={kpis.isLoading}
-              />
-            </Col>
-            <Col xs={24} sm={12} lg={6}>
-              <KPICard
-                title="Retry Success Rate"
-                value={kpiData?.retrySuccessRate ?? 0}
-                format="percent"
-                prefix={<SyncOutlined />}
-                color="#1890ff"
-                description="Declined transactions recovered via retry"
                 loading={kpis.isLoading}
               />
             </Col>
