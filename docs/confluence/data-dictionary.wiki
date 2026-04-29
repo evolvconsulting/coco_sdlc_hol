@@ -20,6 +20,7 @@ The following metrics are pre-defined calculations available for natural languag
 |CHARGEBACK_RATE|Chargeback count as percentage of total transactions|Chargeback count / Authorization count * 100|NUMBER (%)|Chargebacks + Authorizations|
 |NET_ADJUSTMENTS|Net adjustment amount|SUM(adjustment_amount)|NUMBER ($)|Adjustments|
 |RETRIEVAL_FULFILLMENT_RATE|Percentage of retrieval requests fulfilled|Closed retrievals / Total retrievals * 100|NUMBER (%)|Retrievals|
+|RETRY_SUCCESS_RATE|Percentage of declined transactions recovered through successful retries within 4 hours|Successful retries / Total declines * 100|NUMBER (%)|Authorizations|
 
 h2. Dimensions by Domain
 
@@ -37,6 +38,8 @@ h3. Authorizations
 |APPROVAL_STATUS|Authorization approval status|Approved, Declined|
 |DECLINE_REASON|Reason for declined authorization|Insufficient Funds, Do Not Honor, Expired Card|
 |PROCESSOR_NAME|Payment processor name|First Data, TSYS, Worldpay|
+|RETRY_ATTEMPT_FLAG|Whether this transaction is a retry attempt within 4 hours of a prior decline|true, false|
+|RETRY_SUCCESS_FLAG|Whether this declined transaction was later retried successfully within 4 hours|true, false|
 
 h3. Settlements
 

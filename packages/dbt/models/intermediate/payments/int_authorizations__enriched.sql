@@ -25,6 +25,12 @@
     - Joins to processors for platform name
     - Joins to decline reasons for full description
     - Derives approval_status from approval_status_code
+    
+    RETRY DETECTION:
+    - A retry is when the same card (BIN + last 4) attempts the same amount
+      at the same merchant within 4 hours of a prior decline
+    - retry_attempt_flag: TRUE on the subsequent attempt after a decline
+    - retry_success_flag: TRUE on the declined row that was later retried successfully
 */
 
 with auth as (
@@ -97,6 +103,28 @@ enriched as (
         on auth.pltf_id = processors.pltf_id
     left join decline_reasons 
         on auth.dcln_rsn_id = decline_reasons.dcln_rsn_id
+),
+
+retry_detection as (
+    select
+        *,
+        lag(approval_status_code) over (
+            partition by card_bin, card_last_four, merchant_id, transaction_amount
+            order by transaction_timestamp
+        ) as _prev_approval_code,
+        lag(transaction_timestamp) over (
+            partition by card_bin, card_last_four, merchant_id, transaction_amount
+            order by transaction_timestamp
+        ) as _prev_timestamp,
+        lead(approval_status_code) over (
+            partition by card_bin, card_last_four, merchant_id, transaction_amount
+            order by transaction_timestamp
+        ) as _next_approval_code,
+        lead(transaction_timestamp) over (
+            partition by card_bin, card_last_four, merchant_id, transaction_amount
+            order by transaction_timestamp
+        ) as _next_timestamp
+    from enriched
 )
 
 select
@@ -133,6 +161,21 @@ select
     processor_id,
     processor_name,
     avs_response_code,
-    cvv_response_code
+    cvv_response_code,
 
-from enriched
+    case
+        when _prev_approval_code = 2
+            and datediff('hour', _prev_timestamp, transaction_timestamp) <= 4
+        then true
+        else false
+    end as retry_attempt_flag,
+
+    case
+        when approval_status_code = 2
+            and _next_approval_code = 1
+            and datediff('hour', transaction_timestamp, _next_timestamp) <= 4
+        then true
+        else false
+    end as retry_success_flag
+
+from retry_detection

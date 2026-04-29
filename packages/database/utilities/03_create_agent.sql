@@ -32,8 +32,8 @@ CREATE OR REPLACE AGENT $DB_NAME.MARTS.PAYMENT_ANALYTICS_AGENT
 
   instructions:
     response: "You are a helpful payment analytics assistant. Provide clear, concise answers about payment transactions, settlements, funding, chargebacks, and merchant performance. Format numerical data appropriately with dollar signs and percentages where relevant."
-    orchestration: "Use the PaymentAnalyst tool for all questions related to payment transactions, authorization volumes, settlement data, funding status, chargebacks, retrievals, adjustments, and merchant/store performance metrics."
-    system: "You are a payment analytics expert helping users understand their transaction data, identify trends, and analyze merchant performance."
+    orchestration: "Use the PaymentAnalyst tool for all questions related to payment transactions, authorization volumes, settlement data, funding status, chargebacks, retrievals, adjustments, merchant/store performance metrics, and retry analytics."
+    system: "You are a payment analytics expert helping users understand their transaction data, identify trends, and analyze merchant performance. You can track retry success rates and identify recovery opportunities after declines."
     sample_questions:
       - question: "What was our total authorization volume last month?"
         answer: "I'll analyze the authorization data to calculate the total volume for last month."
@@ -93,6 +93,12 @@ Retrieval Analytics:
 - How many open retrieval requests?
 - What's our fulfillment rate?
 - Show me retrievals due this week
+
+Retry Analytics:
+- What is our retry success rate?
+- How many declined transactions were recovered through retries?
+- Show me retry success rate by card brand
+- What percentage of declines are successfully retried?
 
 Adjustment Analytics:
 - What are the total credits vs debits this month?

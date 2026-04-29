@@ -1,8 +1,8 @@
-USE DATABASE COCO_SDLC_HOL;
+USE DATABASE COCO_SDLC_HOL_01;
 USE SCHEMA MARTS;
 
 CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
-  'COCO_SDLC_HOL.MARTS',
+  'COCO_SDLC_HOL_01.MARTS',
   $$
 name: PAYMENT_ANALYTICS
 description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
@@ -14,7 +14,7 @@ tables:
   - name: MERCHANTS
     description: Merchant and store reference data for location-based analytics
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: DIM_MERCHANTS
     primary_key:
@@ -93,7 +93,7 @@ tables:
   - name: AUTHORIZATIONS
     description: Authorization transactions for payment processing
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: AUTHORIZATIONS
     primary_key:
@@ -177,6 +177,14 @@ tables:
         synonyms:
           - auth count
           - transaction count
+      - name: RETRY_RECOVERED_COUNT
+        description: Count of successful retry recoveries after a decline (1 if recovered, 0 otherwise). A retry is the same card, same amount, same merchant within 4 hours of a decline.
+        expr: RETRY_RECOVERED_COUNT
+        data_type: NUMBER
+        synonyms:
+          - recovered transactions
+          - retry count
+          - retried count
 
   # ============================================================================
   # SETTLEMENTS - Settlement batch records
@@ -184,7 +192,7 @@ tables:
   - name: SETTLEMENTS
     description: Settlement and clearing transactions
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: SETTLEMENTS
     primary_key:
@@ -269,7 +277,7 @@ tables:
   - name: DEPOSITS
     description: Funding and deposit records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: DEPOSITS
     primary_key:
@@ -339,7 +347,7 @@ tables:
   - name: CHARGEBACKS
     description: Chargeback and dispute records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: CHARGEBACKS
     primary_key:
@@ -430,7 +438,7 @@ tables:
   - name: RETRIEVALS
     description: Retrieval requests
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: RETRIEVALS
     primary_key:
@@ -496,7 +504,7 @@ tables:
   - name: ADJUSTMENTS
     description: Fee adjustments and corrections
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: ADJUSTMENTS
     primary_key:
@@ -689,6 +697,16 @@ metrics:
     data_type: NUMBER
     synonyms:
       - RR fulfillment rate
+
+  - name: RETRY_SUCCESS_RATE
+    description: Percentage of declined transactions that were subsequently retried and approved. A retry is defined as the same card (BIN + last 4), same amount, same merchant within 4 hours of a decline.
+    expr: SUM(AUTHORIZATIONS.RETRY_RECOVERED_COUNT) * 100.0 / NULLIF(SUM(CASE WHEN AUTHORIZATIONS.APPROVAL_STATUS = 'Declined' THEN 1 ELSE 0 END), 0)
+    data_type: NUMBER
+    synonyms:
+      - retry rate
+      - recovery rate
+      - decline recovery rate
+      - retry success rate
 
 $$,
   FALSE  -- Set to TRUE to validate only without creating

@@ -48,7 +48,7 @@ models:
       +materialized: dynamic_table
       +schema: intermediate
       +tags: ['intermediate', 'silver']
-      +snowflake_warehouse: COMPUTE_WH
+      +snowflake_warehouse: HOL_WH_01
       +target_lag: '1 hour'
       payments:
         +description: "Enriched payment data with business logic"
@@ -58,7 +58,7 @@ models:
       +materialized: dynamic_table
       +schema: marts
       +tags: ['marts', 'gold']
-      +snowflake_warehouse: COMPUTE_WH
+      +snowflake_warehouse: HOL_WH_01
       +target_lag: '1 hour'
       payments:
         +description: "Business-ready payment analytics"
