@@ -177,14 +177,6 @@ tables:
         synonyms:
           - auth count
           - transaction count
-      - name: RETRY_RECOVERED_COUNT
-        description: Count of successful retry recoveries after a decline (1 if recovered, 0 otherwise). A retry is the same card, same amount, same merchant within 24 hours of a decline.
-        expr: RETRY_RECOVERED_COUNT
-        data_type: NUMBER
-        synonyms:
-          - recovered transactions
-          - retry count
-          - retried count
 
   # ============================================================================
   # SETTLEMENTS - Settlement batch records

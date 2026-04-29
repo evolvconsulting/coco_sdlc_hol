@@ -100,7 +100,7 @@ def run_sql_file(con: SnowflakeConnection, filename: str, label: str) -> bool:
     with open(path) as f:
         sql = f.read()
     try:
-        for _ in con.cursor().execute_string(sql):
+        for _ in con.execute_string(sql):
             pass
         print(f"  [OK]   {label}", flush=True)
         return True

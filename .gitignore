@@ -47,3 +47,4 @@ config.local.yml
 
 # Python / uv
 .venv/
+__pycache__/
