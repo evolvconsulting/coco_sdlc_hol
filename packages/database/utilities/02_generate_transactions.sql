@@ -301,7 +301,7 @@ BEGIN
     -- ==========================================================================
     -- Generate Retry Transactions (from declined authorizations)
     -- Retries reuse the same card (BIN + last 4), merchant, and amount
-    -- so that the dbt retry detection window functions can match them.
+    -- so that the Task 1 window function can detect them.
     -- ~8% of declines are retried; ~65% of retries succeed.
     -- ==========================================================================
     INSERT INTO CLX_AUTH (
