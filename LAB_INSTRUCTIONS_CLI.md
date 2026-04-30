@@ -130,7 +130,7 @@ Your instructor has pre-provisioned a dedicated Snowflake environment for you, i
 
 Log into Snowsight at the account URL provided by your instructor. Once logged in:
 
-1. Click your name (bottom-left) → **My Profile** → **Programmatic Access Tokens**
+1. Click your name (bottom-left) → **Settings** → **Authentication** → **Programmatic Access Tokens**
 2. Click **+ Generate New Token**
 3. Fill in the details:
 

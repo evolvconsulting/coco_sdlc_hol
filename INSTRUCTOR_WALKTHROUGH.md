@@ -35,7 +35,7 @@ Fallback (no Git): download ZIP, extract, `git init && git add . && git commit -
 
 **Step 1a — Create a Programmatic Access Token (PAT)**
 
-Log into Snowsight → click your name (bottom-left) → **My Profile** → **Programmatic Access Tokens** → **+ Generate New Token**.
+Log into Snowsight → click your name (bottom-left) → **Settings** → **Authentication** → **Programmatic Access Tokens** → **+ Generate New Token**.
 
 | Field | Value |
 |-------|-------|
