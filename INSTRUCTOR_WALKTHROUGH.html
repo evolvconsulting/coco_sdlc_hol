@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Instructor Walkthrough — AI-Assisted SDLC Hands-On Lab</title>
+<style>
+  /* ── Base ── */
+  :root {
+    --blue: #1a73e8;
+    --blue-light: #e8f0fe;
+    --green: #1e8e3e;
+    --green-light: #e6f4ea;
+    --orange: #e8710a;
+    --orange-light: #fef7e0;
+    --purple: #7b1fa2;
+    --purple-light: #f3e8fd;
+    --red: #d93025;
+    --gray-100: #f8f9fa;
+    --gray-200: #e8eaed;
+    --gray-600: #5f6368;
+    --gray-900: #202124;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    font-size: 11pt;
+    line-height: 1.5;
+    color: var(--gray-900);
+    max-width: 8.5in;
+    margin: 0 auto;
+    padding: 0.5in 0.6in;
+  }
+
+  /* ── Typography ── */
+  h1 {
+    font-size: 20pt;
+    font-weight: 700;
+    margin-bottom: 4pt;
+    color: var(--gray-900);
+    border-bottom: 3px solid var(--blue);
+    padding-bottom: 6pt;
+  }
+  h1 .subtitle {
+    display: block;
+    font-size: 11pt;
+    font-weight: 400;
+    color: var(--gray-600);
+    margin-top: 4pt;
+  }
+
+  h2 {
+    font-size: 15pt;
+    font-weight: 700;
+    margin-top: 24pt;
+    margin-bottom: 8pt;
+    color: var(--gray-900);
+    border-bottom: 2px solid var(--gray-200);
+    padding-bottom: 4pt;
+    page-break-after: avoid;
+  }
+
+  h3 {
+    font-size: 12pt;
+    font-weight: 600;
+    margin-top: 14pt;
+    margin-bottom: 6pt;
+    color: var(--gray-900);
+    page-break-after: avoid;
+  }
+
+  p { margin-bottom: 8pt; }
+  strong { font-weight: 600; }
+
+  /* ── Header meta line ── */
+  .meta {
+    font-size: 10pt;
+    color: var(--gray-600);
+    margin-bottom: 16pt;
+  }
+  .meta span { margin-right: 18pt; }
+
+  /* ── Checklist (Before You Start) ── */
+  .checklist {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 12pt;
+  }
+  .checklist li {
+    padding: 3pt 0 3pt 22pt;
+    position: relative;
+    line-height: 1.5;
+  }
+  .checklist li::before {
+    content: "\2610";
+    position: absolute;
+    left: 0;
+    font-size: 13pt;
+  }
+
+  /* ── Tables ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8pt 0 12pt;
+    font-size: 10pt;
+  }
+  th, td {
+    border: 1px solid var(--gray-200);
+    padding: 5pt 8pt;
+    text-align: left;
+    vertical-align: top;
+  }
+  th {
+    background: var(--gray-100);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+
+  /* ── Code blocks ── */
+  code {
+    font-family: "SF Mono", "Cascadia Code", "Fira Code", Consolas, monospace;
+    font-size: 9.5pt;
+    background: var(--gray-100);
+    padding: 1pt 4pt;
+    border-radius: 3pt;
+  }
+  pre {
+    background: var(--gray-100);
+    border: 1px solid var(--gray-200);
+    border-radius: 4pt;
+    padding: 8pt 10pt;
+    margin: 6pt 0 10pt;
+    overflow-x: auto;
+    font-size: 9pt;
+    line-height: 1.45;
+    page-break-inside: avoid;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+  }
+
+  /* ── Instructor script (What You Say) ── */
+  .say-box {
+    border-left: 4px solid var(--blue);
+    background: var(--blue-light);
+    padding: 8pt 12pt;
+    margin: 8pt 0 12pt;
+    border-radius: 0 4pt 4pt 0;
+    font-style: italic;
+    page-break-inside: avoid;
+  }
+  .say-box::before {
+    content: "WHAT YOU SAY";
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    font-style: normal;
+    color: var(--blue);
+    letter-spacing: 0.5pt;
+    margin-bottom: 4pt;
+  }
+
+  /* ── Snowsight divergence callout ── */
+  .snowsight-box {
+    border-left: 4px solid var(--purple);
+    background: var(--purple-light);
+    padding: 8pt 12pt;
+    margin: 8pt 0 12pt;
+    border-radius: 0 4pt 4pt 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  .snowsight-box::before {
+    content: "\2744  SNOWSIGHT DIVERGENCE";
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    color: var(--purple);
+    letter-spacing: 0.5pt;
+    margin-bottom: 4pt;
+  }
+  .snowsight-box ul { margin: 4pt 0 0 16pt; }
+  .snowsight-box li { margin-bottom: 3pt; }
+  .snowsight-box pre {
+    background: #ede0f5;
+    border-color: #d1b3e8;
+  }
+
+  /* ── Kahoot break ── */
+  .kahoot-break {
+    border: 2px solid var(--orange);
+    background: var(--orange-light);
+    padding: 10pt 14pt;
+    margin: 18pt 0;
+    border-radius: 6pt;
+    page-break-inside: avoid;
+  }
+  .kahoot-break::before {
+    content: "\1F3AF  KAHOOT BREAK";
+    display: block;
+    font-size: 10pt;
+    font-weight: 700;
+    color: var(--orange);
+    letter-spacing: 0.5pt;
+    margin-bottom: 6pt;
+  }
+  .kahoot-break .q {
+    margin-bottom: 6pt;
+  }
+  .kahoot-break .q strong {
+    color: var(--gray-900);
+  }
+  .kahoot-break .answer {
+    color: var(--green);
+    font-weight: 600;
+    font-size: 10pt;
+    margin-left: 10pt;
+  }
+
+  /* ── Watch-for tables ── */
+  .watchfor table {
+    border-left: 3px solid var(--red);
+  }
+  .watchfor th {
+    background: #fce8e6;
+  }
+  .watchfor-label {
+    font-size: 9pt;
+    font-weight: 700;
+    color: var(--red);
+    letter-spacing: 0.5pt;
+    margin-bottom: 4pt;
+    text-transform: uppercase;
+  }
+
+  /* ── Instructor callout ── */
+  .callout {
+    border-left: 4px solid var(--green);
+    background: var(--green-light);
+    padding: 8pt 12pt;
+    margin: 8pt 0 12pt;
+    border-radius: 0 4pt 4pt 0;
+    font-size: 10pt;
+    page-break-inside: avoid;
+  }
+  .callout::before {
+    content: "INSTRUCTOR CALLOUT";
+    display: block;
+    font-size: 8pt;
+    font-weight: 700;
+    color: var(--green);
+    letter-spacing: 0.5pt;
+    margin-bottom: 4pt;
+  }
+
+  /* ── Horizontal rule sections ── */
+  hr {
+    border: none;
+    border-top: 1px solid var(--gray-200);
+    margin: 16pt 0;
+  }
+
+  /* ── Footer ── */
+  .footer {
+    margin-top: 24pt;
+    padding-top: 8pt;
+    border-top: 1px solid var(--gray-200);
+    font-size: 9pt;
+    color: var(--gray-600);
+    font-style: italic;
+    text-align: center;
+  }
+
+  /* ── Prompt blocks (user prompts to paste) ── */
+  .prompt-block {
+    background: #f0f7ff;
+    border: 1px solid #b8d4f0;
+    border-radius: 4pt;
+    padding: 8pt 10pt;
+    margin: 6pt 0 10pt;
+    font-size: 9.5pt;
+    font-family: "SF Mono", "Cascadia Code", Consolas, monospace;
+    line-height: 1.45;
+    page-break-inside: avoid;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+  }
+
+  /* ── Quick ref section ── */
+  .quickref { margin-top: 20pt; }
+  .quickref h2 { color: var(--blue); border-bottom-color: var(--blue); }
+  .quickref table th { background: var(--blue-light); }
+
+  /* ── Print styles ── */
+  @media print {
+    body {
+      padding: 0;
+      font-size: 10pt;
+      max-width: none;
+    }
+    h2 { page-break-after: avoid; }
+    .kahoot-break, .snowsight-box, .callout, .say-box, pre, table {
+      page-break-inside: avoid;
+    }
+    .kahoot-break {
+      border-width: 2px;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .snowsight-box, .callout, .say-box {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    th {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* ── Numbered step labels ── */
+  .step-label {
+    display: inline-block;
+    background: var(--blue);
+    color: white;
+    font-size: 8pt;
+    font-weight: 700;
+    padding: 1pt 6pt;
+    border-radius: 3pt;
+    margin-right: 4pt;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<!-- ============================================================ -->
+<!-- HEADER                                                        -->
+<!-- ============================================================ -->
+
+<h1>
+  Instructor Walkthrough
+  <span class="subtitle">AI-Assisted SDLC Hands-On Lab &mdash; evolv Payment Analytics</span>
+</h1>
+
+<div class="meta">
+  <span><strong>Duration:</strong> ~90 min</span>
+  <span><strong>Primary track:</strong> CLI (terminal + React)</span>
+  <span><strong>Parallel track:</strong> Snowsight (browser-only + Streamlit)</span>
+</div>
+
+<!-- ============================================================ -->
+<!-- BEFORE YOU START                                              -->
+<!-- ============================================================ -->
+
+<h2>Before You Start</h2>
+
+<ul class="checklist">
+  <li>Provisioning pipeline complete (see <code>INSTRUCTOR_GUIDE.md</code> Part 1)</li>
+  <li>Each attendee slot verified: user login, dashboard loads, workspace/repo accessible</li>
+  <li>Kahoot game loaded with &ldquo;Engagement Questions.docx&rdquo; (15 questions)</li>
+  <li>Attendee path assignments decided (CLI vs Snowsight) and credentials distributed</li>
+  <li><code>INSTRUCTOR_GUIDE.md</code> Watch-Fors table open for live troubleshooting</li>
+</ul>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SECTION 1                                                     -->
+<!-- ============================================================ -->
+
+<h2>Section 1: Environment Setup (~5 min)</h2>
+
+<div class="say-box">
+  &ldquo;Log into Snowflake with the credentials on your card. We&rsquo;ll confirm the baseline dashboard works, then connect Cortex Code to your environment.&rdquo;
+</div>
+
+<h3>Steps &mdash; CLI Track (Primary)</h3>
+
+<p><strong><span class="step-label">0</span> Clone the repo</strong></p>
+<pre><code>git clone https://github.com/evolvconsulting/coco_sdlc_hol.git
+cd coco_sdlc_hol</code></pre>
+<p>Fallback (no Git): download ZIP, extract, <code>git init &amp;&amp; git add . &amp;&amp; git commit -m "Initial commit"</code>.</p>
+
+<p><strong><span class="step-label">1a</span> Create a Programmatic Access Token (PAT)</strong></p>
+<p>Log into Snowsight &rarr; click your name (bottom-left) &rarr; <strong>My Profile</strong> &rarr; <strong>Programmatic Access Tokens</strong> &rarr; <strong>+ Generate New Token</strong>.</p>
+<table>
+  <tr><th>Field</th><th>Value</th></tr>
+  <tr><td>Token name</td><td><code>HOL_PAT</code></td></tr>
+  <tr><td>Role</td><td><code>HOL_ROLE_NN</code></td></tr>
+  <tr><td>Expires in</td><td>1 day</td></tr>
+</table>
+<p>Copy the token immediately &mdash; shown only once.</p>
+
+<p><strong><span class="step-label">1b</span> Launch Cortex Code &amp; create a connection</strong></p>
+<pre><code>cortex</code></pre>
+<p>First-run wizard prompts:</p>
+<table>
+  <tr><th>Prompt</th><th>Value</th></tr>
+  <tr><td>Connection name</td><td><code>HOL_USER_NN</code></td></tr>
+  <tr><td>Account identifier</td><td><code>orgname-accountname</code> (from instructor)</td></tr>
+  <tr><td>Username</td><td><code>HOL_USER_NN</code></td></tr>
+  <tr><td>Token</td><td>Paste the PAT from Step 1a</td></tr>
+  <tr><td>Auth method</td><td>Programmatic Access Token</td></tr>
+</table>
+
+<p><strong><span class="step-label">1c</span> Set session context</strong> (replace <code>NN</code>):</p>
+<div class="prompt-block">Set my role to HOL_ROLE_NN, warehouse to HOL_WH_NN, and use database COCO_SDLC_HOL_NN with schema MARTS.</div>
+<p>Verify: <code>/status</code> &mdash; Expect: <code>HOL_ROLE_NN</code>, <code>COCO_SDLC_HOL_NN</code>, <code>MARTS</code>.</p>
+
+<p><strong><span class="step-label">1d</span> Configure local frontend</strong></p>
+<div class="prompt-block">Update apps/frontend/.env.local with my Snowflake credentials: SNOWFLAKE_ACCOUNT=&lt;orgname-accountname&gt;, SNOWFLAKE_USER=HOL_USER_NN, SNOWFLAKE_ROLE=HOL_ROLE_NN, SNOWFLAKE_WAREHOUSE=HOL_WH_NN, SNOWFLAKE_PASSWORD=&lt;password&gt;, SNOWFLAKE_DATABASE=COCO_SDLC_HOL_NN.</div>
+
+<p><strong><span class="step-label">2</span> Confirm local app runs</strong></p>
+<div class="prompt-block">Install the frontend dependencies and start the dev server from apps/frontend.</div>
+<p>Open <code>http://localhost:3000</code> &mdash; dashboard should show real data with 4 KPI cards.</p>
+
+<div class="snowsight-box">
+  <ul>
+    <li><strong>Skip Steps 0, 1a, 1b, 1d, and 2</strong> entirely (no repo clone, no PAT, no connection wizard, no <code>.env.local</code>, no local app).</li>
+    <li><strong>Step 1.1</strong> &mdash; Log into Snowsight with HOL credentials.</li>
+    <li><strong>Step 1.2</strong> &mdash; Go to <strong>Projects &gt; Streamlit</strong>, open <code>PAYMENT_ANALYTICS_DASHBOARD</code> (under their database). Confirm 4 KPI cards with real data.</li>
+    <li><strong>Step 1.3</strong> &mdash; Open <strong>AI &amp; ML &gt; Cortex Code</strong>. Paste the same session context prompt. Run <code>/status</code>.</li>
+    <li><strong>Step 1.4</strong> &mdash; Paste <code>open HOL_WORKSPACE</code> to load the project file tree.</li>
+  </ul>
+</div>
+
+<div class="watchfor">
+  <div class="watchfor-label">Watch-Fors</div>
+  <table>
+    <tr><th>Issue</th><th>Path</th><th>Fix</th></tr>
+    <tr><td><code>/status</code> shows wrong role</td><td>Both</td><td>Re-send session context prompt</td></tr>
+    <tr><td><code>HOL_WORKSPACE</code> not found</td><td>Snowsight</td><td>Re-run provisioning for that user</td></tr>
+    <tr><td>&ldquo;Account not found&rdquo; in wizard</td><td>CLI</td><td>Must be <code>orgname-accountname</code>, not a URL</td></tr>
+    <tr><td>App loads but no data</td><td>CLI</td><td>Check <code>SNOWFLAKE_ACCOUNT</code> in <code>.env.local</code></td></tr>
+  </table>
+</div>
+
+<!-- KAHOOT -->
+<div class="kahoot-break">
+  <div class="q"><strong>Q1:</strong> What makes Cortex Code different from general-purpose AI coding assistants?<br><span class="answer">B &mdash; It can connect to and query your live Snowflake data warehouse</span></div>
+  <div class="q"><strong>Q2:</strong> Why is MFA bypassed for lab participants?<br><span class="answer">B &mdash; MFA triggers interactive browser prompts that block CLI automation; the bypass is temporary</span></div>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SECTION 2                                                     -->
+<!-- ============================================================ -->
+
+<h2>Section 2: Cortex Code Primer (~10 min CLI / ~5 min Snowsight)</h2>
+
+<div class="say-box">
+  &ldquo;Now let&rsquo;s learn the key commands and set up our Jira integration so we can pull tickets directly into our coding workflow.&rdquo;
+</div>
+
+<h3>Steps &mdash; CLI Track</h3>
+
+<p><strong>2.1 &mdash; Key slash commands</strong> (demonstrate or walk through):</p>
+<table>
+  <tr><th>Command</th><th>Purpose</th></tr>
+  <tr><td><code>/plan</code></td><td>Show action plan before executing</td></tr>
+  <tr><td><code>/plan-off</code></td><td>Return to direct execution</td></tr>
+  <tr><td><code>/new</code></td><td>Fresh conversation (clears context)</td></tr>
+  <tr><td><code>/model</code></td><td>Select AI model</td></tr>
+  <tr><td><code>/mcp</code></td><td>Manage MCP integrations</td></tr>
+  <tr><td><code>/status</code></td><td>Session status</td></tr>
+</table>
+
+<p><strong>2.3 &mdash; Install Atlassian MCP</strong></p>
+<p>First exit Cortex Code: <code>/quit</code></p>
+<p>Then in the terminal:</p>
+<pre><code>cortex mcp add atlassian https://mcp.atlassian.com/v1/mcp \
+  -t http -H "Authorization: Basic &lt;token&gt;"</code></pre>
+<p><strong>Common mistake:</strong> Running <code>cortex mcp add</code> <em>inside</em> the Cortex Code session. Must run in the terminal.</p>
+
+<div class="snowsight-box">
+  <ul>
+    <li><strong>No MCP setup.</strong> Snowsight path uses a <code>GET_JIRA_TICKET</code> UDF instead (created in Section 4).</li>
+    <li><strong>Plan mode:</strong> Ask &ldquo;use plan mode&rdquo; (no <code>/plan</code> command). Code edits show an Apply/Dismiss banner.</li>
+    <li><strong>Jira access:</strong> Explain they&rsquo;ll create a UDF in Section 4 since MCP isn&rsquo;t available in the Snowsight UI.</li>
+  </ul>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SECTION 3                                                     -->
+<!-- ============================================================ -->
+
+<h2>Section 3: Architecture Overview (~10 min CLI / ~5 min Snowsight)</h2>
+
+<div class="say-box">
+  &ldquo;Let&rsquo;s see Cortex Code&rsquo;s killer feature &mdash; it already knows your entire project. Ask it to describe the architecture and watch what happens.&rdquo;
+</div>
+
+<h3>Steps &mdash; Both Tracks (same prompt)</h3>
+
+<p>Relaunch Cortex Code (CLI only): <code>cortex</code></p>
+<div class="prompt-block">Describe this project's data architecture and the Cortex Agent setup. What database, schemas, layers, domain tables, semantic view, and metrics are configured?</div>
+<p><strong>Expected:</strong> Cortex Code describes the medallion architecture (RAW &gt; STAGING &gt; INTERMEDIATE &gt; MARTS), 7 domain tables, 10 metrics, and the <code>PAYMENT_ANALYTICS</code> semantic view &mdash; all sourced from <code>AGENTS.md</code>.</p>
+
+<div class="callout">
+  &ldquo;Cortex Code reads <code>AGENTS.md</code> automatically from the workspace/repo root. This is how it knows the full architecture without being told. Think about what you&rsquo;d put in an <code>AGENTS.md</code> for your own project.&rdquo;
+</div>
+
+<div class="watchfor">
+  <div class="watchfor-label">Watch-Fors</div>
+  <table>
+    <tr><th>Issue</th><th>Path</th><th>Fix</th></tr>
+    <tr><td>Generic response, no database name</td><td>CLI</td><td>Not launched from repo root &mdash; re-launch</td></tr>
+    <tr><td>Generic response, no database name</td><td>Snowsight</td><td>Workspace not opened &mdash; run <code>open HOL_WORKSPACE</code></td></tr>
+  </table>
+</div>
+
+<!-- KAHOOT -->
+<div class="kahoot-break">
+  <div class="q"><strong>Q3:</strong> How did Cortex Code know the architecture without being told?<br><span class="answer">C &mdash; It reads AGENTS.md in the workspace/repo root</span></div>
+  <div class="q"><strong>Q4:</strong> What would you include in an AGENTS.md for your own project?<br><span class="answer">B &mdash; Connection details, schema layout, business rules, key file paths, security constraints</span></div>
+  <div class="q"><strong>Q5:</strong> What is a medallion architecture?<br><span class="answer">B &mdash; RAW stores untouched source data, STAGING cleans, INTERMEDIATE enriches, MARTS provides business-ready output</span></div>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SECTION 4                                                     -->
+<!-- ============================================================ -->
+
+<h2>Section 4: Task 1 &mdash; Retry Success Rate Metric (~30 min)</h2>
+
+<div class="say-box">
+  &ldquo;Time for the main event. You&rsquo;ll take a Jira ticket from reading requirements to a deployed, queryable metric &mdash; all without leaving Cortex Code.&rdquo;
+</div>
+
+<h3><span class="step-label">4.1</span> Read the Jira Ticket</h3>
+
+<p><strong>CLI:</strong></p>
+<div class="prompt-block">Show me Jira ticket EPA-2. What does it ask me to implement?</div>
+<p>(Uses Atlassian MCP configured in Section 2.)</p>
+
+<div class="snowsight-box">
+  <p>Snowsight must first create the <code>GET_JIRA_TICKET</code> UDF. <strong>Three prompts in order:</strong></p>
+  <p><strong>Prompt 1 &mdash; Create the UDF:</strong></p>
+  <pre><code>Create a Python UDF called GET_JIRA_TICKET(issue_key VARCHAR)
+in COCO_SDLC_HOL_NN.PUBLIC. It should call the Jira REST API
+and return the ticket type, summary, status, and description
+as plain text.
+
+Use: REST API https://api.atlassian.com/ex/jira/
+  310bd229-0685-4130-a7cc-f994764ba475/rest/api/3/issue/{issue_key}
+Auth: Basic auth from HOL_SHARED.PUBLIC.ATLASSIAN_TOKEN_SECRET
+EAI: ATLASSIAN_EAI, Runtime: Python 3.11</code></pre>
+  <p><strong>Prompt 2 &mdash; Add JiraLookup tool to agent:</strong></p>
+  <pre><code>Add a JiraLookup tool to COCO_SDLC_HOL_NN.MARTS.PAYMENT_ANALYTICS_AGENT
+that calls COCO_SDLC_HOL_NN.PUBLIC.GET_JIRA_TICKET.</code></pre>
+  <p><strong>Prompt 3 &mdash; Read the ticket:</strong></p>
+  <pre><code>Show me Jira ticket EPA-2. What does it ask me to implement?</code></pre>
+  <p><strong>Watch-For:</strong> If Cortex Code asks which database &mdash; select <code>COCO_SDLC_HOL_NN</code>, not <code>HOL_SHARED</code>.</p>
+</div>
+
+<h3><span class="step-label">4.2</span> Implement the Metric (Both tracks &mdash; same prompt)</h3>
+
+<div class="prompt-block">Based on the EPA-2 Jira ticket requirements, implement the retry success rate metric: add retry_attempt_flag and retry_success_flag columns to int_authorizations__enriched.sql using a window function (same card/amount/merchant within 5 minutes of a prior decline), pass both flags through in authorizations.sql, add the RETRY_SUCCESS_RATE metric to payment_analytics_semantic_view.sql, and update the Cortex Agent instructions in 03_create_agent.sql. Do not run dbt compile, dbt deps, or any dbt CLI commands after making the changes.</div>
+
+<p><strong>4 files edited:</strong></p>
+<table>
+  <tr><th>#</th><th>File</th><th>Change</th></tr>
+  <tr><td>1</td><td><code>int_authorizations__enriched.sql</code></td><td>Retry flags via window function</td></tr>
+  <tr><td>2</td><td><code>authorizations.sql</code></td><td>Pass-through to marts</td></tr>
+  <tr><td>3</td><td><code>payment_analytics_semantic_view.sql</code></td><td><code>RETRY_SUCCESS_RATE</code> metric</td></tr>
+  <tr><td>4</td><td><code>03_create_agent.sql</code></td><td>Agent instructions update</td></tr>
+</table>
+<p><strong>CLI:</strong> Confirm each file change as presented. &nbsp; <strong>Snowsight:</strong> Click <strong>Keep all</strong> on the &ldquo;Changed N files&rdquo; banner.</p>
+
+<h3><span class="step-label">4.3</span> Deploy to Snowflake</h3>
+
+<p><strong>CLI:</strong></p>
+<div class="prompt-block">Run:
+  snow stage copy packages/dbt/ @COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES --overwrite --parallel 4 --recursive -c HOL_USER_NN
+
+Then add a new version of the dbt project from @COCO_SDLC_HOL_NN.PUBLIC.DBT_FILES/ and execute it with --select int_authorizations__enriched+ --full-refresh.</div>
+<p>Three operations: <code>snow stage copy</code> &gt; <code>ALTER DBT PROJECT ADD VERSION</code> &gt; <code>EXECUTE DBT PROJECT</code>.</p>
+
+<div class="snowsight-box">
+  <p><strong>Different prompt</strong> &mdash; deploys from workspace, not stage:</p>
+  <pre><code>Deploy my workspace edits: add a new version (no alias)
+from HOL_WORKSPACE using versions/live, then execute the dbt
+project with ARGS = 'run --select int_authorizations__enriched+
+--full-refresh'. Do not add a VERSION clause to EXECUTE DBT PROJECT.</code></pre>
+  <p>Two operations: <code>ALTER DBT PROJECT ADD VERSION FROM 'snow://workspace/.../versions/live'</code> &gt; <code>EXECUTE DBT PROJECT</code>.</p>
+  <p><strong>Critical:</strong> Must use <code>versions/live</code> (includes Cortex Code edits), not <code>versions/last</code> (committed snapshots only).</p>
+</div>
+
+<h3><span class="step-label">4.4</span> Rebuild Semantic View &amp; Agent (Both tracks &mdash; same prompt)</h3>
+
+<div class="prompt-block">Execute the semantic view DDL from packages/dbt/analyses/payment_analytics_semantic_view.sql and the Cortex Agent DDL from packages/database/utilities/03_create_agent.sql against my database.</div>
+
+<h3><span class="step-label">4.5</span> Verify End-to-End (Both tracks &mdash; same prompt)</h3>
+
+<div class="prompt-block">Verify the retry success rate metric end-to-end: query MARTS.AUTHORIZATIONS directly for the retry success rate over the last 30 days using retry_attempt_flag and retry_success_flag, then ask the PAYMENT_ANALYTICS_AGENT the same question and confirm both return a consistent non-null percentage.</div>
+<p><strong>Expected:</strong> Percentage between 20% and 80%. If null, dynamic table still refreshing &mdash; wait 2&ndash;3 min.</p>
+
+<h3><span class="step-label">4.6</span> Git Commit (CLI only)</h3>
+<pre><code>git commit -am "feat: add retry success rate metric"</code></pre>
+<div class="snowsight-box">
+  <ul><li>No git step. Changes are already persisted in the workspace.</li></ul>
+</div>
+
+<h3><span class="step-label">4.7</span> Confluence Reference (CLI only)</h3>
+
+<div class="prompt-block">Read the Confluence data dictionary at https://evolv-coco-sdlc-hol.atlassian.net/wiki/spaces/EPA/pages/851970/Data+Dictionary+-+Authorizations. How should I document retry_success_rate to match the existing format?</div>
+<div class="snowsight-box">
+  <ul><li>This step is skipped (no MCP / Confluence access).</li></ul>
+</div>
+
+<div class="watchfor">
+  <div class="watchfor-label">Watch-Fors</div>
+  <table>
+    <tr><th>Issue</th><th>Path</th><th>Fix</th></tr>
+    <tr><td>Only 2&ndash;3 files edited</td><td>Both</td><td>Re-prompt to include all 4 files</td></tr>
+    <tr><td><code>versions/last</code> used</td><td>Snowsight</td><td>Re-run deploy prompt verbatim</td></tr>
+    <tr><td>Permission denied on STAGING</td><td>Both</td><td>Missing <code>--select</code> scope &mdash; re-run with it</td></tr>
+    <tr><td><code>snow stage put</code> fails</td><td>CLI</td><td>Verify <code>DBT_FILES</code> stage exists</td></tr>
+    <tr><td>Metric not found after rebuild</td><td>Both</td><td>Re-execute the semantic view DDL</td></tr>
+    <tr><td>Dynamic table shows old data</td><td>Both</td><td>Wait 2&ndash;3 min or <code>ALTER DYNAMIC TABLE ... REFRESH;</code></td></tr>
+  </table>
+</div>
+
+<div class="callout">
+  <ul>
+    <li><code>ADD VERSION</code> auto-sets the new version as default &mdash; no <code>SET DEFAULT_VERSION</code> needed.</li>
+    <li>Cortex Code validates the agent via Cortex Analyst (same engine). Seeing &ldquo;Cortex Analyst&rdquo; in output is expected.</li>
+  </ul>
+</div>
+
+<!-- KAHOOT -->
+<div class="kahoot-break">
+  <div class="q"><strong>Q6:</strong> How many files need to change to add a metric end-to-end?<br><span class="answer">C &mdash; Four (intermediate model, marts model, semantic view DDL, agent instructions)</span></div>
+  <div class="q"><strong>Q7:</strong> Why is reviewing proposed changes before execution important?<br><span class="answer">B &mdash; Without review, AI could edit wrong files or deploy incorrect SQL</span></div>
+  <div class="q"><strong>Q8:</strong> What are potential edge cases in the retry detection window function?<br><span class="answer">B &mdash; Partial amount retries, same card/amount at different merchant, retries after 5-min window, chained retries</span></div>
+  <div class="q"><strong>Q9:</strong> How many tools did you context-switch between?<br><span class="answer">C &mdash; Just Cortex Code (plus a browser to verify)</span></div>
+  <div class="q"><strong>Q10:</strong> Cortex Agent vs writing SQL yourself?<br><span class="answer">C &mdash; Agent: faster for ad-hoc, curated metrics, non-SQL users. SQL: more control, easier to debug</span></div>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SECTION 5                                                     -->
+<!-- ============================================================ -->
+
+<h2>Section 5: Context Switch (~2 min)</h2>
+
+<div class="say-box">
+  &ldquo;Before we start the next ticket, clear your context. This is real-world hygiene &mdash; you don&rsquo;t want stale dbt context bleeding into your frontend task.&rdquo;
+</div>
+
+<p><strong>CLI:</strong> <code>/new</code> &nbsp;&nbsp; <strong>Snowsight:</strong> Click <strong>New Conversation</strong> (or the <code>+</code> icon).</p>
+
+<div class="callout">
+  Plan mode is session-scoped. CLI users must re-enable <code>/plan</code> if they want it for Task 2.
+</div>
+
+<p><strong>Review &mdash; What Task 1 Accomplished:</strong></p>
+<ul>
+  <li>Retry detection logic (window function) in intermediate dbt model</li>
+  <li><code>retry_attempt_flag</code> and <code>retry_success_flag</code> passed through to marts</li>
+  <li><code>RETRY_SUCCESS_RATE</code> metric in semantic view</li>
+  <li>Cortex Agent instructions updated</li>
+  <li>Deployed and verified end-to-end via SQL and natural language</li>
+</ul>
+
+<!-- KAHOOT -->
+<div class="kahoot-break">
+  <div class="q"><strong>Q11:</strong> Why start a fresh conversation before Task 2?<br><span class="answer">B &mdash; Task 1 context (dbt/SQL/retry logic) is irrelevant to Task 2 (dashboard code) &mdash; stale context confuses the AI</span></div>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SECTION 6                                                     -->
+<!-- ============================================================ -->
+
+<h2>Section 6: Task 2 &mdash; Add KPI Card to Dashboard (~20 min)</h2>
+
+<div class="say-box">
+  &ldquo;Now the metric exists in the data layer. Your next ticket is to surface it in the dashboard. Watch how Cortex Code switches from SQL/dbt to frontend code seamlessly.&rdquo;
+</div>
+
+<h3><span class="step-label">6.1</span> Read the Jira Ticket</h3>
+
+<p><strong>CLI:</strong></p>
+<div class="prompt-block">Using the Jira MCP, show me ticket EPA-3. What does it ask me to implement?</div>
+
+<div class="snowsight-box">
+  <p>Ask the Cortex Agent (under <strong>AI &amp; ML &gt; Cortex Agents</strong>):</p>
+  <pre><code>Show me Jira ticket EPA-3. What does it ask me to implement?</code></pre>
+  <p>The agent uses the <code>JiraLookup</code> tool created in Section 4.</p>
+</div>
+
+<h3><span class="step-label">6.2</span> Create a Git Branch (CLI only)</h3>
+
+<div class="prompt-block">Create a new git branch called feature/retry-success-kpi-card and switch to it.</div>
+
+<div class="snowsight-box">
+  <ul><li>No git branch step.</li></ul>
+</div>
+
+<h3><span class="step-label">6.3</span> Implement the KPI Card</h3>
+
+<p><strong>CLI:</strong></p>
+<div class="prompt-block">Using the Jira MCP, read EPA-3 and implement the KPI card changes.</div>
+<p>Edits <strong>3 files</strong>:</p>
+<table>
+  <tr><th>File</th><th>Change</th></tr>
+  <tr><td><code>apps/frontend/src/types/domain.ts</code></td><td>Adds <code>retrySuccessRate: number</code> to <code>AuthorizationKPIs</code></td></tr>
+  <tr><td><code>apps/frontend/src/app/api/analytics/authorization/kpis/route.ts</code></td><td>Adds SQL + return field</td></tr>
+  <tr><td><code>apps/frontend/src/app/analytics/authorization/page.tsx</code></td><td>Adds <code>&lt;KPICard&gt;</code></td></tr>
+</table>
+
+<div class="snowsight-box">
+  <p><strong>Different prompt, different file:</strong></p>
+  <pre><code>Based on the EPA-3 Jira ticket, implement the Retry Success Rate
+KPI card in apps/streamlit/app.py.</code></pre>
+  <p>Edits <strong>1 file</strong> (<code>apps/streamlit/app.py</code>):</p>
+  <ul>
+    <li>Adds retry success rate column to the KPI SQL query</li>
+    <li>Uncomments the fifth <code>st.metric()</code> card</li>
+  </ul>
+</div>
+
+<h3><span class="step-label">6.4</span> Verify</h3>
+
+<p><strong>CLI:</strong></p>
+<div class="prompt-block">Restart the frontend dev server from apps/frontend.</div>
+<p>Open <code>http://localhost:3000/analytics/authorization</code> &mdash; expect 5 KPI cards including &ldquo;Retry Success Rate&rdquo;.</p>
+
+<div class="snowsight-box">
+  <ul>
+    <li>Navigate to <strong>Projects &gt; Streamlit</strong>, open <code>PAYMENT_ANALYTICS_DASHBOARD</code>. Expect 5 KPI cards.</li>
+    <li>If still showing 4, click the <strong>refresh button</strong> in the top-right of the Streamlit app.</li>
+  </ul>
+</div>
+
+<h3><span class="step-label">6.5</span> Pull Request (CLI only, informational)</h3>
+<p>In a real workflow, you&rsquo;d open a PR here. For the lab, no remote push required.</p>
+<div class="snowsight-box">
+  <ul><li>No PR step.</li></ul>
+</div>
+
+<div class="watchfor">
+  <div class="watchfor-label">Watch-Fors</div>
+  <table>
+    <tr><th>Issue</th><th>Path</th><th>Fix</th></tr>
+    <tr><td>Streamlit still shows 4 cards</td><td>Snowsight</td><td>Click refresh in Streamlit app</td></tr>
+    <tr><td>Plan order wrong (<code>page.tsx</code> before <code>domain.ts</code>)</td><td>CLI</td><td>Reorder &mdash; <code>domain.ts</code> must come first</td></tr>
+    <tr><td>KPI card shows 0 or undefined</td><td>CLI</td><td>Check <code>AuthorizationKPIs</code> includes <code>retrySuccessRate: number</code></td></tr>
+  </table>
+</div>
+
+<div class="callout">
+  (CLI) &ldquo;Notice the full loop: Jira ticket read at the start, code changes, local verification, and a PR at the end &mdash; all without leaving the terminal.&rdquo;
+</div>
+
+<!-- KAHOOT -->
+<div class="kahoot-break">
+  <div class="q"><strong>Q12:</strong> Comparing Task 1 and Task 2 &mdash; what stayed the same and what changed?<br><span class="answer">B &mdash; Same workflow (read ticket &gt; implement &gt; verify), different files (SQL/dbt vs dashboard code) &mdash; language-agnostic</span></div>
+  <div class="q"><strong>Q13:</strong> Task 1 metric is the data source for Task 2&rsquo;s KPI card. How does that mirror real sprint work?<br><span class="answer">B &mdash; Backend work in one ticket unblocks frontend work in another &mdash; normal dependency chain</span></div>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SECTION 7                                                     -->
+<!-- ============================================================ -->
+
+<h2>Section 7: Wrap-up (~5 min)</h2>
+
+<div class="say-box">
+  &ldquo;Let&rsquo;s recap. You just completed two full development cycles &mdash; backend data metric and frontend dashboard card &mdash; using AI-assisted development. Let me highlight the key takeaways.&rdquo;
+</div>
+
+<h3>Key Takeaways</h3>
+<ol>
+  <li><strong>Automatic file context</strong> &mdash; <code>AGENTS.md</code> gives the AI full project awareness without manual setup</li>
+  <li><strong>Plan mode for review</strong> &mdash; <code>/plan</code> (CLI) or &ldquo;use plan mode&rdquo; (Snowsight) is a human checkpoint before code is written</li>
+  <li><strong>MCP / tool integrations</strong> &mdash; Jira and Confluence access without leaving the coding assistant</li>
+  <li><strong>Extend existing patterns</strong> &mdash; AI works best when following established conventions in the codebase</li>
+  <li><strong>Context hygiene</strong> &mdash; <code>/new</code> between tasks keeps context focused and produces better suggestions</li>
+</ol>
+
+<h3>What They Accomplished</h3>
+<ul>
+  <li><strong>Task 1:</strong> Retry success rate metric end-to-end &mdash; dbt intermediate &gt; marts &gt; semantic view &gt; Cortex Agent. Verified via SQL and natural language.</li>
+  <li><strong>Task 2:</strong> Frontend KPI card displaying the new metric. CLI: React (3 files). Snowsight: Streamlit (1 file).</li>
+  <li><strong>Throughout:</strong> Read Jira tickets, planned with AI, reviewed changes step-by-step, deployed, verified &mdash; entirely within Cortex Code.</li>
+</ul>
+
+<!-- KAHOOT -->
+<div class="kahoot-break">
+  <div class="q"><strong>Q14:</strong> Where did AI save the most time, and where did human judgment matter most?<br><span class="answer">B &mdash; AI saved time on boilerplate, file discovery, SQL generation; human judgment for plan review, edge cases, verifying correctness</span></div>
+  <div class="q"><strong>Q15:</strong> What would you trust the AI to do unsupervised, and what would you always review?<br><span class="answer">C &mdash; Trust: branch creation, scaffolding, simple queries. Always review: SQL modifying data, business logic, security, production</span></div>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- SECTION 8                                                     -->
+<!-- ============================================================ -->
+
+<h2>Section 8: Bonus &mdash; Semantic View as dbt Model (Optional)</h2>
+
+<p><em>Only if attendees finish early. Same prompt for both tracks.</em></p>
+
+<h3><span class="step-label">8.1</span> Implement</h3>
+<div class="prompt-block">Can you implement the semantic view using dbt_semantic_view? https://www.snowflake.com/en/engineering-blog/dbt-semantic-view-package/</div>
+<p>Cortex Code will: (1) add <code>Snowflake-Labs/dbt_semantic_view</code> to <code>packages.yml</code>, (2) install with <code>dbt deps</code>, (3) create <code>models/marts/payments/payment_analytics.sql</code>.</p>
+
+<h3><span class="step-label">8.2</span> Deploy and Verify</h3>
+<p><strong>CLI:</strong></p>
+<div class="prompt-block">Upload the updated dbt project files to the DBT_FILES stage, add a new version, execute the dbt project with --select payment_analytics, and ask the PAYMENT_ANALYTICS_AGENT for the retry success rate to confirm the semantic view still works correctly.</div>
+
+<div class="snowsight-box">
+  <pre><code>Deploy my workspace edits: add a new version (no alias) from
+HOL_WORKSPACE using versions/live, execute the dbt project with
+--select payment_analytics, and ask the PAYMENT_ANALYTICS_AGENT
+for the retry success rate to confirm the semantic view still
+works correctly.</code></pre>
+</div>
+
+<hr>
+
+<!-- ============================================================ -->
+<!-- QUICK REFERENCE TABLES                                        -->
+<!-- ============================================================ -->
+
+<div class="quickref">
+
+<h2>Quick Reference: Kahoot Question Placement</h2>
+<table>
+  <tr><th>After Section</th><th>Questions</th><th>Topic</th></tr>
+  <tr><td>Section 1 (Setup)</td><td>Q1, Q2</td><td>Cortex Code differentiation, MFA bypass</td></tr>
+  <tr><td>Section 3 (Architecture)</td><td>Q3, Q4, Q5</td><td>AGENTS.md, medallion architecture</td></tr>
+  <tr><td>Section 4 (Task 1)</td><td>Q6 &ndash; Q10</td><td>End-to-end changes, review importance, edge cases, tool consolidation</td></tr>
+  <tr><td>Section 5 (Context Switch)</td><td>Q11</td><td>Context hygiene</td></tr>
+  <tr><td>Section 6 (Task 2)</td><td>Q12, Q13</td><td>Workflow consistency, sprint dependencies</td></tr>
+  <tr><td>Section 7 (Wrap-up)</td><td>Q14, Q15</td><td>AI trust boundaries, human judgment</td></tr>
+</table>
+
+<h2>Quick Reference: Track Divergence Summary</h2>
+<table>
+  <tr><th>Aspect</th><th>CLI</th><th>Snowsight</th></tr>
+  <tr><td>Repo access</td><td><code>git clone</code> locally</td><td><code>open HOL_WORKSPACE</code></td></tr>
+  <tr><td>Jira access</td><td>Atlassian MCP</td><td><code>GET_JIRA_TICKET</code> UDF + Agent tool</td></tr>
+  <tr><td>dbt deploy</td><td><code>snow stage copy</code> &gt; <code>ADD VERSION</code> &gt; <code>EXECUTE</code></td><td>Workspace <code>versions/live</code> &gt; <code>ADD VERSION</code> &gt; <code>EXECUTE</code></td></tr>
+  <tr><td>Task 2 dashboard</td><td>React (3 TypeScript files)</td><td>Streamlit (1 Python file)</td></tr>
+  <tr><td>Plan mode</td><td><code>/plan</code> slash command</td><td>&ldquo;Use plan mode&rdquo; prompt</td></tr>
+  <tr><td>Git workflow</td><td>Feature branch + local commit</td><td>Not used</td></tr>
+  <tr><td>Confluence</td><td>MCP read in Step 4.7</td><td>Skipped</td></tr>
+</table>
+
+</div>
+
+<div class="footer">
+  Generated for instructor use. Not for distribution to attendees.
+</div>
+
+</body>
+</html>

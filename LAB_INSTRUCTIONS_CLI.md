@@ -126,7 +126,25 @@ Your instructor has pre-provisioned a dedicated Snowflake environment for you, i
 
 > **MFA note:** MFA is pre-bypassed for 20 hours. You will not be prompted during Cortex Code sessions or automated SQL calls.
 
-**1a. Launch Cortex Code and create a connection**
+**1a. Create a Programmatic Access Token (PAT)**
+
+Log into Snowsight at the account URL provided by your instructor. Once logged in:
+
+1. Click your name (bottom-left) → **My Profile** → **Programmatic Access Tokens**
+2. Click **+ Generate New Token**
+3. Fill in the details:
+
+| Field | Value |
+|-------|-------|
+| Token name | `HOL_PAT` |
+| Role | `HOL_ROLE_NN` (replace `NN` with your assigned number) |
+| Expires in | 1 day |
+
+4. Click **Generate Token** and **copy the token immediately** — it is only shown once.
+
+> **Note:** You will paste this token in the next step when configuring the Cortex Code connection.
+
+**1b. Launch Cortex Code and create a connection**
 
 From the cloned repository root, launch Cortex Code:
 
@@ -141,14 +159,14 @@ The first-run setup wizard will guide you through connecting to Snowflake. Selec
 | Connection name | `HOL_USER_NN` (replace `NN` with your assigned number) |
 | Account identifier | Provided by your instructor (format: `orgname-accountname`) |
 | Username | Your assigned user — e.g. `HOL_USER_NN` |
-| Password | Provided by your instructor |
-| Authentication method | Password (`snowflake`) |
+| Token | Paste the PAT you created in Step 1a |
+| Authentication method | Programmatic Access Token |
 
 Once authenticated, Cortex Code connects and drops you into an interactive session.
 
 > **Note:** The connection is saved to `~/.snowflake/connections.toml` and can be reused by both Cortex Code CLI and Snow CLI.
 
-**1b. Set your role, warehouse, database, and schema**
+**1c. Set your role, warehouse, database, and schema**
 
 In the Cortex Code session, set your session context. Replace `NN` with your assigned number (e.g. `03` for `HOL_USER_03`):
 
@@ -164,7 +182,7 @@ Then verify your connection is configured correctly:
 
 **Expected output:** You should see `HOL_ROLE_NN` as the role, your assigned database (e.g. `COCO_SDLC_HOL_NN`) as the database, and `MARTS` as the schema.
 
-**1c. Configure local project files**
+**1d. Configure local project files**
 
 Ask Cortex Code to configure the frontend with your Snowflake credentials:
 
