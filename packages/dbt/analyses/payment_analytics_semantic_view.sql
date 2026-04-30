@@ -1,8 +1,8 @@
-USE DATABASE COCO_SDLC_HOL;
+USE DATABASE COCO_SDLC_HOL_01;
 USE SCHEMA MARTS;
 
 CALL SYSTEM$CREATE_SEMANTIC_VIEW_FROM_YAML(
-  'COCO_SDLC_HOL.MARTS',
+  'COCO_SDLC_HOL_01.MARTS',
   $$
 name: PAYMENT_ANALYTICS
 description: Unified payment analytics semantic layer for evolv Payment Analytics - with merchant relationships
@@ -14,7 +14,7 @@ tables:
   - name: MERCHANTS
     description: Merchant and store reference data for location-based analytics
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: DIM_MERCHANTS
     primary_key:
@@ -93,7 +93,7 @@ tables:
   - name: AUTHORIZATIONS
     description: Authorization transactions for payment processing
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: AUTHORIZATIONS
     primary_key:
@@ -160,6 +160,13 @@ tables:
         synonyms:
           - processor
           - acquirer
+      - name: IS_RETRY
+        description: Whether this authorization is a retry of a prior declined transaction
+        expr: IS_RETRY
+        data_type: BOOLEAN
+        synonyms:
+          - retry
+          - retried
     facts:
       - name: TRANSACTION_AMOUNT
         description: Transaction amount in USD
@@ -177,6 +184,20 @@ tables:
         synonyms:
           - auth count
           - transaction count
+      - name: RETRY_COUNT
+        description: Count of retry transactions (1 per retry, 0 otherwise)
+        expr: RETRY_COUNT
+        data_type: NUMBER
+        synonyms:
+          - retries
+          - retry count
+      - name: RETRY_SUCCESS_COUNT
+        description: Count of successful retry transactions (1 per successful retry, 0 otherwise)
+        expr: RETRY_SUCCESS_COUNT
+        data_type: NUMBER
+        synonyms:
+          - successful retries
+          - retry success count
 
   # ============================================================================
   # SETTLEMENTS - Settlement batch records
@@ -184,7 +205,7 @@ tables:
   - name: SETTLEMENTS
     description: Settlement and clearing transactions
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: SETTLEMENTS
     primary_key:
@@ -269,7 +290,7 @@ tables:
   - name: DEPOSITS
     description: Funding and deposit records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: DEPOSITS
     primary_key:
@@ -339,7 +360,7 @@ tables:
   - name: CHARGEBACKS
     description: Chargeback and dispute records
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: CHARGEBACKS
     primary_key:
@@ -430,7 +451,7 @@ tables:
   - name: RETRIEVALS
     description: Retrieval requests
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: RETRIEVALS
     primary_key:
@@ -496,7 +517,7 @@ tables:
   - name: ADJUSTMENTS
     description: Fee adjustments and corrections
     base_table:
-      database: COCO_SDLC_HOL
+      database: COCO_SDLC_HOL_01
       schema: MARTS
       table: ADJUSTMENTS
     primary_key:
@@ -690,6 +711,14 @@ metrics:
     synonyms:
       - RR fulfillment rate
 
+  - name: RETRY_SUCCESS_RATE
+    description: Percentage of retry transactions that were approved
+    expr: SUM(AUTHORIZATIONS.RETRY_SUCCESS_COUNT) * 100.0 / NULLIF(SUM(AUTHORIZATIONS.RETRY_COUNT), 0)
+    data_type: NUMBER
+    synonyms:
+      - retry approval rate
+      - retry rate
+
 $$,
   FALSE  -- Set to TRUE to validate only without creating
 );
@@ -697,5 +726,5 @@ $$,
 -- =============================================================================
 -- Grant access (uncomment and modify role as needed)
 -- =============================================================================
--- GRANT SELECT ON SEMANTIC VIEW COCO_SDLC_HOL.MARTS.PAYMENT_ANALYTICS 
+-- GRANT SELECT ON SEMANTIC VIEW COCO_SDLC_HOL_01.MARTS.PAYMENT_ANALYTICS 
 --   TO ROLE ANALYST_ROLE;

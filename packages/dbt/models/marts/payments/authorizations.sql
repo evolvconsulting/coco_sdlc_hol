@@ -56,6 +56,11 @@ select
 
     -- Response codes
     avs_response_code as avs_response,
-    cvv_response_code as cvv_response
+    cvv_response_code as cvv_response,
+
+    -- Retry metrics
+    is_retry,
+    case when is_retry then 1 else 0 end as retry_count,
+    case when is_retry_successful then 1 else 0 end as retry_success_count
 
 from enriched

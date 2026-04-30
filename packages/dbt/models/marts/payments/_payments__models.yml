@@ -38,6 +38,12 @@ models:
         description: "Card brand (Visa, Mastercard, etc.)"
       - name: card_category
         description: "Card category (Commercial/Consumer)"
+      - name: is_retry
+        description: "Whether this authorization is a retry of a prior declined transaction"
+      - name: retry_count
+        description: "1 if this is a retry, 0 otherwise (for aggregation)"
+      - name: retry_success_count
+        description: "1 if this is a successful retry, 0 otherwise (for aggregation)"
 
   - name: settlements
     description: |

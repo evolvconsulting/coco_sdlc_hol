@@ -38,6 +38,10 @@ models:
         description: "Merchant location name (enriched from join)"
       - name: processor_name
         description: "Processor platform name (enriched from join)"
+      - name: is_retry
+        description: "Whether this authorization is a retry of a prior declined transaction (same card BIN + last 4, merchant, and amount within 4 hours)"
+      - name: is_retry_successful
+        description: "Whether this retry authorization was approved"
 
   - name: int_settlements__enriched
     description: |

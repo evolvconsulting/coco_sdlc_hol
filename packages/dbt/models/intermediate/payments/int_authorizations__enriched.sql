@@ -97,6 +97,39 @@ enriched as (
         on auth.pltf_id = processors.pltf_id
     left join decline_reasons 
         on auth.dcln_rsn_id = decline_reasons.dcln_rsn_id
+),
+
+retry_detection as (
+    select
+        *,
+        lag(approval_status_code) over (
+            partition by card_bin, card_last_four, merchant_id, transaction_amount
+            order by transaction_timestamp
+        ) as prev_approval_status_code,
+        lag(transaction_timestamp) over (
+            partition by card_bin, card_last_four, merchant_id, transaction_amount
+            order by transaction_timestamp
+        ) as prev_transaction_timestamp
+    from enriched
+),
+
+with_retry_flags as (
+    select
+        *,
+        case
+            when prev_approval_status_code = 2
+                 and datediff('hour', prev_transaction_timestamp, transaction_timestamp) <= 4
+            then true
+            else false
+        end as is_retry,
+        case
+            when prev_approval_status_code = 2
+                 and datediff('hour', prev_transaction_timestamp, transaction_timestamp) <= 4
+                 and approval_status_code = 1
+            then true
+            else false
+        end as is_retry_successful
+    from retry_detection
 )
 
 select
@@ -133,6 +166,8 @@ select
     processor_id,
     processor_name,
     avs_response_code,
-    cvv_response_code
+    cvv_response_code,
+    is_retry,
+    is_retry_successful
 
-from enriched
+from with_retry_flags
