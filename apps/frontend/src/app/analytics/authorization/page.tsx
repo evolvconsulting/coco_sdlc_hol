@@ -191,7 +191,7 @@ export default function AuthorizationPage() {
         <>
           {/* KPI Cards */}
           <Row gutter={[16, 16]}>
-            <Col xs={24} sm={12} lg={6}>
+            <Col xs={24} sm={12} lg={{ flex: '20%' }}>
               <KPICard
                 title="Total Transactions"
                 value={kpiData?.totalTransactions ?? 0}
@@ -202,7 +202,7 @@ export default function AuthorizationPage() {
                 loading={kpis.isLoading}
               />
             </Col>
-            <Col xs={24} sm={12} lg={6}>
+            <Col xs={24} sm={12} lg={{ flex: '20%' }}>
               {isLoading ? (
                 <Card>
                   <Skeleton active paragraph={{ rows: 6 }} style={{ height: 180, padding: '12px' }} />
@@ -221,7 +221,7 @@ export default function AuthorizationPage() {
                 />
               )}
             </Col>
-            <Col xs={24} sm={12} lg={6}>
+            <Col xs={24} sm={12} lg={{ flex: '20%' }}>
               <KPICard
                 title="Approved Amount"
                 value={kpiData?.approvedAmount ?? 0}
@@ -232,13 +232,23 @@ export default function AuthorizationPage() {
                 loading={kpis.isLoading}
               />
             </Col>
-            <Col xs={24} sm={12} lg={6}>
+            <Col xs={24} sm={12} lg={{ flex: '20%' }}>
               <KPICard
                 title="Avg Ticket Size"
                 value={kpiData?.avgTicketSize ?? 0}
                 format="currency"
                 description="Average transaction amount"
                 loading={kpis.isLoading}
+              />
+            </Col>
+            <Col xs={24} sm={12} lg={{ flex: '20%' }}>
+              <KPICard
+                title="Retry Success Rate"
+                value={kpiData?.retrySuccessRate ?? 0}
+                format="percent"
+                description="Percentage of retry transactions that were approved"
+                loading={kpis.isLoading}
+                color="#722ed1"
               />
             </Col>
           </Row>

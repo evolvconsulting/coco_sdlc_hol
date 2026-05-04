@@ -104,9 +104,8 @@ kpi_df = query(f"""
         ROUND(SUM(CASE WHEN approval_status = 'Approved' THEN 1 ELSE 0 END)
               * 100.0 / NULLIF(COUNT(*), 0), 2)                                         AS approval_rate,
         SUM(CASE WHEN approval_status = 'Approved' THEN transaction_amount ELSE 0 END) AS approved_amount,
-        ROUND(AVG(transaction_amount), 2)                                               AS avg_ticket_size
-        -- TODO (Task 2): Add retry_success_rate column here
-        -- ROUND(SUM(retry_success_flag) * 100.0 / NULLIF(SUM(retry_attempt_flag), 0), 2) AS retry_success_rate
+        ROUND(AVG(transaction_amount), 2)                                               AS avg_ticket_size,
+        ROUND(SUM(retry_success_count) * 100.0 / NULLIF(SUM(retry_count), 0), 2)        AS retry_success_rate
     FROM MARTS.AUTHORIZATIONS
     WHERE transaction_date BETWEEN '{start_date}' AND '{end_date}'
     {brand_filter}
@@ -126,8 +125,7 @@ if not kpi_df.empty:
                   border=True)
         st.metric("Approved amount", fmt_currency(row["APPROVED_AMOUNT"]), border=True)
         st.metric("Avg ticket size",  fmt_currency(row["AVG_TICKET_SIZE"]),  border=True)
-        # TODO (Task 2): uncomment after dbt model update adds retry_success_flag
-        # st.metric("Retry success rate", fmt_pct(row["RETRY_SUCCESS_RATE"]), border=True)
+        st.metric("Retry success rate", fmt_pct(row["RETRY_SUCCESS_RATE"]), border=True)
 
 # ── Tabs ───────────────────────────────────────────────────────────────────────
 tab_overview, tab_details = st.tabs([

@@ -102,6 +102,9 @@ export interface AuthorizationKPIs {
   totalAmount: number;
   approvedAmount: number;
   avgTicketSize: number;
+  retrySuccessRate: number;
+  totalRetries: number;
+  successfulRetries: number;
   trends: {
     transactions: number;
     approvalRate: number;

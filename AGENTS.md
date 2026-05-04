@@ -143,3 +143,7 @@ EXECUTE DBT PROJECT <your-database>.MARTS.EVOLV_PAYMENT_ANALYTICS
 - Do **NOT** use a version name alias like `VERSION V2` in `ADD VERSION` — the alias makes re-runs fail because the same alias cannot be added twice.
 - Always scope with `--select int_authorizations__enriched+ --full-refresh` to avoid `CREATE VIEW` permission errors on the STAGING schema.
 
+## Agent Behavior Rules
+
+- **Always recheck your work** before marking any task as done. Verify outputs, re-read modified files, and confirm correctness before moving on.
+
