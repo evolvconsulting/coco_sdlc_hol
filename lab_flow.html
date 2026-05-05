@@ -777,7 +777,7 @@
   <p class="tagline">Payment Analytics Platform &nbsp;·&nbsp; Add Retry Success Rate end-to-end</p>
   <div style="margin-top:18px; display:block; max-width:780px; margin-left:auto; margin-right:auto; background:rgba(255,255,255,0.12); border:1px solid rgba(255,255,255,0.25); border-radius:10px; padding:12px 24px; position:relative; text-align:center;">
     <div style="font-size:11px; text-transform:uppercase; letter-spacing:1.5px; opacity:0.7; margin-bottom:6px;">Snowflake Account</div>
-    <a href="https://sfsehol-atlanta_hol_with_evolv_giznhi.snowflakecomputing.com/" target="_blank" style="color:#29B5E8; font-size:15px; font-weight:600; text-decoration:none; word-break:break-all;">https://sfsehol-atlanta_hol_with_evolv_giznhi.snowflakecomputing.com/</a>
+    <a href="https://sfsehol-philly_hol_with_evolv_lzgujp.snowflakecomputing.com/" target="_blank" style="color:#29B5E8; font-size:15px; font-weight:600; text-decoration:none; word-break:break-all;">https://sfsehol-philly_hol_with_evolv_lzgujp.snowflakecomputing.com/</a>
     <div style="font-size:12px; opacity:0.7; margin-top:6px;">Log in with your assigned HOL credentials (HOL_USER_NN / password from instructor)</div>
   </div>
   <span class="pill">⏱ ~90 minutes &nbsp;·&nbsp; Two paths, same outcome</span>
@@ -1002,7 +1002,7 @@
           <div class="step-icon">🔑</div>
           <div class="step-body">
             <div class="step-title">Log into Snowsight</div>
-            <div class="step-sub">Open <a href="https://sfsehol-atlanta_hol_with_evolv_giznhi.snowflakecomputing.com/" target="_blank">Snowsight</a> → log in with HOL credentials</div>
+            <div class="step-sub">Open <a href="https://sfsehol-philly_hol_with_evolv_lzgujp.snowflakecomputing.com/" target="_blank">Snowsight</a> → log in with HOL credentials</div>
           </div>
         </div>
         <div class="arrow">↓</div>
@@ -1389,7 +1389,7 @@ function cliS1() {
   note('If Git is not available, download the ZIP from GitHub, extract, and run <code class="ic">git init && git add . && git commit -m "initial"</code> inside the folder.') +
   h3('Step 1: Configure Snowflake Connection') +
   h3('Step 1a: Create a Programmatic Access Token (PAT)') +
-  pb('Log into Snowsight at <a href="https://sfsehol-atlanta_hol_with_evolv_giznhi.snowflakecomputing.com/" target="_blank">https://sfsehol-atlanta_hol_with_evolv_giznhi.snowflakecomputing.com/</a> with your HOL credentials.') +
+  pb('Log into Snowsight at <a href="https://sfsehol-philly_hol_with_evolv_lzgujp.snowflakecomputing.com/" target="_blank">https://sfsehol-philly_hol_with_evolv_lzgujp.snowflakecomputing.com/</a> with your HOL credentials.') +
   pb('Create a PAT: click your name (bottom-left) → <strong>Settings</strong> → <strong>Authentication</strong> → <strong>Programmatic Access Tokens</strong> → <strong>+ Generate New Token</strong>.') +
   sc('<strong>Token name:</strong> HOL_PAT<br><strong>Role:</strong> HOL_ROLE_NN (your assigned role)<br><strong>Expires in:</strong> 1 day') +
   note('Copy the token immediately — it is only shown once. You will paste it in Step 1b.') +
@@ -1397,14 +1397,14 @@ function cliS1() {
   pb('From the repository root, launch Cortex Code:') +
   '<pre><code>cortex</code></pre>' +
   pb('The first-run wizard will prompt you to create a connection. Select <strong>More options</strong> and enter:') +
-  sc('<strong>Connection name:</strong> HOL_USER_NN (your number)<br><strong>Account identifier:</strong> SFSEHOL-ATLANTA_HOL_WITH_EVOLV_GIZNHI<br><strong>Username:</strong> e.g. HOL_USER_NN<br><strong>Token:</strong> paste the PAT you created in Step 1a<br><strong>Auth method:</strong> Programmatic Access Token') +
+  sc('<strong>Connection name:</strong> HOL_USER_NN (your number)<br><strong>Account identifier:</strong> SFSEHOL-PHILLY_HOL_WITH_EVOLV_LZGUJP<br><strong>Username:</strong> e.g. HOL_USER_NN<br><strong>Token:</strong> paste the PAT you created in Step 1a<br><strong>Auth method:</strong> Programmatic Access Token') +
   pb('Once connected, set your session context (replace <code class="ic">NN</code> with your number):') +
   pbox('Cortex Code prompt','Set my role to HOL_ROLE_NN, warehouse to HOL_WH_NN, and use database COCO_SDLC_HOL_NN with schema MARTS.') +
   pb('Then verify:') +
   '<pre><code>/status</code></pre>' +
   note('Expected: HOL_ROLE_NN as role, COCO_SDLC_HOL_NN as database, MARTS as schema.') +
   h3('Step 1c: Configure Frontend Config') +
-  pbox('Cortex Code prompt','Update apps/frontend/.env.local with my Snowflake credentials: SNOWFLAKE_ACCOUNT=SFSEHOL-ATLANTA_HOL_WITH_EVOLV_GIZNHI, SNOWFLAKE_USER=HOL_USER_NN, SNOWFLAKE_ROLE=HOL_ROLE_NN, SNOWFLAKE_WAREHOUSE=HOL_WH_NN, SNOWFLAKE_PASSWORD=&lt;password&gt;, SNOWFLAKE_DATABASE=COCO_SDLC_HOL_NN.') +
+  pbox('Cortex Code prompt','Update apps/frontend/.env.local with my Snowflake credentials: SNOWFLAKE_ACCOUNT=SFSEHOL-PHILLY_HOL_WITH_EVOLV_LZGUJP, SNOWFLAKE_USER=HOL_USER_NN, SNOWFLAKE_ROLE=HOL_ROLE_NN, SNOWFLAKE_WAREHOUSE=HOL_WH_NN, SNOWFLAKE_PASSWORD=&lt;password&gt;, SNOWFLAKE_DATABASE=COCO_SDLC_HOL_NN.') +
   h3('Step 2: Confirm App Runs') +
   pbox('Cortex Code prompt','Install the frontend dependencies and start the dev server from apps/frontend.') +
   pb('Open <a href="http://localhost:3000" target="_blank">http://localhost:3000</a>. You should see the Payment Analytics dashboard with real transaction data — charts, KPI cards, and natural language query interface.') +
@@ -1513,7 +1513,7 @@ function cliS6() {
 function uiS1() {
   return shead(1,'Environment Setup','~5 min','#2563EB') +
   h3('Step 1.1: Log Into Snowsight') +
-  pb('Open Snowsight at <a href="https://sfsehol-atlanta_hol_with_evolv_giznhi.snowflakecomputing.com/" target="_blank">https://sfsehol-atlanta_hol_with_evolv_giznhi.snowflakecomputing.com/</a> and log in with your HOL credentials.') +
+  pb('Open Snowsight at <a href="https://sfsehol-philly_hol_with_evolv_lzgujp.snowflakecomputing.com/" target="_blank">https://sfsehol-philly_hol_with_evolv_lzgujp.snowflakecomputing.com/</a> and log in with your HOL credentials.') +
   sc('<strong>Username:</strong> Your assigned user — e.g. HOL_USER_03<br><strong>Password:</strong> Provided by your instructor') +
   h3('Step 1.2: Confirm the App Runs') +
   pb('Before making any changes, verify the baseline dashboard is working. Go to <strong>Projects → Streamlit</strong> and open <code class="ic">PAYMENT_ANALYTICS_DASHBOARD</code> (under your assigned database).') +

@@ -362,7 +362,7 @@
 <ul class="checklist">
   <li>Provisioning pipeline complete (see <code>INSTRUCTOR_GUIDE.md</code> Part 1)</li>
   <li>Each attendee slot verified: user login, dashboard loads, workspace/repo accessible</li>
-  <li>Kahoot game loaded with &ldquo;Engagement Questions.docx&rdquo; (15 questions)</li>
+  <li>Kahoot game loaded &mdash; &ldquo;Cortex Code Onboarding: Setup and Security&rdquo; (11 questions)</li>
   <li>Attendee path assignments decided (CLI vs Snowsight) and credentials distributed</li>
   <li><code>INSTRUCTOR_GUIDE.md</code> Watch-Fors table open for live troubleshooting</li>
 </ul>
@@ -442,8 +442,8 @@ cd coco_sdlc_hol</code></pre>
 
 <!-- KAHOOT -->
 <div class="kahoot-break">
-  <div class="q"><strong>Q1:</strong> What makes Cortex Code different from general-purpose AI coding assistants?<br><span class="answer">B &mdash; It can connect to and query your live Snowflake data warehouse</span></div>
-  <div class="q"><strong>Q2:</strong> Why is MFA bypassed for lab participants?<br><span class="answer">B &mdash; MFA triggers interactive browser prompts that block CLI automation; the bypass is temporary</span></div>
+  <div class="q"><strong>Q1:</strong> What makes Cortex Code different from general-purpose AI coding assistants like Copilot or ChatGPT?<br><span class="answer">B &mdash; It can query your live Snowflake data, not just generate code</span></div>
+  <div class="q"><strong>Q2:</strong> What is the best TRUE BLUE consulting firm in the whole world?<br><span class="answer">B &mdash; evolv Consulting</span></div>
 </div>
 
 <hr>
@@ -519,9 +519,8 @@ cd coco_sdlc_hol</code></pre>
 
 <!-- KAHOOT -->
 <div class="kahoot-break">
-  <div class="q"><strong>Q3:</strong> How did Cortex Code know the architecture without being told?<br><span class="answer">C &mdash; It reads AGENTS.md in the workspace/repo root</span></div>
-  <div class="q"><strong>Q4:</strong> What would you include in an AGENTS.md for your own project?<br><span class="answer">B &mdash; Connection details, schema layout, business rules, key file paths, security constraints</span></div>
-  <div class="q"><strong>Q5:</strong> What is a medallion architecture?<br><span class="answer">B &mdash; RAW stores untouched source data, STAGING cleans, INTERMEDIATE enriches, MARTS provides business-ready output</span></div>
+  <div class="q"><strong>Q3:</strong> Cortex Code described the project&rsquo;s tables, schemas, and metrics without being told about them. How did it know?<br><span class="answer">C &mdash; Reads AGENTS.md with architecture context and rules</span></div>
+  <div class="q"><strong>Q4:</strong> What would you include in an AGENTS.md for your own project?<br><span class="answer">B &mdash; Connection info, schema, rules, key paths, and security constraints</span></div>
 </div>
 
 <hr>
@@ -639,11 +638,9 @@ project with ARGS = 'run --select int_authorizations__enriched+
 
 <!-- KAHOOT -->
 <div class="kahoot-break">
-  <div class="q"><strong>Q6:</strong> How many files need to change to add a metric end-to-end?<br><span class="answer">C &mdash; Four (intermediate model, marts model, semantic view DDL, agent instructions)</span></div>
-  <div class="q"><strong>Q7:</strong> Why is reviewing proposed changes before execution important?<br><span class="answer">B &mdash; Without review, AI could edit wrong files or deploy incorrect SQL</span></div>
-  <div class="q"><strong>Q8:</strong> What are potential edge cases in the retry detection window function?<br><span class="answer">B &mdash; Partial amount retries, same card/amount at different merchant, retries after 5-min window, chained retries</span></div>
-  <div class="q"><strong>Q9:</strong> How many tools did you context-switch between?<br><span class="answer">C &mdash; Just Cortex Code (plus a browser to verify)</span></div>
-  <div class="q"><strong>Q10:</strong> Cortex Agent vs writing SQL yourself?<br><span class="answer">C &mdash; Agent: faster for ad-hoc, curated metrics, non-SQL users. SQL: more control, easier to debug</span></div>
+  <div class="q"><strong>Q5:</strong> How many files need to change to add a new metric end-to-end across the data stack?<br><span class="answer">C &mdash; Four: intermediate, marts, semantic view, and agent instructions</span></div>
+  <div class="q"><strong>Q6:</strong> Why review proposed changes before execution &mdash; via plan mode (CLI) or the edit review banner (UI)?<br><span class="answer">B &mdash; Prevents bad edits; review acts like a PR checkpoint</span></div>
+  <div class="q"><strong>Q7:</strong> In the lab, how many separate tools were context-switched between to go from Jira ticket to deployed, queryable data?<br><span class="answer">C &mdash; Just Cortex Code (+ browser); normally 4&ndash;5 tools</span></div>
 </div>
 
 <hr>
@@ -675,7 +672,7 @@ project with ARGS = 'run --select int_authorizations__enriched+
 
 <!-- KAHOOT -->
 <div class="kahoot-break">
-  <div class="q"><strong>Q11:</strong> Why start a fresh conversation before Task 2?<br><span class="answer">B &mdash; Task 1 context (dbt/SQL/retry logic) is irrelevant to Task 2 (dashboard code) &mdash; stale context confuses the AI</span></div>
+  <div class="q"><strong>Q8:</strong> Why do we start a fresh conversation (or use /new) before Task 2 instead of continuing in the same session?<br><span class="answer">B &mdash; Old context can confuse AI; fresh chat avoids bad suggestions</span></div>
 </div>
 
 <hr>
@@ -767,8 +764,7 @@ KPI card in apps/streamlit/app.py.</code></pre>
 
 <!-- KAHOOT -->
 <div class="kahoot-break">
-  <div class="q"><strong>Q12:</strong> Comparing Task 1 and Task 2 &mdash; what stayed the same and what changed?<br><span class="answer">B &mdash; Same workflow (read ticket &gt; implement &gt; verify), different files (SQL/dbt vs dashboard code) &mdash; language-agnostic</span></div>
-  <div class="q"><strong>Q13:</strong> Task 1 metric is the data source for Task 2&rsquo;s KPI card. How does that mirror real sprint work?<br><span class="answer">B &mdash; Backend work in one ticket unblocks frontend work in another &mdash; normal dependency chain</span></div>
+  <div class="q"><strong>Q9:</strong> Comparing Task 1 and Task 2 &mdash; what stayed the same and what changed?<br><span class="answer">B &mdash; Same workflow; files and verification method changed</span></div>
 </div>
 
 <hr>
@@ -801,8 +797,8 @@ KPI card in apps/streamlit/app.py.</code></pre>
 
 <!-- KAHOOT -->
 <div class="kahoot-break">
-  <div class="q"><strong>Q14:</strong> Where did AI save the most time, and where did human judgment matter most?<br><span class="answer">B &mdash; AI saved time on boilerplate, file discovery, SQL generation; human judgment for plan review, edge cases, verifying correctness</span></div>
-  <div class="q"><strong>Q15:</strong> What would you trust the AI to do unsupervised, and what would you always review?<br><span class="answer">C &mdash; Trust: branch creation, scaffolding, simple queries. Always review: SQL modifying data, business logic, security, production</span></div>
+  <div class="q"><strong>Q10:</strong> Where did AI save the most time, and where did human judgment matter most?<br><span class="answer">B &mdash; AI saved time on boilerplate &mdash; humans review logic, edge cases, output</span></div>
+  <div class="q"><strong>Q11:</strong> What would you trust the AI to do unsupervised, and what would you always want to review?<br><span class="answer">C &mdash; Trust simple tasks &mdash; Humans review logic, data changes, and security</span></div>
 </div>
 
 <hr>
