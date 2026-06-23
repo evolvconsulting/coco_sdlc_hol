@@ -83,7 +83,8 @@ Install these before the lab. Verification steps are in [LAB_INSTRUCTIONS_CLI.md
 - **Snow CLI** (prerequisite for Cortex Code CLI) — [docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation](https://docs.snowflake.com/en/developer-guide/snowflake-cli/installation/installation)
 - **Cortex Code CLI** — [docs.snowflake.com/en/user-guide/cortex-code-cli](https://docs.snowflake.com/en/user-guide/cortex-code-cli)
 - **Node.js 20.x** — [nodejs.org/en/download](https://nodejs.org/en/download)
-- **Git**
+- **Git** — [git-scm.com/downloads](https://git-scm.com/downloads)
+- **GitHub CLI** — [cli.github.com](https://cli.github.com/)
 
 ---
 

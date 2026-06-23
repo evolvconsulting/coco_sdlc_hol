@@ -78,11 +78,27 @@ npm --version
 
 ### 5. Git
 
+**Install:** https://git-scm.com/downloads
+
+**Verify:**
+
 ```bash
 git --version
 ```
 
 Get the lab repository (fork + clone, or download ZIP) -- instructions are in Section 1, Step 0.
+
+### 6. GitHub CLI
+
+Required for authenticating to GitHub and cloning the lab repository from the terminal.
+
+**Install:** https://cli.github.com/
+
+**Verify:**
+
+```bash
+gh --version
+```
 
 > **No CLI tools available?** Use `LAB_INSTRUCTIONS_UI.md` instead — the full lab is available entirely in Snowsight.
 
