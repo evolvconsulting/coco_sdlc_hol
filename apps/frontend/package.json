@@ -17,7 +17,7 @@
     "ag-grid-react": "^35.1.0",
     "antd": "^6.3.0",
     "dayjs": "^1.11.19",
-    "echarts": "^6.0.0",
+    "echarts": "^6.1.0",
     "echarts-for-react": "^3.0.6",
     "ioredis": "^5.9.3",
     "next": "16.2.4",
